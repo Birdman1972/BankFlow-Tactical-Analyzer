@@ -1,9 +1,9 @@
 """
 專案名稱：BankFlow Tactical Analyzer (Web 戰術版)
 描述：協助執法單位進行離線數位鑑識分析，透過網頁介面清洗、整理並交叉比對銀行存款與網銀 IP 紀錄。
-版本：1.0.0-web
+版本：1.1.0-web
 作者：Antigravity AICoder
-日期：2026-01-09
+日期：2026-01-16
 技術：Streamlit + Pandas
 執行方式：streamlit run main.py
 """
@@ -428,6 +428,9 @@ def main():
         file_name="sample_ip_log.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+    st.sidebar.markdown("---")
+    st.sidebar.caption("Version: v1.1.0-web")
 
     # --- Main: 檔案輸入 ---
     col1, col2 = st.columns(2)
