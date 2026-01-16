@@ -154,12 +154,12 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
     status_log = []
     
     try:
-        # Load Data
+        # 載入資料 (Load Data)
         df_a = pd.read_excel(file_a)
         df_b = pd.read_excel(file_b)
         status_log.append(f"✅ 檔案載入成功: A({len(df_a)}筆), B({len(df_b)}筆)")
 
-        # Prepare Split Dataframes (Before Drop)
+        # 準備收支分流資料表 (Prepare Split Dataframes - Before Drop)
         df_income = pd.DataFrame()
         df_expense = pd.DataFrame()
         
@@ -167,7 +167,7 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
             try:
                 # 確保欄位足夠 (至少10欄)
                 if df_a.shape[1] > 9:
-                    # Force cleanup of 'J' (index 9) and 'I' (index 8)
+                    # 強制清理 'J' (index 9) 和 'I' (index 8) 欄位
                     val_inc = pd.to_numeric(df_a.iloc[:, 9], errors='coerce').fillna(0)
                     val_exp = pd.to_numeric(df_a.iloc[:, 8], errors='coerce').fillna(0)
                     
@@ -179,32 +179,31 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
             except Exception as e:
                 status_log.append(f"⚠️ 收支分流錯誤: {str(e)}")
 
-        # Extract Counterparty Accounts (Assuming Index 5 / Column F)
-        # Requirement: "需要多一個功能能把收支分流兩表的對方帳號，列出來並去重複"
+        # 提取對方帳號 (假設位於 Index 5 / Column F)
+        # 需求: "需要多一個功能能把收支分流兩表的對方帳號，列出來並去重複"
         df_counterparty_list = pd.DataFrame()
         counterparty_col_idx = 5
 
         try:
             accs = set()
-            # If split enabled, use split DFs
+            # 若啟用收支分流，使用分流後的 DataFrame
             if split_io:
                 if not df_income.empty and df_income.shape[1] > counterparty_col_idx:
                      accs.update(df_income.iloc[:, counterparty_col_idx].dropna().astype(str).tolist())
                 if not df_expense.empty and df_expense.shape[1] > counterparty_col_idx:
                      accs.update(df_expense.iloc[:, counterparty_col_idx].dropna().astype(str).tolist())
             else:
-                # Fallback to df_a if split not enabled but user wants analysis?
-                # Or just use df_a (which contains all)
+                # 若未分流，直接使用原始 df_a
                 if df_a.shape[1] > counterparty_col_idx:
                     accs.update(df_a.iloc[:, counterparty_col_idx].dropna().astype(str).tolist())
 
             if accs:
-                df_counterparty_list = pd.DataFrame(sorted(list(accs)), columns=['Unique_Counterparty_Account'])
+                df_counterparty_list = pd.DataFrame(sorted(list(accs)), columns=['對方帳號'])
                 status_log.append(f"📋 對方帳號提取完成 ({len(df_counterparty_list)} 筆)")
         except Exception as e:
              status_log.append(f"⚠️ 對方帳號提取失敗: {str(e)}")
 
-        # Drop Sensitive (Index 2, 5, 11, 12)
+        # 隱藏敏感欄位 (Drop Sensitive - Index 2, 5, 11, 12)
         if hide_sensitive:
             cols_to_drop = [2, 5, 11, 12]
             valid_cols = [c for c in cols_to_drop if c < df_a.shape[1]]
@@ -220,17 +219,17 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
                     valid_drop_exp = [c for c in col_names if c in df_expense.columns]
                     df_expense.drop(columns=valid_drop_exp, inplace=True)
 
-                # Drop inplace is safe here as income/expense are copies
+                # 直接修改 df_a (因為 income/expense 已經是拷貝，所以安全)
                 df_a.drop(columns=col_names, inplace=True)
                 status_log.append(f"🛡️ 敏感欄位已隱藏 (Cols: {valid_cols})")
 
-        # IP Matching
+        # IP 交叉比對 (IP Matching)
         if do_ip_match:
             status_log.append("🔄 正在執行 IP 交叉比對 (Window: -1s/+2s)...")
             
-            # Pre-process File B for speed
-            # Assume Col 0=Time, Col 1=Account, Col 2=IP
-            # Safe check
+            # 為了效能預處理檔案 B (Pre-process File B for speed)
+            # 假設 Col 0=Time, Col 1=Account, Col 2=IP
+            # 安全檢查 (Safe check)
             if df_b.shape[1] < 3:
                  status_log.append("❌ IP比對失敗: 檔案 B 欄位不足 (需 >= 3)")
             else:
@@ -239,9 +238,8 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
                 df_b_proc['Time'] = pd.to_datetime(df_b_proc['Time'], errors='coerce')
                 df_b_proc.dropna(subset=['Time'], inplace=True)
                 
-                # File A columns (Index 0, 1 assumed safely exist even after drop)
-                # Note: df_a might have dropped cols, but typically 0,1 are not dropped (2,5,11,12)
-                # times_a = pd.to_datetime(df_a.iloc[:, 0], errors='coerce')
+                # 檔案 A 欄位 (Index 0, 1 假設在刪除後仍安全存在)
+                # 註: df_a 可能已刪除欄位，但通常 0, 1 不會被刪除 (2,5,11,12)
 
                 # 使用增強版日期解析 (支援 ROC)
                 times_a = df_a.iloc[:, 0].apply(parse_roc_date)
@@ -318,7 +316,7 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
             df_a['IP_ISP'] = isps
             status_log.append("✅ Whois 查詢完成")
 
-        # Generate Output
+        # 產生輸出 (Generate Output)
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df_a.to_excel(writer, sheet_name='Sheet1_Summary', index=False)
@@ -327,7 +325,7 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
                 df_expense.to_excel(writer, sheet_name='Sheet3_Expense', index=False)
 
             if not df_counterparty_list.empty:
-                df_counterparty_list.to_excel(writer, sheet_name='Sheet4_Counterparty', index=False)
+                df_counterparty_list.to_excel(writer, sheet_name='Sheet4_對方帳號', index=False)
         
         output.seek(0)
         return output, df_a, df_counterparty_list, status_log
@@ -346,7 +344,7 @@ def main():
     st.divider()
 
     # --- Sidebar: 控制面板 ---
-    st.sidebar.header("⚙️ Tactical Config")
+    st.sidebar.header("⚙️ 戰術設定 (Tactical Config)")
     
     st.sidebar.markdown("---")
     sw_hide_sensitive = st.sidebar.toggle("隱藏敏感欄位 (C, F, L, M)", value=False)
@@ -373,9 +371,9 @@ def main():
     # --- Action: 執行分析 ---
     st.markdown("---")
     
-    if st.button("🚀 EXECUTE ANALYSIS", use_container_width=True):
+    if st.button("🚀 執行分析 (EXECUTE ANALYSIS)", use_container_width=True):
         if file_a and file_b:
-            with st.spinner("SYSTEM PROCESSING..."):
+            with st.spinner("系統處理中 (SYSTEM PROCESSING)..."):
                 excel_data, result_df, cp_df, logs = process_analysis(
                     file_a, file_b, 
                     sw_hide_sensitive, sw_split_io, 
@@ -383,13 +381,13 @@ def main():
                 )
             
             # 顯示 Logs
-            with st.expander("System Logs", expanded=True):
+            with st.expander("系統日誌 (System Logs)", expanded=True):
                 for log in logs:
                     st.text(log)
 
             if excel_data:
                 st.balloons()
-                st.success("分析完成! Target Neutralized.")
+                st.success("分析完成! (Target Neutralized)")
                 
                 # 下載按鈕
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -403,11 +401,11 @@ def main():
                 
                 # 顯示對方帳號列表
                 if not cp_df.empty:
-                    with st.expander(f"📋 對方帳號清單 (Total: {len(cp_df)})"):
+                    with st.expander(f"📋 對方帳號清單 (共 {len(cp_df)} 筆)"):
                         st.dataframe(cp_df, use_container_width=True)
 
                 # 數據預覽
-                st.subheader("🔍 Result Preview (Top 10)")
+                st.subheader("🔍 結果預覽 (前 10 筆)")
                 st.dataframe(result_df.head(10), use_container_width=True)
 
         else:
