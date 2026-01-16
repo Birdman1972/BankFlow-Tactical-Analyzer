@@ -111,9 +111,9 @@ def parse_roc_date(date_str):
     except:
         pass
 
-    # 2. 嘗試民國年 (ROC) 格式: 112/01/01 或 112-01-01
-    # 簡單啟發式: 分隔符號 / 或 -
-    parts = s.replace('-', '/').split('/')
+    # 2. 嘗試民國年 (ROC) 格式: 112/01/01 或 112-01-01 或 112.01.01
+    # 簡單啟發式: 分隔符號 / 或 - 或 .
+    parts = s.replace('-', '/').replace('.', '/').split('/')
     if len(parts) == 3:
         try:
             y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
@@ -126,6 +126,51 @@ def parse_roc_date(date_str):
             pass
 
     return pd.NaT
+
+def generate_sample_file(file_type):
+    """
+    產生範例檔案 (Transaction or IP Log)
+    """
+    output = io.BytesIO()
+
+    if file_type == 'transaction':
+        # 產生 交易明細 範例
+        data = {
+            '交易日期': ['112/01/01', '112.01.02', '112-01-03', '2023/01/04'],
+            '帳號': ['MyAccount001'] * 4,
+            '身分證字號(C)': ['A123456789'] * 4,
+            '交易代號': ['D001', 'D002', 'D003', 'D004'],
+            '摘要': ['Salary', 'Shopping', 'Transfer', 'Utility'],
+            '對方帳號(F)': ['CompanyAcc_A', 'ShopAcc_B', 'FriendAcc_C', 'WaterCo_D'],
+            '對方銀行': ['BankA', 'BankB', 'BankC', 'BankD'],
+            '分行': ['BranchA', 'BranchB', 'BranchC', 'BranchD'],
+            '支出(I)': [0, 5000, 0, 1000],
+            '存入(J)': [50000, 0, 3000, 0],
+            '結餘': [50000, 45000, 48000, 47000],
+            '備註(L)': ['SecretL1', 'SecretL2', 'SecretL3', 'SecretL4'],
+            '經辦(M)': ['UserM1', 'UserM2', 'UserM3', 'UserM4']
+        }
+        df = pd.DataFrame(data)
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+
+    elif file_type == 'ip_log':
+        # 產生 IP Log 範例
+        data = {
+            '登入時間': [
+                '2023-01-01 00:00:00', # Matches 112/01/01
+                '2023-01-02 00:00:00', # Matches 112.01.02
+                '2023-01-04 00:00:01', # Matches 2023/01/04 (+2s window)
+            ],
+            '帳號': ['MyAccount001'] * 3,
+            '來源IP': ['1.1.1.1', '2.2.2.2', '4.4.4.4']
+        }
+        df = pd.DataFrame(data)
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+
+    output.seek(0)
+    return output
 
 @st.cache_data(show_spinner=False)
 def get_whois_info(ip_address):
@@ -292,6 +337,13 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
                 df_a['Matched_IP'] = results
                 status_log.append(f"✅ IP 比對完成")
 
+                # Check for widespread invalid data
+                invalid_count = results.count("Invalid Data")
+                if invalid_count > 0 and invalid_count == len(results):
+                     status_log.append("⚠️ 警告: 所有 IP 比對結果均為 'Invalid Data'。請檢查交易明細的日期格式 (需為標準日期或 ROC 格式)。")
+                elif invalid_count > 0:
+                     status_log.append(f"⚠️ 注意: 有 {invalid_count} 筆資料日期或帳號解析失敗 (Invalid Data)。")
+
         # Whois
         if do_whois and 'Matched_IP' in df_a.columns:
             status_log.append("🌍 正在執行 Whois 線上反查...")
@@ -356,6 +408,26 @@ def main():
     sw_whois = st.sidebar.toggle("Whois 線上反查", value=False)
     if sw_whois:
         st.sidebar.markdown('<p class="warning-text">警告: 將連線至外部 API</p>', unsafe_allow_html=True)
+
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📥 範例檔案下載")
+
+    # 範例檔案生成
+    sample_tx = generate_sample_file('transaction')
+    st.sidebar.download_button(
+        label="下載交易明細範例 (A)",
+        data=sample_tx,
+        file_name="sample_transaction.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+    sample_ip = generate_sample_file('ip_log')
+    st.sidebar.download_button(
+        label="下載 IP 紀錄範例 (B)",
+        data=sample_ip,
+        file_name="sample_ip_log.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
     # --- Main: 檔案輸入 ---
     col1, col2 = st.columns(2)
