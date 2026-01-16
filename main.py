@@ -361,12 +361,12 @@ def main():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📂 檔案 A (存款明細)")
-        file_a = st.file_uploader("Upload Transaction Excel", type=["xls", "xlsx"], key="file_a")
+        st.subheader("📂 檔案 A：銀行存款往來明細")
+        file_a = st.file_uploader("上傳 Excel 檔案 (Transaction)", type=["xls", "xlsx"], key="file_a")
         
     with col2:
-        st.subheader("📂 檔案 B (IP 紀錄)")
-        file_b = st.file_uploader("Upload IP Log Excel", type=["xls", "xlsx"], key="file_b")
+        st.subheader("📂 檔案 B：網銀 IP 登入紀錄")
+        file_b = st.file_uploader("上傳 Excel 檔案 (IP Log)", type=["xls", "xlsx"], key="file_b")
 
     # --- Action: 執行分析 ---
     st.markdown("---")
