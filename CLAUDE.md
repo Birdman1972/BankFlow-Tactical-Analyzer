@@ -1,5 +1,23 @@
 # BankFlow Tactical Analyzer - Claude 指引
 
+---
+## ⚠️ 未完成任務 (ACTIVE TASK)
+
+**Phase 7 WASM 架構尚未完成！**
+
+當使用者開始對話時，主動詢問：
+> 「Phase 7 WASM 架構還有未完成的工作，是否要繼續？」
+
+**剩餘步驟：**
+1. 更新 `src-tauri/Cargo.toml` 依賴 bankflow-core
+2. 修改 src-tauri 使用 bankflow-core
+3. 前端平台切換機制
+4. WASM 編譯測試
+
+**完成後刪除此區塊。**
+
+---
+
 ## Guardian Recursion Protocol (守護神連鎖)
 
 **規則**：禁止暴力試錯 (No Brute-Force Retry)
