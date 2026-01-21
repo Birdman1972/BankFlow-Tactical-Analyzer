@@ -1,0 +1,33 @@
+[package]
+name = "bankflow-core"
+version = "0.1.0"
+edition = "2021"
+description = "Core analysis engine for BankFlow Tactical Analyzer"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+wasm = ["wasm-bindgen", "js-sys", "web-sys", "console_error_panic_hook", "getrandom/js"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Excel processing
+calamine = "0.26"
+rust_xlsxwriter = "0.79"
+
+# WASM dependencies (optional)
+wasm-bindgen = { version = "0.2", optional = true }
+js-sys = { version = "0.3", optional = true }
+web-sys = { version = "0.3", optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
+getrandom = { version = "0.2", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
