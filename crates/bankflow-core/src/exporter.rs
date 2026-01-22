@@ -129,3 +129,31 @@ fn set_column_widths(ws: &mut Worksheet) -> Result<(), CoreError> {
     }
     Ok(())
 }
+
+// Native-only functions
+#[cfg(not(target_arch = "wasm32"))]
+mod native {
+    use super::*;
+    use std::fs;
+    use std::path::Path;
+
+    impl Exporter {
+        /// Export to Excel file (native only)
+        pub fn export_to_excel(
+            path: &Path,
+            summary: &[Transaction],
+            income: &[Transaction],
+            expense: &[Transaction],
+        ) -> Result<(), CoreError> {
+            let bytes = Exporter::export_to_bytes(summary, income, expense)?;
+            fs::write(path, bytes).map_err(|e| {
+                CoreError::ExportError(format!("Failed to write file: {}", e))
+            })?;
+            Ok(())
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(unused_imports)]
+pub use native::*;

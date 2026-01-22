@@ -17,7 +17,8 @@ pub use error::CoreError;
 pub use exporter::Exporter;
 pub use matcher::{IpMatcher, MatchStats, TimeWindow};
 pub use models::{
-    AnalysisResult, AnalysisSettings, FileMetadata, IpRecord, Transaction, WhoisResult,
+    excel_date_to_datetime, AnalysisResult, AnalysisSettings, FileMetadata, IpRecord, Transaction,
+    WhoisResult,
 };
 pub use parser::Parser;
 pub use processor::{ProcessingStats, Processor};

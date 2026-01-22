@@ -80,6 +80,7 @@ impl Parser {
         }
 
         let metadata = FileMetadata {
+            path: None,
             filename: filename.to_string(),
             row_count,
             column_count: col_count,
@@ -132,6 +133,7 @@ impl Parser {
         }
 
         let metadata = FileMetadata {
+            path: None,
             filename: filename.to_string(),
             row_count,
             column_count: col_count,
@@ -158,6 +160,7 @@ impl Parser {
             .map_err(|e| CoreError::ExcelParseError(format!("Failed to read sheet: {}", e)))?;
 
         Ok(FileMetadata {
+            path: None,
             filename: filename.to_string(),
             row_count: range.height(),
             column_count: range.width(),
@@ -220,6 +223,56 @@ fn extract_cell_as_f64(cell: Option<&Data>) -> Option<f64> {
         _ => None,
     }
 }
+
+// Native-only functions (not available in WASM)
+#[cfg(not(target_arch = "wasm32"))]
+mod native {
+    use super::*;
+    use std::fs;
+    use std::path::Path;
+
+    impl Parser {
+        /// Parse transactions from file path (native only)
+        pub fn parse_transactions(path: &Path) -> Result<Vec<Transaction>, CoreError> {
+            let data = fs::read(path).map_err(|e| {
+                CoreError::ExcelParseError(format!("Failed to read file: {}", e))
+            })?;
+            let filename = path.file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
+            let (transactions, _) = Parser::parse_transactions_from_bytes(&data, &filename)?;
+            Ok(transactions)
+        }
+
+        /// Parse IP records from file path (native only)
+        pub fn parse_ip_records(path: &Path) -> Result<Vec<IpRecord>, CoreError> {
+            let data = fs::read(path).map_err(|e| {
+                CoreError::ExcelParseError(format!("Failed to read file: {}", e))
+            })?;
+            let filename = path.file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
+            let (records, _) = Parser::parse_ip_records_from_bytes(&data, &filename)?;
+            Ok(records)
+        }
+
+        /// Get file metadata from path (native only)
+        pub fn get_file_metadata(path: &Path) -> Result<(usize, usize), CoreError> {
+            let data = fs::read(path).map_err(|e| {
+                CoreError::ExcelParseError(format!("Failed to read file: {}", e))
+            })?;
+            let filename = path.file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
+            let metadata = Parser::get_metadata_from_bytes(&data, &filename)?;
+            Ok((metadata.row_count, metadata.column_count))
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(unused_imports)]
+pub use native::*;
 
 #[cfg(test)]
 mod tests {

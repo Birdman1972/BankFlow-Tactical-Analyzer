@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 /// Metadata about a loaded file
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileMetadata {
+    /// Full path (optional, only available on native)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
     pub filename: String,
     pub row_count: usize,
     pub column_count: usize,
