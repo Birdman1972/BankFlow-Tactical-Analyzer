@@ -4,7 +4,7 @@
 
 use crate::error::CoreError;
 use crate::models::{excel_date_to_datetime, FileMetadata, IpRecord, Transaction};
-use calamine::{open_workbook_auto_from_rs, Data, Reader, Sheets};
+use calamine::{open_workbook_auto_from_rs, Data, DataType, Reader, Sheets};
 use std::io::Cursor;
 
 /// Column indices for File A (Transaction file)

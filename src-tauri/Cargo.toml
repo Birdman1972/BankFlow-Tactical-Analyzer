@@ -1,0 +1,42 @@
+[package]
+name = "bankflow-tactical-analyzer"
+version = "2.0.0"
+description = "Digital forensics tactical analysis tool"
+authors = ["BankFlow Team"]
+edition = "2021"
+
+[lib]
+name = "bankflow_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Core analysis engine (shared with WASM)
+bankflow-core = { path = "../crates/bankflow-core" }
+
+# Excel processing (will be removed after migration)
+calamine = "0.26"
+rust_xlsxwriter = "0.79"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# HTTP client for Whois
+reqwest = { version = "0.12", features = ["json"] }
+
+# Parallel processing
+rayon = "1.10"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
