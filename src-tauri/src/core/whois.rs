@@ -237,12 +237,104 @@ mod tests {
 
     #[test]
     fn test_is_private_ip() {
+        // 10.0.0.0/8
         assert!(is_private_ip("10.0.0.1"));
+        assert!(is_private_ip("10.255.255.255"));
+
+        // 172.16.0.0/12
         assert!(is_private_ip("172.16.0.1"));
         assert!(is_private_ip("172.31.255.255"));
+        assert!(!is_private_ip("172.15.0.1")); // Below range
+        assert!(!is_private_ip("172.32.0.1")); // Above range
+
+        // 192.168.0.0/16
         assert!(is_private_ip("192.168.1.1"));
+        assert!(is_private_ip("192.168.0.0"));
+        assert!(is_private_ip("192.168.255.255"));
+
+        // 127.0.0.0/8 (loopback)
         assert!(is_private_ip("127.0.0.1"));
+        assert!(is_private_ip("127.255.255.255"));
+
+        // 169.254.0.0/16 (link-local)
+        assert!(is_private_ip("169.254.0.1"));
+        assert!(is_private_ip("169.254.255.255"));
+
+        // Public IPs
         assert!(!is_private_ip("8.8.8.8"));
         assert!(!is_private_ip("1.1.1.1"));
+        assert!(!is_private_ip("203.0.113.1"));
+
+        // Invalid IPs
+        assert!(!is_private_ip("invalid"));
+        assert!(!is_private_ip("256.1.1.1"));
+        assert!(!is_private_ip("1.2.3"));
+    }
+
+    #[test]
+    fn test_whois_client_new() {
+        let client = WhoisClient::new();
+        assert_eq!(client.cache.len(), 0);
+    }
+
+    #[test]
+    fn test_whois_client_default() {
+        let client = WhoisClient::default();
+        assert_eq!(client.cache.len(), 0);
+    }
+
+    #[test]
+    fn test_whois_result_clone() {
+        let result = WhoisResult {
+            ip: "8.8.8.8".to_string(),
+            country: Some("US".to_string()),
+            isp: Some("Google".to_string()),
+            query_success: true,
+        };
+        let cloned = result.clone();
+        assert_eq!(cloned.ip, result.ip);
+        assert_eq!(cloned.country, result.country);
+        assert_eq!(cloned.isp, result.isp);
+        assert_eq!(cloned.query_success, result.query_success);
+    }
+
+    #[tokio::test]
+    async fn test_whois_client_private_ip_cached() {
+        let mut client = WhoisClient::new();
+
+        // Query a private IP
+        let result = client.query("192.168.1.1").await;
+        assert!(result.query_success);
+        assert_eq!(result.country, Some("Private".to_string()));
+        assert_eq!(result.isp, Some("Local Network".to_string()));
+
+        // Check it's cached
+        assert_eq!(client.cache.len(), 1);
+
+        // Query again - should use cache
+        let result2 = client.query("192.168.1.1").await;
+        assert_eq!(result2.ip, result.ip);
+        assert_eq!(client.cache.len(), 1); // Still 1, not 2
+    }
+
+    #[test]
+    fn test_cache_stats_empty() {
+        let client = WhoisClient::new();
+        let (total, successful) = client.cache_stats();
+        assert_eq!(total, 0);
+        assert_eq!(successful, 0);
+    }
+
+    #[tokio::test]
+    async fn test_cache_stats_with_data() {
+        let mut client = WhoisClient::new();
+
+        // Add private IP (always successful)
+        client.query("10.0.0.1").await;
+        client.query("192.168.0.1").await;
+
+        let (total, successful) = client.cache_stats();
+        assert_eq!(total, 2);
+        assert_eq!(successful, 2);
     }
 }

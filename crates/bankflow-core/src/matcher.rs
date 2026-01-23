@@ -171,3 +171,159 @@ fn format_matches(matches: &[IpMatch]) -> String {
         .collect::<Vec<_>>()
         .join(" | ")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_transaction(timestamp: &str, account: &str) -> Transaction {
+        Transaction::new(
+            timestamp.to_string(),
+            account.to_string(),
+            None,
+            None,
+            vec![],
+            1,
+        )
+    }
+
+    fn create_test_ip_record(timestamp: &str, account: &str, ip: &str, row: usize) -> IpRecord {
+        IpRecord::new(timestamp.to_string(), account.to_string(), ip.to_string(), row)
+    }
+
+    #[test]
+    fn test_time_window_default() {
+        let window = TimeWindow::default();
+        assert_eq!(window.before, 1);
+        assert_eq!(window.after, 2);
+    }
+
+    #[test]
+    fn test_format_matches_single() {
+        let matches = vec![IpMatch {
+            ip: "192.168.1.1".to_string(),
+            offset_seconds: 0,
+            row_index: 1,
+        }];
+        assert_eq!(format_matches(&matches), "192.168.1.1");
+    }
+
+    #[test]
+    fn test_format_matches_multiple() {
+        let matches = vec![
+            IpMatch {
+                ip: "192.168.1.1".to_string(),
+                offset_seconds: -1,
+                row_index: 1,
+            },
+            IpMatch {
+                ip: "10.0.0.1".to_string(),
+                offset_seconds: 2,
+                row_index: 2,
+            },
+        ];
+        assert_eq!(format_matches(&matches), "-1s:192.168.1.1 | +2s:10.0.0.1");
+    }
+
+    #[test]
+    fn test_format_matches_dedup() {
+        let matches = vec![
+            IpMatch {
+                ip: "192.168.1.1".to_string(),
+                offset_seconds: 0,
+                row_index: 1,
+            },
+            IpMatch {
+                ip: "192.168.1.1".to_string(),
+                offset_seconds: 1,
+                row_index: 2,
+            },
+        ];
+        // Should return single IP since both are the same
+        assert_eq!(format_matches(&matches), "192.168.1.1");
+    }
+
+    #[test]
+    fn test_matcher_exact_match() {
+        let ip_records = vec![
+            create_test_ip_record("2024-01-15 10:30:00", "ACC001", "192.168.1.1", 1),
+        ];
+        let mut transactions = vec![
+            create_test_transaction("2024-01-15 10:30:00", "ACC001"),
+        ];
+
+        let matcher = IpMatcher::with_default_window(&ip_records);
+        matcher.match_all(&mut transactions);
+
+        assert_eq!(transactions[0].matched_ip, Some("192.168.1.1".to_string()));
+    }
+
+    #[test]
+    fn test_matcher_within_window() {
+        let ip_records = vec![
+            create_test_ip_record("2024-01-15 10:30:01", "ACC001", "192.168.1.1", 1),
+        ];
+        let mut transactions = vec![
+            create_test_transaction("2024-01-15 10:30:00", "ACC001"),
+        ];
+
+        let matcher = IpMatcher::with_default_window(&ip_records);
+        matcher.match_all(&mut transactions);
+
+        // IP is 1 second after transaction, within default window (+2s)
+        assert_eq!(transactions[0].matched_ip, Some("192.168.1.1".to_string()));
+    }
+
+    #[test]
+    fn test_matcher_outside_window() {
+        let ip_records = vec![
+            create_test_ip_record("2024-01-15 10:30:10", "ACC001", "192.168.1.1", 1),
+        ];
+        let mut transactions = vec![
+            create_test_transaction("2024-01-15 10:30:00", "ACC001"),
+        ];
+
+        let matcher = IpMatcher::with_default_window(&ip_records);
+        matcher.match_all(&mut transactions);
+
+        // IP is 10 seconds after, outside window
+        assert_eq!(transactions[0].matched_ip, Some("N/A".to_string()));
+    }
+
+    #[test]
+    fn test_matcher_different_account() {
+        let ip_records = vec![
+            create_test_ip_record("2024-01-15 10:30:00", "ACC002", "192.168.1.1", 1),
+        ];
+        let mut transactions = vec![
+            create_test_transaction("2024-01-15 10:30:00", "ACC001"),
+        ];
+
+        let matcher = IpMatcher::with_default_window(&ip_records);
+        matcher.match_all(&mut transactions);
+
+        // Different account, no match
+        assert_eq!(transactions[0].matched_ip, Some("N/A".to_string()));
+    }
+
+    #[test]
+    fn test_matcher_stats() {
+        let ip_records = vec![
+            create_test_ip_record("2024-01-15 10:30:00", "ACC001", "192.168.1.1", 1),
+            create_test_ip_record("2024-01-15 10:30:01", "ACC001", "10.0.0.1", 2),
+        ];
+        let mut transactions = vec![
+            create_test_transaction("2024-01-15 10:30:00", "ACC001"),
+            create_test_transaction("2024-01-15 11:00:00", "ACC002"),
+        ];
+
+        let matcher = IpMatcher::with_default_window(&ip_records);
+        matcher.match_all(&mut transactions);
+
+        let stats = matcher.get_stats(&transactions);
+        assert_eq!(stats.total, 2);
+        assert_eq!(stats.matched, 1);
+        assert_eq!(stats.unmatched, 1);
+        assert_eq!(stats.multi_ip, 1); // First tx has 2 IPs
+    }
+}

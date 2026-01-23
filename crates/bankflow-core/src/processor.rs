@@ -87,3 +87,87 @@ impl ProcessingStats {
         stats
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_transaction(income: Option<f64>, expense: Option<f64>) -> Transaction {
+        Transaction {
+            datetime: None,
+            timestamp: "2024-01-15 10:30:00".to_string(),
+            account: "ACC001".to_string(),
+            income,
+            expense,
+            matched_ip: None,
+            ip_country: None,
+            ip_isp: None,
+            raw_columns: vec![
+                "col0".to_string(),
+                "col1".to_string(),
+                "col2".to_string(), // sensitive
+                "col3".to_string(),
+                "col4".to_string(),
+                "col5".to_string(), // sensitive
+                "col6".to_string(),
+            ],
+            row_index: 1,
+        }
+    }
+
+    #[test]
+    fn test_processor_hide_sensitive() {
+        let mut transactions = vec![create_test_transaction(None, None)];
+        assert_eq!(transactions[0].raw_columns.len(), 7);
+
+        let processor = Processor::new(true);
+        processor.process(&mut transactions);
+
+        // Should have removed columns 2 and 5 (indices within bounds)
+        assert!(transactions[0].raw_columns.len() < 7);
+    }
+
+    #[test]
+    fn test_processor_no_hide() {
+        let mut transactions = vec![create_test_transaction(None, None)];
+        let original_len = transactions[0].raw_columns.len();
+
+        let processor = Processor::new(false);
+        processor.process(&mut transactions);
+
+        // Should not change anything
+        assert_eq!(transactions[0].raw_columns.len(), original_len);
+    }
+
+    #[test]
+    fn test_split_income_expense() {
+        let transactions = vec![
+            create_test_transaction(Some(1000.0), None),
+            create_test_transaction(None, Some(500.0)),
+            create_test_transaction(Some(200.0), Some(100.0)), // Both
+            create_test_transaction(None, None),
+        ];
+
+        let (income, expense) = Processor::split_income_expense(&transactions);
+
+        assert_eq!(income.len(), 2); // 2 transactions with income > 0
+        assert_eq!(expense.len(), 2); // 2 transactions with expense > 0
+    }
+
+    #[test]
+    fn test_processing_stats() {
+        let transactions = vec![
+            create_test_transaction(Some(1000.0), None),
+            create_test_transaction(None, Some(500.0)),
+            create_test_transaction(Some(200.0), Some(100.0)),
+        ];
+
+        let stats = ProcessingStats::from_transactions(&transactions);
+
+        assert_eq!(stats.total, 3);
+        assert_eq!(stats.income_count, 2);
+        assert_eq!(stats.expense_count, 2);
+        assert!((stats.total_income - 1200.0).abs() < 0.01);
+        assert!((stats.total_expense - 600.0).abs() < 0.01);
+    }
+}

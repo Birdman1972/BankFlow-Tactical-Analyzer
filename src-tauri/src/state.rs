@@ -74,3 +74,167 @@ impl AppState {
         results.is_complete
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_app_state_new() {
+        let state = AppState::new();
+        // Default state should have empty vectors
+        assert!(state.transactions.try_read().is_ok());
+        assert!(state.ip_records.try_read().is_ok());
+        assert!(state.results.try_read().is_ok());
+    }
+
+    #[test]
+    fn test_app_state_default() {
+        let state = AppState::default();
+        assert!(state.transactions.try_read().is_ok());
+    }
+
+    #[test]
+    fn test_analysis_state_default() {
+        let state = AnalysisState::default();
+        assert!(state.summary.is_empty());
+        assert!(state.income.is_empty());
+        assert!(state.expense.is_empty());
+        assert!(!state.is_complete);
+        assert_eq!(state.total_records, 0);
+        assert_eq!(state.matched_count, 0);
+        assert_eq!(state.multi_ip_count, 0);
+        assert_eq!(state.whois_queried, 0);
+    }
+
+    #[test]
+    fn test_analysis_state_clone() {
+        let state = AnalysisState {
+            summary: vec![],
+            income: vec![],
+            expense: vec![],
+            is_complete: true,
+            total_records: 100,
+            matched_count: 80,
+            multi_ip_count: 5,
+            whois_queried: 10,
+        };
+
+        let cloned = state.clone();
+        assert_eq!(cloned.is_complete, state.is_complete);
+        assert_eq!(cloned.total_records, state.total_records);
+        assert_eq!(cloned.matched_count, state.matched_count);
+    }
+
+    #[tokio::test]
+    async fn test_app_state_has_transactions_empty() {
+        let state = AppState::new();
+        assert!(!state.has_transactions().await);
+    }
+
+    #[tokio::test]
+    async fn test_app_state_has_transactions_with_data() {
+        let state = AppState::new();
+
+        // Add a transaction
+        {
+            let mut transactions = state.transactions.write().await;
+            transactions.push(Transaction {
+                datetime: None,
+                timestamp: "2024-01-15 10:30:00".to_string(),
+                account: "ACC001".to_string(),
+                income: Some(1000.0),
+                expense: None,
+                matched_ip: None,
+                ip_country: None,
+                ip_isp: None,
+                raw_columns: vec![],
+                row_index: 1,
+            });
+        }
+
+        assert!(state.has_transactions().await);
+    }
+
+    #[tokio::test]
+    async fn test_app_state_has_ip_records() {
+        let state = AppState::new();
+        assert!(!state.has_ip_records().await);
+
+        // Add an IP record
+        {
+            let mut ip_records = state.ip_records.write().await;
+            ip_records.push(IpRecord::new(
+                "2024-01-15 10:30:00".to_string(),
+                "ACC001".to_string(),
+                "192.168.1.1".to_string(),
+                1,
+            ));
+        }
+
+        assert!(state.has_ip_records().await);
+    }
+
+    #[tokio::test]
+    async fn test_app_state_is_analysis_complete() {
+        let state = AppState::new();
+        assert!(!state.is_analysis_complete().await);
+
+        // Mark analysis as complete
+        {
+            let mut results = state.results.write().await;
+            results.is_complete = true;
+        }
+
+        assert!(state.is_analysis_complete().await);
+    }
+
+    #[tokio::test]
+    async fn test_app_state_clear() {
+        let state = AppState::new();
+
+        // Add data
+        {
+            let mut transactions = state.transactions.write().await;
+            transactions.push(Transaction {
+                datetime: None,
+                timestamp: "2024-01-15 10:30:00".to_string(),
+                account: "ACC001".to_string(),
+                income: Some(1000.0),
+                expense: None,
+                matched_ip: None,
+                ip_country: None,
+                ip_isp: None,
+                raw_columns: vec![],
+                row_index: 1,
+            });
+        }
+        {
+            let mut ip_records = state.ip_records.write().await;
+            ip_records.push(IpRecord::new(
+                "2024-01-15 10:30:00".to_string(),
+                "ACC001".to_string(),
+                "192.168.1.1".to_string(),
+                1,
+            ));
+        }
+        {
+            let mut results = state.results.write().await;
+            results.is_complete = true;
+            results.total_records = 100;
+        }
+
+        // Verify data exists
+        assert!(state.has_transactions().await);
+        assert!(state.has_ip_records().await);
+        assert!(state.is_analysis_complete().await);
+
+        // Clear
+        state.clear().await;
+
+        // Verify cleared
+        assert!(!state.has_transactions().await);
+        assert!(!state.has_ip_records().await);
+        assert!(!state.is_analysis_complete().await);
+    }
+}
