@@ -5,7 +5,8 @@
 #![cfg(feature = "wasm")]
 
 use wasm_bindgen::prelude::*;
-use crate::{Exporter, IpMatcher, Parser, Processor, TimeWindow};
+use serde_wasm_bindgen;
+use crate::{Exporter, IpMatcher, Parser, Processor};
 
 #[wasm_bindgen(start)]
 pub fn init() {

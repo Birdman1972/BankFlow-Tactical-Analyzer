@@ -1,0 +1,17 @@
+{
+  "name": "bankflow-core",
+  "type": "module",
+  "description": "Core analysis engine for BankFlow Tactical Analyzer",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "bankflow_core_bg.wasm",
+    "bankflow_core.js",
+    "bankflow_core.d.ts"
+  ],
+  "main": "bankflow_core.js",
+  "types": "bankflow_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

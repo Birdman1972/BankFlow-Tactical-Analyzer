@@ -30,7 +30,7 @@ let fileAData: LoadedFile | null = null;
 let fileBData: LoadedFile | null = null;
 
 // WASM module reference (type from bankflow-core-wasm.d.ts)
-let wasmModule: typeof import('bankflow-core-wasm') | null = null;
+let wasmModule: typeof import('$lib/wasm/bankflow-core-wasm/bankflow_core.js') | null = null;
 
 // ============================================
 // WASM Platform Implementation
@@ -50,7 +50,8 @@ export class WasmPlatform implements PlatformAPI {
       addLog('info', 'Loading WASM module...');
       // Dynamic import of WASM module
       // The actual path will depend on wasm-pack output configuration
-      const wasm = await import('bankflow-core-wasm');
+      // Import from local WASM build output
+      const wasm = await import('$lib/wasm/bankflow-core-wasm/bankflow_core.js');
       await wasm.default(); // Initialize WASM
       wasmModule = wasm;
       addLog('success', 'WASM module loaded');
