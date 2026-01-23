@@ -51,10 +51,14 @@
   - [x] src-tauri 使用 bankflow-core
   - [x] 前端平台切換機制 (platform.ts)
   - [x] WASM 建置腳本與編譯測試
+- [x] **Phase 5：測試** (2026-01-23)
+  - [x] bankflow-core 單元測試 (16 tests)
+  - [x] src-tauri 整合測試 (16 tests)
+  - [x] WASM 測試 (5 tests)
+  - 總計：37 tests passing
 
-**跳過的階段**：
-- Phase 5 (測試) - 待功能完成後補做
-- Phase 6 (打包) - 待功能完成後執行
+**待完成**：
+- [ ] Phase 6 (打包) - 待功能完成後執行
 
 ---
 
@@ -123,3 +127,8 @@ src/lib/wasm/                # WASM 輸出
 
 **檢查**：
 - `npm run check` - TypeScript 型別檢查
+
+**測試**：
+- `cargo test -p bankflow-core` - 核心單元測試
+- `cargo test` (in src-tauri) - Tauri 整合測試
+- `wasm-pack test --node --features wasm` (in crates/bankflow-core) - WASM 測試
