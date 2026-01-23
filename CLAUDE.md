@@ -1,22 +1,6 @@
 # BankFlow Tactical Analyzer - Claude 指引
 
 ---
-## ⚠️ 未完成任務 (ACTIVE TASK)
-
-**Phase 7 WASM 架構尚未完成！**
-
-當使用者開始對話時，主動詢問：
-> 「Phase 7 WASM 架構還有未完成的工作，是否要繼續？」
-
-**剩餘步驟：**
-1. 更新 `src-tauri/Cargo.toml` 依賴 bankflow-core
-2. 修改 src-tauri 使用 bankflow-core
-3. 前端平台切換機制
-4. WASM 編譯測試
-
-**完成後刪除此區塊。**
-
----
 
 ## Guardian Recursion Protocol (守護神連鎖)
 
@@ -52,7 +36,7 @@
 
 ## 目前狀態
 
-**階段**：Phase 7 WASM 架構 - 進行中 🔄
+**階段**：Phase 7 WASM 架構 - 完成 ✅
 
 **已完成**：
 - [x] 專案文件 (README, docs/)
@@ -62,54 +46,80 @@
 - [x] **Phase 2：Rust 核心引擎** (2026-01-21)
 - [x] **Phase 3：Tauri 命令層** (2026-01-21)
 - [x] **Phase 4：Svelte 前端** (2026-01-21)
-- [x] **Phase 7A：bankflow-core crate** (2026-01-21) - 部分完成
-  - [x] 建立 `crates/bankflow-core/` 目錄結構
-  - [x] Cargo.toml (含 wasm feature flag)
-  - [x] models.rs - NaiveDateTime (WASM 相容)
-  - [x] parser.rs - bytes 輸入 (WASM 相容)
-  - [x] matcher.rs - 移除 rayon (WASM 相容)
-  - [x] processor.rs - 資料前處理
-  - [x] exporter.rs - bytes 輸出 (WASM 相容)
-  - [x] wasm.rs - wasm-bindgen 封裝
-  - [x] error.rs - 錯誤類型
-  - [x] lib.rs - 模組匯出
-
-**Phase 7 剩餘工作**：
-- [ ] 更新 src-tauri/Cargo.toml 依賴 bankflow-core
-- [ ] 修改 src-tauri 使用 bankflow-core (移除重複程式碼)
-- [ ] 建立前端平台切換機制 (src/lib/stores/platform.ts)
-- [ ] 建立 WASM 建置腳本 (wasm-pack)
-- [ ] 測試 WASM 編譯
+- [x] **Phase 7：WASM 雙平台架構** (2026-01-23)
+  - [x] bankflow-core crate (WASM 相容)
+  - [x] src-tauri 使用 bankflow-core
+  - [x] 前端平台切換機制 (platform.ts)
+  - [x] WASM 建置腳本與編譯測試
 
 **跳過的階段**：
-- Phase 5 (測試) - 待 WASM 架構完成後補做
+- Phase 5 (測試) - 待功能完成後補做
 - Phase 6 (打包) - 待功能完成後執行
 
 ---
 
-## 檔案結構 (Phase 7 新增)
+## 雙平台架構
 
 ```
-crates/bankflow-core/
-├── Cargo.toml          # 含 [features] wasm
-└── src/
-    ├── lib.rs          # 模組匯出
-    ├── error.rs        # CoreError
-    ├── models.rs       # Transaction, IpRecord (NaiveDateTime)
-    ├── parser.rs       # Parser::parse_*_from_bytes()
-    ├── matcher.rs      # IpMatcher (無 rayon)
-    ├── processor.rs    # Processor
-    ├── exporter.rs     # Exporter::export_to_bytes()
-    └── wasm.rs         # #[wasm_bindgen] analyze(), export_excel()
+┌─────────────────────────────────────────────────────────┐
+│                    Svelte Frontend                       │
+│              (src/lib/stores/platform.ts)               │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+         ┌─────────────┴─────────────┐
+         │                           │
+         ▼                           ▼
+┌─────────────────┐         ┌─────────────────┐
+│  Tauri Desktop  │         │    Web/WASM     │
+│  (tauri-impl)   │         │  (wasm-impl)    │
+└────────┬────────┘         └────────┬────────┘
+         │                           │
+         ▼                           ▼
+┌─────────────────┐         ┌─────────────────┐
+│  bankflow-core  │         │  bankflow-core  │
+│   (native Rust) │         │    (WASM)       │
+└─────────────────┘         └─────────────────┘
+```
+
+---
+
+## 檔案結構
+
+```
+crates/bankflow-core/        # 共用核心 (WASM 相容)
+├── src/
+│   ├── lib.rs, models.rs, parser.rs, matcher.rs
+│   ├── processor.rs, exporter.rs, error.rs
+│   └── wasm.rs              # WASM bindings
+
+src-tauri/                   # Tauri 桌面版
+├── src/
+│   ├── core/mod.rs          # 重新導出 bankflow-core
+│   ├── core/whois.rs        # Tauri 專用 (網路請求)
+│   └── commands/, models/, state.rs
+
+src/lib/stores/              # 前端平台抽象
+├── platform.ts              # 統一 API + 偵測
+├── tauri-impl.ts            # Tauri 實現
+├── wasm-impl.ts             # WASM 實現
+└── app.ts                   # 應用狀態
+
+src/lib/wasm/                # WASM 輸出
+└── bankflow-core-wasm/      # wasm-pack build 輸出
 ```
 
 ---
 
 ## 快速指令
 
-繼續 WASM 架構：「繼續 Phase 7 WASM」
+**開發**：
+- `npm run dev` - Vite 開發伺服器 (Web)
+- `npm run dev:tauri` - Tauri 開發模式
 
-完成剩餘步驟：
-1. 更新 src-tauri 依賴
-2. 前端平台切換
-3. WASM 編譯測試
+**建置**：
+- `npm run build:wasm` - 編譯 WASM 模組
+- `npm run build:web` - 編譯 Web 版本
+- `npm run build:tauri` - 打包桌面應用
+
+**檢查**：
+- `npm run check` - TypeScript 型別檢查
