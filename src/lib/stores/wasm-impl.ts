@@ -49,10 +49,19 @@ export class WasmPlatform implements PlatformAPI {
     try {
       addLog('info', 'Loading WASM module...');
       // Dynamic import of WASM module
-      // The actual path will depend on wasm-pack output configuration
-      // Import from local WASM build output
       const wasm = await import('$lib/wasm/bankflow-core-wasm/bankflow_core.js');
-      await wasm.default(); // Initialize WASM
+
+      // In production, load WASM from public folder
+      // In development, let wasm-bindgen resolve it via import.meta.url
+      const isDev = import.meta.env.DEV;
+      if (isDev) {
+        await wasm.default();
+      } else {
+        // Production: explicitly provide WASM URL from public folder
+        const wasmUrl = new URL('/wasm/bankflow_core_bg.wasm', window.location.origin);
+        await wasm.default(wasmUrl);
+      }
+
       wasmModule = wasm;
       addLog('success', 'WASM module loaded');
     } catch (error) {

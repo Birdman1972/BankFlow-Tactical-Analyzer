@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Cyberpunk Base Styles */
+:root {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 400;
+
+  color: #e5e7eb;
+  background-color: #0a0a0f;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0f 0%, #111827 100%);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00ff9d;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 255, 157, 0.3);
+  color: #00ff9d;
+}
+
+/* Utility Classes */
+@layer components {
+  .cyber-panel {
+    @apply bg-cyber-panel border border-cyber-border rounded-lg;
+  }
+
+  .cyber-card {
+    @apply bg-cyber-card border border-cyber-border rounded-md p-4;
+  }
+
+  .neon-text {
+    @apply text-neon-green;
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  .neon-border {
+    @apply border-neon-green;
+    box-shadow: 0 0 5px theme("colors.neon.green"),
+      inset 0 0 5px theme("colors.neon.green");
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-neon-green text-cyber-bg font-bold rounded
+           hover:shadow-neon transition-all duration-200
+           active:scale-95;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 bg-neon-pink text-white font-bold rounded
+           hover:shadow-neon-pink transition-all duration-200
+           active:scale-95;
+  }
+
+  .btn-primary:disabled,
+  .btn-danger:disabled {
+    @apply opacity-50 cursor-not-allowed hover:shadow-none active:scale-100;
+  }
+}
