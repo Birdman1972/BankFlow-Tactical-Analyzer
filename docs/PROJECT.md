@@ -67,41 +67,74 @@
 ```mermaid
 mindmap
   root((BankFlow<br/>Tactical<br/>Analyzer))
-    輸入模組
-      檔案 A：存款明細
-        Excel 格式
+    技術架構
+      前端 Svelte
+        元件化 UI
+        狀態管理 Store
+        TypeScript
+      橋接 Tauri
+        IPC Commands
+        事件系統
+        單一執行檔
+      後端 Rust
+        calamine 解析
+        xlsxwriter 輸出
+        reqwest HTTP
+    功能模組
+      輸入處理
+        檔案 A 存款明細
+        檔案 B IP 紀錄
         拖曳上傳
-        欄位驗證
-      檔案 B：IP 紀錄
-        Excel 格式
-        拖曳上傳
-        時間格式解析
-    資料處理
-      前處理
+      資料處理
         敏感欄位隱藏
-        資料型別轉換
+        收支分流
         時間標準化
-      收支分流
-        存入交易篩選
-        支出交易篩選
-        獨立工作表
-    核心分析
-      IP 時間窗口比對
-        -1秒 到 +2秒
-        帳號匹配
+      核心分析
+        IP 時間窗口比對
+        Whois 反查
         多 IP 處理
-      Whois 反查
-        國籍查詢
-        ISP 識別
-        OpSec 警告
-    輸出模組
-      Excel 報告
-        總表 Sheet
-        存入 Sheet
-        支出 Sheet
-      記憶體清理
-        DataFrame 釋放
-        垃圾回收
+      輸出匯出
+        Excel 多 Sheet
+        即時預覽
+        記憶體清理
+    安全設計
+      離線優先
+        本機運算
+        無雲端上傳
+        零網路依賴
+      記憶體安全
+        Rust 所有權
+        自動釋放
+        無暫存檔
+      行動安全 OpSec
+        Whois 預設關閉
+        紅色警告提示
+        使用者確認
+    開發階段
+      Phase 1 專案初始化
+        Tauri 結構
+        Svelte 設定
+        主題樣式
+      Phase 2 Rust 核心
+        Excel 解析器
+        IP 比對引擎
+        資料處理器
+      Phase 3 命令層
+        load_file
+        run_analysis
+        export_excel
+      Phase 4 前端 UI
+        DropZone
+        ControlPanel
+        ResultTable
+      Phase 5 測試
+        單元測試
+        整合測試
+        效能測試
+      Phase 6 發布
+        Windows 打包
+        程式碼簽署
+        GitHub Release
     使用者介面
       賽博龐克主題
         深色背景

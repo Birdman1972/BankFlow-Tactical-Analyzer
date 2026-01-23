@@ -2,6 +2,21 @@
 
 ---
 
+## ⚠️ 未完成任務 (ACTIVE TASK)
+
+**下一步：介面國際化 (i18n)**
+
+需要實作繁體中文/英文介面切換功能：
+1. 建立 i18n 架構（svelte-i18n 或自訂方案）
+2. 建立語言檔案（zh-TW.json, en.json）
+3. 更新所有元件使用翻譯 key
+4. 新增語言切換 UI（Header 或 Settings）
+5. 儲存使用者語言偏好（localStorage）
+
+**完成後刪除此區塊。**
+
+---
+
 ## Guardian Recursion Protocol (守護神連鎖)
 
 **規則**：禁止暴力試錯 (No Brute-Force Retry)
@@ -58,6 +73,7 @@
   - 總計：37 tests passing
 
 **待完成**：
+- [ ] 介面中英文切換功能（繁體中文/English）
 - [ ] Phase 6 (打包) - Tauri 桌面應用打包
 
 ---
