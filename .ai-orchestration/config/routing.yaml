@@ -45,6 +45,29 @@ rules:
     assign_to: gemini-3-flash
     reasoning: "簡單快速，成本低"
 
+  # 規則 0.4：品質檢查（建置測試）→ Gemini Flash
+  - name: "quality_check"
+    description: "建置測試、TypeScript 檢查、單元測試"
+    condition:
+      category: [quality_check, build_test, test]
+      complexity: [trivial, simple]
+    assign_to: gemini-3-flash
+    fallback: claude-sonnet-ide
+    reasoning: "簡單執行命令，失敗時升級到能修復的模型"
+    auto_commands:
+      - "npm run check"
+      - "npm run build:web"
+
+  # 規則 0.5：品質檢查（需修復）→ Claude Sonnet
+  - name: "quality_check_with_fix"
+    description: "建置失敗後的除錯與修復"
+    condition:
+      category: [quality_check, build_test]
+      requires_fix: true
+    assign_to: claude-sonnet-ide
+    fallback: claude-code
+    reasoning: "需要理解錯誤並修復程式碼"
+
   # 規則 1：翻譯任務 → Gemini CLI
   - name: "translation_tasks"
     description: "翻譯和國際化任務"
@@ -216,6 +239,12 @@ classifications:
     - debugging       # 除錯
     - batch_modify    # 批量修改
     - security        # 安全相關
+    - quality_check   # 品質檢查
+    - build_test      # 建置測試
+    - ui_design       # UI 設計
+    - ui_component    # UI 元件
+    - ui_style        # UI 樣式
+    - ui_analysis     # UI 分析
 
   priority:
     - critical   # 緊急

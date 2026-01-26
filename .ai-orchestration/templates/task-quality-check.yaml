@@ -1,0 +1,123 @@
+# 品質檢查任務模板
+# 用於：建置測試、TypeScript 檢查、單元測試
+# 預設代理：Gemini Flash（快速執行）
+# 失敗後升級：Claude Sonnet（可修復）
+
+id: "TASK-QC-XXX"
+created: "YYYY-MM-DDTHH:MM:SS+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "品質檢查任務"
+  description: |
+    執行建置測試和品質檢查命令。
+    若有錯誤，嘗試修復並重新執行。
+  category: quality_check
+  priority: high  # 品質檢查通常優先度較高
+  tags:
+    - quality
+    - build
+    - test
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: simple  # 純執行命令
+  domain: fullstack
+  requires_fix: false  # 設為 true 如果需要修復
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: gemini-3-flash
+  fallback: claude-sonnet-ide
+  reasoning: "簡單執行命令，失敗時升級"
+
+# ============================================
+# 檢查命令
+# ============================================
+
+commands:
+  required:
+    - name: "TypeScript 檢查"
+      command: "npm run check"
+      timeout: 60
+
+    - name: "Web 建置"
+      command: "npm run build:web"
+      timeout: 180
+
+  optional:
+    - name: "Rust 核心測試"
+      command: "cargo test -p bankflow-core"
+      timeout: 180
+
+    - name: "Tauri 整合測試"
+      command: "cd src-tauri && cargo test"
+      timeout: 180
+
+# ============================================
+# 失敗處理
+# ============================================
+
+on_failure:
+  # 第一次失敗：嘗試自動修復
+  attempt_1:
+    action: "analyze_error"
+    escalate_to: claude-sonnet-ide
+
+  # 第二次失敗：深度分析
+  attempt_2:
+    action: "deep_debug"
+    escalate_to: claude-code
+
+  # 第三次失敗：通知人工
+  attempt_3:
+    action: "notify_human"
+    create_issue: true
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-QC-XXX"
+  expected_files:
+    - "check-result.md"  # 檢查結果報告
+
+  report_format: |
+    ## 品質檢查報告
+
+    ### 執行結果
+    - [ ] TypeScript 檢查
+    - [ ] Web 建置
+    - [ ] Rust 測試（選）
+
+    ### 錯誤（如有）
+    ```
+    錯誤訊息...
+    ```
+
+    ### 修復（如有）
+    - 修復內容描述
+
+    ### 建議
+    - 後續建議事項
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []
