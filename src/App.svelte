@@ -7,6 +7,7 @@
   import ResultSummary from './lib/components/ResultSummary.svelte';
   import WarningBanner from './lib/components/WarningBanner.svelte';
   import UpdateDialog from './lib/components/UpdateDialog.svelte';
+  import ToastContainer from './lib/components/ToastContainer.svelte';
   import {
     fileA,
     fileB,
@@ -182,4 +183,6 @@
   <footer class="mt-6 text-center text-xs text-gray-600">
     {$t('app.footer')}
   </footer>
+
+  <ToastContainer />
 </main>
