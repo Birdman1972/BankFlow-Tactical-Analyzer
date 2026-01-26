@@ -1,183 +1,147 @@
 # 任務路由配置檔
-# 定義任務如何自動分派給最適合的 AI
+# 定義任務特性與建議代理（實際工具由用戶決定）
 
-version: "1.0"
+version: "2.0"
 updated: "2026-01-26"
 
 # ============================================
 # 路由規則（依優先順序評估）
+# 注意：這些是建議，實際使用哪個工具由用戶決定
 # ============================================
 
 rules:
-  # 規則 0：UI/UX 設計系統 → Claude Opus
+  # UI/UX 設計系統
   - name: "ui_design_system"
     description: "設計系統、UI 架構規劃"
     condition:
       category: [ui_design, design_system]
       complexity: [complex, expert]
-    assign_to: claude-code
+    suggested: claude-opus
     reasoning: "Claude 擅長複雜設計架構思考"
 
-  # 規則 0.1：UI 元件分析（需要看圖）→ Gemini Pro
+  # UI 視覺分析（需要看圖）
   - name: "ui_visual_analysis"
     description: "分析 mockup、截圖、設計稿"
     condition:
       category: [ui_analysis]
       requires_visual: true
-    assign_to: gemini-3-pro-thinking
+    suggested: gemini-pro
     reasoning: "Gemini 多模態能力，可分析圖片"
 
-  # 規則 0.2：批量 UI 元件生成 → Codex
+  # 批量 UI 元件生成
   - name: "ui_component_batch"
     description: "批量生成 UI 元件"
     condition:
       category: [ui_component]
       files_count: "> 3"
-    assign_to: openai-codex
-    reasoning: "Codex 批量生成效率高"
+    suggested: [gpt-5.2-codex, gpt-5.1-codex-max]
+    reasoning: "GPT Codex 批量生成效率高"
 
-  # 規則 0.3：簡單樣式調整 → Gemini Flash
+  # 簡單樣式調整
   - name: "ui_style_simple"
     description: "簡單的樣式修改"
     condition:
       category: [ui_style]
       complexity: [trivial, simple]
-    assign_to: gemini-3-flash
+    suggested: gemini-flash
     reasoning: "簡單快速，成本低"
 
-  # 規則 0.4：品質檢查（建置測試）→ Gemini Flash
+  # 品質檢查（建置測試）
   - name: "quality_check"
     description: "建置測試、TypeScript 檢查、單元測試"
     condition:
       category: [quality_check, build_test, test]
       complexity: [trivial, simple]
-    assign_to: gemini-3-flash
-    fallback: claude-sonnet-ide
-    reasoning: "簡單執行命令，失敗時升級到能修復的模型"
+    suggested: gemini-flash
+    fallback: claude-sonnet
+    reasoning: "簡單執行命令，失敗時升級"
     auto_commands:
       - "npm run check"
       - "npm run build:web"
 
-  # 規則 0.5：品質檢查（需修復）→ Claude Sonnet
+  # 品質檢查（需修復）
   - name: "quality_check_with_fix"
     description: "建置失敗後的除錯與修復"
     condition:
       category: [quality_check, build_test]
       requires_fix: true
-    assign_to: claude-sonnet-ide
-    fallback: claude-code
+    suggested: claude-sonnet
+    fallback: claude-opus
     reasoning: "需要理解錯誤並修復程式碼"
 
-  # 規則 1：翻譯任務 → Gemini CLI
+  # 翻譯任務
   - name: "translation_tasks"
     description: "翻譯和國際化任務"
     condition:
       requires_translation: true
-    assign_to: gemini-cli
-    reasoning: "Gemini 多語言支援最佳"
+    suggested: claude-sonnet
+    reasoning: "多語言支援佳"
 
-  # 規則 2：架構設計 → Claude Opus
+  # 架構設計
   - name: "architecture_design"
     description: "複雜架構和系統設計"
     condition:
       complexity: [complex, expert]
       category: [architecture, design]
-    assign_to: claude-code
+    suggested: claude-opus
     reasoning: "Claude Opus 深度推理能力最強"
 
-  # 規則 3：程式碼審查 → Claude
+  # 程式碼審查
   - name: "code_review"
     description: "程式碼審查任務"
     condition:
       category: review
-    assign_to: claude-code
+    suggested: claude-opus
     reasoning: "Claude 提供最完整的程式碼分析"
 
-  # 規則 4：複雜除錯 → Gemini Pro (Thinking)
+  # 複雜除錯
   - name: "complex_debugging"
     description: "複雜的除錯任務"
     condition:
       category: debugging
       complexity: [complex, expert]
-    assign_to: gemini-3-pro-thinking
-    fallback: claude-code
+    suggested: gemini-pro
+    fallback: claude-opus
     reasoning: "延伸思考模式有助於複雜除錯"
 
-  # 規則 5：批量修改 → Codex
+  # 批量修改
   - name: "batch_modifications"
     description: "多檔案批量修改"
     condition:
       category: [refactor, batch_modify]
       files_count: "> 3"
-    assign_to: openai-codex
-    reasoning: "Codex 批量修改效率高"
+    suggested: [gpt-5.2-codex, gpt-5.1-codex-max]
+    reasoning: "GPT Codex 批量修改效率高"
 
-  # 規則 6：簡單文件 → Gemini Flash
+  # 簡單文件
   - name: "simple_docs"
     description: "簡單的文件撰寫"
     condition:
       complexity: [trivial, simple]
       category: docs
-    assign_to: gemini-3-flash
+    suggested: [gemini-flash, gpt-5.1-codex-mini]
     reasoning: "快速且成本低"
 
-  # 規則 7：成本敏感 → GPT-OSS
-  - name: "cost_sensitive"
-    description: "成本敏感的簡單任務"
-    condition:
-      cost_sensitive: true
-      complexity: [trivial, simple, moderate]
-    assign_to: gpt-oss-120b
-    reasoning: "免費本地模型"
-
-  # 規則 8：中等複雜度 → Claude Sonnet
+  # 中等複雜度
   - name: "moderate_tasks"
     description: "中等複雜度的一般任務"
     condition:
       complexity: moderate
-    assign_to: claude-sonnet-ide
+    suggested: claude-sonnet
     reasoning: "平衡速度與品質"
 
   # 預設規則
   - name: "default"
     description: "預設分派"
     condition: {}
-    assign_to: claude-sonnet-ide
+    suggested: claude-sonnet
     reasoning: "平衡的預設選擇"
-
-# ============================================
-# 成本優化設定
-# ============================================
-
-cost_optimization:
-  enabled: true
-
-  # 預算限制
-  budget:
-    daily_limit_usd: 50.00
-    weekly_limit_usd: 200.00
-    alert_threshold: 0.8  # 80% 時警告
-
-  # 優先使用便宜模型的情況
-  prefer_cheaper_when:
-    complexity: [trivial, simple]
-    time_sensitivity: low
-
-  # 失敗後升級策略
-  escalation:
-    failures_before_upgrade: 2
-    escalation_path:
-      - free
-      - budget
-      - standard
-      - premium
 
 # ============================================
 # 品質控制
 # ============================================
 
 quality_gates:
-  # 自動檢查
   auto_checks:
     - name: typescript
       command: "npm run check"
@@ -194,7 +158,6 @@ quality_gates:
       required: false
       timeout: 180
 
-  # 人工審查需求
   human_review:
     always_required:
       - architecture
@@ -206,7 +169,6 @@ quality_gates:
       - bugfix
       - docs
 
-  # Guardian Protocol
   guardian_protocol:
     enabled: true
     max_consecutive_failures: 5

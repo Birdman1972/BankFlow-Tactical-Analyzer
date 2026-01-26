@@ -1,232 +1,191 @@
 # AI 代理配置檔
 # 定義所有可用的 AI 模型及其能力
 
-version: "1.0"
+version: "2.0"
 updated: "2026-01-26"
 
 # ============================================
-# CLI 工具
+# 可用代理
 # ============================================
 
 agents:
-  # Claude Code (主要協調者)
-  claude-code:
-    name: "Claude Code (Opus 4.5)"
+  # ==========================================
+  # Claude 系列
+  # ==========================================
+
+  claude-opus:
+    name: "Claude Opus 4.5"
     type: cli
     command: "claude"
-    model: "claude-opus-4-5-20251101"
-    role: coordinator  # 總指揮角色
+    model: "claude-opus-4-5"
+    role: coordinator
     capabilities:
       - architecture_design
       - complex_reasoning
       - code_review
       - debugging
-      - refactoring
       - task_coordination
     strengths:
       - "深度推理與分析"
       - "複雜系統設計"
       - "程式碼審查"
-      - "多步驟問題解決"
       - "任務協調與整合"
     cost:
       tier: premium
-      input_per_1k_tokens: 0.015
-      output_per_1k_tokens: 0.075
-    limits:
-      max_context: 200000
-    best_for:
-      complexity: [complex, expert]
-      category: [architecture, review, debugging, coordination]
 
-  # Gemini CLI
-  gemini-cli:
-    name: "Gemini CLI"
-    type: cli
-    command: "gemini"
-    model: "gemini-2.0"
+  claude-sonnet:
+    name: "Claude Sonnet 4.5"
+    type: ide
+    model: "claude-sonnet-4-5"
     capabilities:
+      - balanced
+      - file_operations
+      - code_generation
       - translation
       - documentation
-      - multilingual
-      - content_generation
     strengths:
-      - "多語言支援優秀"
-      - "翻譯準確度高"
-      - "文件撰寫"
-      - "快速回應"
-    cost:
-      tier: budget
-      input_per_1k_tokens: 0.00035
-      output_per_1k_tokens: 0.0014
-    limits:
-      max_context: 1000000
-    best_for:
-      requires_translation: true
-      category: [docs, i18n, readme]
-
-  # OpenAI Codex
-  openai-codex:
-    name: "OpenAI Codex"
-    type: cli
-    command: "codex"
-    model: "gpt-4-turbo"
-    capabilities:
-      - batch_code_modification
-      - pattern_application
-      - code_generation
-      - refactoring
-    strengths:
-      - "批量檔案修改"
-      - "模式識別與套用"
-      - "一致的程式碼風格"
+      - "速度與品質平衡"
+      - "中等複雜度任務"
+      - "多語言支援"
     cost:
       tier: standard
-      input_per_1k_tokens: 0.01
-      output_per_1k_tokens: 0.03
-    limits:
-      max_context: 128000
-    best_for:
-      category: [refactor, batch_modify]
-      pattern_based: true
 
-# ============================================
-# Antigravity IDE 模型
-# ============================================
+  # ==========================================
+  # Gemini 系列
+  # ==========================================
 
-  # Gemini 3 Pro (Thinking)
-  gemini-3-pro-thinking:
-    name: "Gemini 3 Pro (Thinking)"
+  gemini-pro:
+    name: "Gemini 3 Pro"
     type: ide
-    platform: antigravity
     model: "gemini-3-pro"
     mode: thinking
     capabilities:
       - deep_reasoning
       - complex_analysis
-      - architecture_design
-      - problem_decomposition
+      - multimodal
+      - visual_analysis
     strengths:
       - "延伸思考鏈"
       - "複雜問題分析"
-      - "多角度推理"
+      - "多模態（可分析圖片）"
     cost:
       tier: standard
-      input_per_1k_tokens: 0.005
-      output_per_1k_tokens: 0.02
-    limits:
-      max_context: 2000000
-      thinking_budget: 32000
-    best_for:
-      complexity: [complex, expert]
-      requires_reasoning: true
 
-  # Gemini 3 Flash
-  gemini-3-flash:
+  gemini-flash:
     name: "Gemini 3 Flash"
     type: ide
-    platform: antigravity
     model: "gemini-3-flash"
     capabilities:
       - fast_response
       - simple_tasks
-      - code_completion
+      - quality_check
     strengths:
       - "回應速度極快"
       - "成本低廉"
-      - "適合簡單任務"
+      - "品質檢查"
     cost:
       tier: budget
-      input_per_1k_tokens: 0.0001
-      output_per_1k_tokens: 0.0004
-    limits:
-      max_context: 1000000
-    best_for:
-      complexity: [trivial, simple]
 
-  # Claude Opus (IDE)
-  claude-opus-ide:
-    name: "Claude Opus (IDE)"
+  # ==========================================
+  # GPT 系列
+  # ==========================================
+
+  gpt-5.2-codex:
+    name: "GPT-5.2 Codex"
     type: ide
-    platform: antigravity
-    model: "claude-opus-4"
+    model: "gpt-5.2-codex"
     capabilities:
-      - full_stack
-      - file_operations
-      - command_execution
-      - complex_reasoning
+      - code_generation
+      - batch_modification
+      - refactoring
     strengths:
-      - "同 Claude Code"
-      - "直接檔案存取"
+      - "程式碼生成"
+      - "批量修改"
+      - "重構"
     cost:
       tier: premium
-      input_per_1k_tokens: 0.015
-      output_per_1k_tokens: 0.075
-    best_for:
-      requires_file_ops: true
-      complexity: [complex, expert]
 
-  # Claude Sonnet (IDE)
-  claude-sonnet-ide:
-    name: "Claude Sonnet (IDE)"
+  gpt-5.2:
+    name: "GPT-5.2"
     type: ide
-    platform: antigravity
-    model: "claude-sonnet-4"
+    model: "gpt-5.2"
     capabilities:
-      - balanced
-      - file_operations
+      - general_reasoning
       - code_generation
+      - documentation
     strengths:
-      - "速度與品質平衡"
-      - "成本比 Opus 低"
-      - "適合中等複雜度任務"
+      - "通用推理"
+      - "程式碼生成"
+      - "文件撰寫"
+    cost:
+      tier: premium
+
+  gpt-5.1-codex-max:
+    name: "GPT-5.1 Codex Max"
+    type: ide
+    model: "gpt-5.1-codex-max"
+    capabilities:
+      - code_generation
+      - complex_refactoring
+      - batch_modification
+    strengths:
+      - "大規模程式碼生成"
+      - "複雜重構"
+      - "批量修改"
     cost:
       tier: standard
-      input_per_1k_tokens: 0.003
-      output_per_1k_tokens: 0.015
-    best_for:
-      complexity: [moderate]
 
-  # GPT-OSS 120B
-  gpt-oss-120b:
-    name: "GPT-OSS 120B"
+  gpt-5.1-codex-mini:
+    name: "GPT-5.1 Codex Mini"
     type: ide
-    platform: antigravity
-    model: "gpt-oss-120b"
+    model: "gpt-5.1-codex-mini"
     capabilities:
-      - open_source
-      - code_generation
-      - general_tasks
+      - fast_code_generation
+      - simple_tasks
     strengths:
-      - "無 API 成本"
-      - "本地運行（隱私）"
-    weaknesses:
-      - "品質可能不穩定"
+      - "快速程式碼生成"
+      - "簡單任務"
+      - "成本較低"
     cost:
-      tier: free
-      input_per_1k_tokens: 0
-      output_per_1k_tokens: 0
-    best_for:
-      cost_sensitive: true
-      privacy_required: true
+      tier: budget
 
 # ============================================
 # 成本等級定義
 # ============================================
 
 cost_tiers:
-  free:
-    description: "免費 - 無 API 成本"
-    agents: [gpt-oss-120b]
-
   budget:
-    description: "低成本 - 適合大量簡單任務"
-    agents: [gemini-cli, gemini-3-flash]
+    description: "低成本 - 適合簡單快速任務"
+    agents: [gemini-flash, gpt-5.1-codex-mini]
 
   standard:
     description: "標準 - 平衡成本與能力"
-    agents: [openai-codex, claude-sonnet-ide, gemini-3-pro-thinking]
+    agents: [claude-sonnet, gemini-pro, gpt-5.1-codex-max]
 
   premium:
-    description: "高級 - 最強能力，成本較高"
-    agents: [claude-code, claude-opus-ide]
+    description: "高級 - 最強能力"
+    agents: [claude-opus, gpt-5.2-codex, gpt-5.2]
+
+# ============================================
+# 代理選擇指南（供參考，實際由用戶決定工具）
+# ============================================
+
+selection_guide:
+  by_complexity:
+    trivial: [gemini-flash, gpt-5.1-codex-mini]
+    simple: [gemini-flash, gpt-5.1-codex-mini]
+    moderate: [claude-sonnet, gpt-5.1-codex-max]
+    complex: [claude-opus, gemini-pro, gpt-5.2]
+    expert: [claude-opus, gpt-5.2-codex]
+
+  by_category:
+    architecture: claude-opus
+    review: claude-opus
+    debugging: gemini-pro
+    feature: [claude-sonnet, gpt-5.1-codex-max]
+    bugfix: [claude-sonnet, gpt-5.1-codex-max]
+    docs: claude-sonnet
+    i18n: claude-sonnet
+    batch_modify: [gpt-5.2-codex, gpt-5.1-codex-max]
+    quality_check: gemini-flash
+    ui_analysis: gemini-pro
