@@ -9,6 +9,42 @@ updated: "2026-01-26"
 # ============================================
 
 rules:
+  # 規則 0：UI/UX 設計系統 → Claude Opus
+  - name: "ui_design_system"
+    description: "設計系統、UI 架構規劃"
+    condition:
+      category: [ui_design, design_system]
+      complexity: [complex, expert]
+    assign_to: claude-code
+    reasoning: "Claude 擅長複雜設計架構思考"
+
+  # 規則 0.1：UI 元件分析（需要看圖）→ Gemini Pro
+  - name: "ui_visual_analysis"
+    description: "分析 mockup、截圖、設計稿"
+    condition:
+      category: [ui_analysis]
+      requires_visual: true
+    assign_to: gemini-3-pro-thinking
+    reasoning: "Gemini 多模態能力，可分析圖片"
+
+  # 規則 0.2：批量 UI 元件生成 → Codex
+  - name: "ui_component_batch"
+    description: "批量生成 UI 元件"
+    condition:
+      category: [ui_component]
+      files_count: "> 3"
+    assign_to: openai-codex
+    reasoning: "Codex 批量生成效率高"
+
+  # 規則 0.3：簡單樣式調整 → Gemini Flash
+  - name: "ui_style_simple"
+    description: "簡單的樣式修改"
+    condition:
+      category: [ui_style]
+      complexity: [trivial, simple]
+    assign_to: gemini-3-flash
+    reasoning: "簡單快速，成本低"
+
   # 規則 1：翻譯任務 → Gemini CLI
   - name: "translation_tasks"
     description: "翻譯和國際化任務"
