@@ -181,9 +181,13 @@ output:
 # 狀態追蹤
 # ============================================
 
-status: pending
+status: completed
 
 execution:
-  attempts: 0
+  attempts: 1
   max_attempts: 3
-  history: []
+  history:
+    - date: "2026-01-26T15:30:00+08:00"
+      agent: "Codex (worktree)"
+      result: "Success"
+      details: "keyboardShortcuts.ts, KeyboardShortcutsHelp.svelte 完成，i18n 已整合"

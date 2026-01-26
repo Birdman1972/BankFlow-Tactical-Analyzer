@@ -109,6 +109,29 @@ export interface Translations {
     };
   };
 
+  // Navigation (Sidebar)
+  nav: {
+    home: string;
+    about: string;
+    feedback: string;
+    collapse: string;
+    expand: string;
+  };
+
+  // Keyboard shortcuts
+  shortcuts: {
+    title: string;
+    close: string;
+    openFileA: string;
+    openFileB: string;
+    runAnalysis: string;
+    exportReport: string;
+    clearAll: string;
+    closeDialog: string;
+    showHelp: string;
+    note: string;
+  };
+
   // AboutPage component
   about: {
     title: string;
