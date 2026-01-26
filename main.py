@@ -1,9 +1,9 @@
 """
 專案名稱：BankFlow Tactical Analyzer (Web 戰術版)
 描述：協助執法單位進行離線數位鑑識分析，透過網頁介面清洗、整理並交叉比對銀行存款與網銀 IP 紀錄。
-版本：1.0.0-web
+版本：1.1.0-web
 作者：Antigravity AICoder
-日期：2026-01-09
+日期：2026-01-16
 技術：Streamlit + Pandas
 執行方式：streamlit run main.py
 """
@@ -96,6 +96,82 @@ st.markdown(CYBERPUNK_CSS, unsafe_allow_html=True)
 # 核心邏輯函數
 # -----------------------------------------------------------------------------
 
+def parse_roc_date(date_str):
+    """
+    解析日期，支援標準格式與民國年 (ROC) 格式 (e.g. 112/01/01)
+    """
+    if pd.isna(date_str):
+        return pd.NaT
+
+    s = str(date_str).strip()
+
+    # 1. 嘗試標準轉換
+    try:
+        return pd.to_datetime(s)
+    except:
+        pass
+
+    # 2. 嘗試民國年 (ROC) 格式: 112/01/01 或 112-01-01 或 112.01.01
+    # 簡單啟發式: 分隔符號 / 或 - 或 .
+    parts = s.replace('-', '/').replace('.', '/').split('/')
+    if len(parts) == 3:
+        try:
+            y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
+            # 民國年通常是 2 或 3 位數 (e.g. 99, 100, 112)
+            # 轉換為西元: +1911
+            if y < 1911:
+                y += 1911
+            return pd.Timestamp(year=y, month=m, day=d)
+        except:
+            pass
+
+    return pd.NaT
+
+def generate_sample_file(file_type):
+    """
+    產生範例檔案 (Transaction or IP Log)
+    """
+    output = io.BytesIO()
+
+    if file_type == 'transaction':
+        # 產生 交易明細 範例
+        data = {
+            '交易日期': ['112/01/01', '112.01.02', '112-01-03', '2023/01/04'],
+            '帳號': ['MyAccount001'] * 4,
+            '身分證字號(C)': ['A123456789'] * 4,
+            '交易代號': ['D001', 'D002', 'D003', 'D004'],
+            '摘要': ['Salary', 'Shopping', 'Transfer', 'Utility'],
+            '對方帳號(F)': ['CompanyAcc_A', 'ShopAcc_B', 'FriendAcc_C', 'WaterCo_D'],
+            '對方銀行': ['BankA', 'BankB', 'BankC', 'BankD'],
+            '分行': ['BranchA', 'BranchB', 'BranchC', 'BranchD'],
+            '支出(I)': [0, 5000, 0, 1000],
+            '存入(J)': [50000, 0, 3000, 0],
+            '結餘': [50000, 45000, 48000, 47000],
+            '備註(L)': ['SecretL1', 'SecretL2', 'SecretL3', 'SecretL4'],
+            '經辦(M)': ['UserM1', 'UserM2', 'UserM3', 'UserM4']
+        }
+        df = pd.DataFrame(data)
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+
+    elif file_type == 'ip_log':
+        # 產生 IP Log 範例
+        data = {
+            '登入時間': [
+                '2023-01-01 00:00:00', # Matches 112/01/01
+                '2023-01-02 00:00:00', # Matches 112.01.02
+                '2023-01-04 00:00:01', # Matches 2023/01/04 (+2s window)
+            ],
+            '帳號': ['MyAccount001'] * 3,
+            '來源IP': ['1.1.1.1', '2.2.2.2', '4.4.4.4']
+        }
+        df = pd.DataFrame(data)
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+
+    output.seek(0)
+    return output
+
 @st.cache_data(show_spinner=False)
 def get_whois_info(ip_address):
     """查詢 IP Whois 資訊 (使用 st.cache_data 快取結果)"""
@@ -123,12 +199,12 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
     status_log = []
     
     try:
-        # Load Data
+        # 載入資料 (Load Data)
         df_a = pd.read_excel(file_a)
         df_b = pd.read_excel(file_b)
         status_log.append(f"✅ 檔案載入成功: A({len(df_a)}筆), B({len(df_b)}筆)")
 
-        # Prepare Split Dataframes (Before Drop)
+        # 準備收支分流資料表 (Prepare Split Dataframes - Before Drop)
         df_income = pd.DataFrame()
         df_expense = pd.DataFrame()
         
@@ -136,7 +212,7 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
             try:
                 # 確保欄位足夠 (至少10欄)
                 if df_a.shape[1] > 9:
-                    # Force cleanup of 'J' (index 9) and 'I' (index 8)
+                    # 強制清理 'J' (index 9) 和 'I' (index 8) 欄位
                     val_inc = pd.to_numeric(df_a.iloc[:, 9], errors='coerce').fillna(0)
                     val_exp = pd.to_numeric(df_a.iloc[:, 8], errors='coerce').fillna(0)
                     
@@ -148,23 +224,57 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
             except Exception as e:
                 status_log.append(f"⚠️ 收支分流錯誤: {str(e)}")
 
-        # Drop Sensitive (Index 2, 5, 11, 12)
+        # 提取對方帳號 (假設位於 Index 5 / Column F)
+        # 需求: "需要多一個功能能把收支分流兩表的對方帳號，列出來並去重複"
+        df_counterparty_list = pd.DataFrame()
+        counterparty_col_idx = 5
+
+        try:
+            accs = set()
+            # 若啟用收支分流，使用分流後的 DataFrame
+            if split_io:
+                if not df_income.empty and df_income.shape[1] > counterparty_col_idx:
+                     accs.update(df_income.iloc[:, counterparty_col_idx].dropna().astype(str).tolist())
+                if not df_expense.empty and df_expense.shape[1] > counterparty_col_idx:
+                     accs.update(df_expense.iloc[:, counterparty_col_idx].dropna().astype(str).tolist())
+            else:
+                # 若未分流，直接使用原始 df_a
+                if df_a.shape[1] > counterparty_col_idx:
+                    accs.update(df_a.iloc[:, counterparty_col_idx].dropna().astype(str).tolist())
+
+            if accs:
+                df_counterparty_list = pd.DataFrame(sorted(list(accs)), columns=['對方帳號'])
+                status_log.append(f"📋 對方帳號提取完成 ({len(df_counterparty_list)} 筆)")
+        except Exception as e:
+             status_log.append(f"⚠️ 對方帳號提取失敗: {str(e)}")
+
+        # 隱藏敏感欄位 (Drop Sensitive - Index 2, 5, 11, 12)
         if hide_sensitive:
             cols_to_drop = [2, 5, 11, 12]
             valid_cols = [c for c in cols_to_drop if c < df_a.shape[1]]
             if valid_cols:
                 col_names = df_a.columns[valid_cols]
-                # Drop inplace is safe here as income/expense are copies
+
+                # 同步隱藏分流表中的敏感欄位
+                if not df_income.empty:
+                    valid_drop_inc = [c for c in col_names if c in df_income.columns]
+                    df_income.drop(columns=valid_drop_inc, inplace=True)
+
+                if not df_expense.empty:
+                    valid_drop_exp = [c for c in col_names if c in df_expense.columns]
+                    df_expense.drop(columns=valid_drop_exp, inplace=True)
+
+                # 直接修改 df_a (因為 income/expense 已經是拷貝，所以安全)
                 df_a.drop(columns=col_names, inplace=True)
                 status_log.append(f"🛡️ 敏感欄位已隱藏 (Cols: {valid_cols})")
 
-        # IP Matching
+        # IP 交叉比對 (IP Matching)
         if do_ip_match:
             status_log.append("🔄 正在執行 IP 交叉比對 (Window: -1s/+2s)...")
             
-            # Pre-process File B for speed
-            # Assume Col 0=Time, Col 1=Account, Col 2=IP
-            # Safe check
+            # 為了效能預處理檔案 B (Pre-process File B for speed)
+            # 假設 Col 0=Time, Col 1=Account, Col 2=IP
+            # 安全檢查 (Safe check)
             if df_b.shape[1] < 3:
                  status_log.append("❌ IP比對失敗: 檔案 B 欄位不足 (需 >= 3)")
             else:
@@ -173,9 +283,11 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
                 df_b_proc['Time'] = pd.to_datetime(df_b_proc['Time'], errors='coerce')
                 df_b_proc.dropna(subset=['Time'], inplace=True)
                 
-                # File A columns (Index 0, 1 assumed safely exist even after drop)
-                # Note: df_a might have dropped cols, but typically 0,1 are not dropped (2,5,11,12)
-                times_a = pd.to_datetime(df_a.iloc[:, 0], errors='coerce')
+                # 檔案 A 欄位 (Index 0, 1 假設在刪除後仍安全存在)
+                # 註: df_a 可能已刪除欄位，但通常 0, 1 不會被刪除 (2,5,11,12)
+
+                # 使用增強版日期解析 (支援 ROC)
+                times_a = df_a.iloc[:, 0].apply(parse_roc_date)
                 accs_a = df_a.iloc[:, 1]
                 
                 results = []
@@ -225,6 +337,13 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
                 df_a['Matched_IP'] = results
                 status_log.append(f"✅ IP 比對完成")
 
+                # Check for widespread invalid data
+                invalid_count = results.count("Invalid Data")
+                if invalid_count > 0 and invalid_count == len(results):
+                     status_log.append("⚠️ 警告: 所有 IP 比對結果均為 'Invalid Data'。請檢查交易明細的日期格式 (需為標準日期或 ROC 格式)。")
+                elif invalid_count > 0:
+                     status_log.append(f"⚠️ 注意: 有 {invalid_count} 筆資料日期或帳號解析失敗 (Invalid Data)。")
+
         # Whois
         if do_whois and 'Matched_IP' in df_a.columns:
             status_log.append("🌍 正在執行 Whois 線上反查...")
@@ -249,20 +368,23 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
             df_a['IP_ISP'] = isps
             status_log.append("✅ Whois 查詢完成")
 
-        # Generate Output
+        # 產生輸出 (Generate Output)
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df_a.to_excel(writer, sheet_name='Sheet1_Summary', index=False)
             if split_io:
                 df_income.to_excel(writer, sheet_name='Sheet2_Income', index=False)
                 df_expense.to_excel(writer, sheet_name='Sheet3_Expense', index=False)
+
+            if not df_counterparty_list.empty:
+                df_counterparty_list.to_excel(writer, sheet_name='Sheet4_對方帳號', index=False)
         
         output.seek(0)
-        return output, df_a, status_log
+        return output, df_a, df_counterparty_list, status_log
 
     except Exception as e:
         status_log.append(f"❌ 嚴重錯誤: {str(e)}")
-        return None, None, status_log
+        return None, None, pd.DataFrame(), status_log
 
 # -----------------------------------------------------------------------------
 # UI 佈局
@@ -274,7 +396,7 @@ def main():
     st.divider()
 
     # --- Sidebar: 控制面板 ---
-    st.sidebar.header("⚙️ Tactical Config")
+    st.sidebar.header("⚙️ 戰術設定 (Tactical Config)")
     
     st.sidebar.markdown("---")
     sw_hide_sensitive = st.sidebar.toggle("隱藏敏感欄位 (C, F, L, M)", value=False)
@@ -287,37 +409,60 @@ def main():
     if sw_whois:
         st.sidebar.markdown('<p class="warning-text">警告: 將連線至外部 API</p>', unsafe_allow_html=True)
 
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📥 範例檔案下載")
+
+    # 範例檔案生成
+    sample_tx = generate_sample_file('transaction')
+    st.sidebar.download_button(
+        label="下載交易明細範例 (A)",
+        data=sample_tx,
+        file_name="sample_transaction.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+    sample_ip = generate_sample_file('ip_log')
+    st.sidebar.download_button(
+        label="下載 IP 紀錄範例 (B)",
+        data=sample_ip,
+        file_name="sample_ip_log.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+    st.sidebar.markdown("---")
+    st.sidebar.caption("Version: v1.1.0-web")
+
     # --- Main: 檔案輸入 ---
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📂 檔案 A (存款明細)")
-        file_a = st.file_uploader("Upload Transaction Excel", type=["xls", "xlsx"], key="file_a")
+        st.subheader("📂 檔案 A：銀行存款往來明細")
+        file_a = st.file_uploader("上傳 Excel 檔案 (Transaction)", type=["xls", "xlsx"], key="file_a")
         
     with col2:
-        st.subheader("📂 檔案 B (IP 紀錄)")
-        file_b = st.file_uploader("Upload IP Log Excel", type=["xls", "xlsx"], key="file_b")
+        st.subheader("📂 檔案 B：網銀 IP 登入紀錄")
+        file_b = st.file_uploader("上傳 Excel 檔案 (IP Log)", type=["xls", "xlsx"], key="file_b")
 
     # --- Action: 執行分析 ---
     st.markdown("---")
     
-    if st.button("🚀 EXECUTE ANALYSIS", use_container_width=True):
+    if st.button("🚀 執行分析 (EXECUTE ANALYSIS)", use_container_width=True):
         if file_a and file_b:
-            with st.spinner("SYSTEM PROCESSING..."):
-                excel_data, result_df, logs = process_analysis(
+            with st.spinner("系統處理中 (SYSTEM PROCESSING)..."):
+                excel_data, result_df, cp_df, logs = process_analysis(
                     file_a, file_b, 
                     sw_hide_sensitive, sw_split_io, 
                     sw_ip_match, sw_whois
                 )
             
             # 顯示 Logs
-            with st.expander("System Logs", expanded=True):
+            with st.expander("系統日誌 (System Logs)", expanded=True):
                 for log in logs:
                     st.text(log)
 
             if excel_data:
                 st.balloons()
-                st.success("分析完成! Target Neutralized.")
+                st.success("分析完成! (Target Neutralized)")
                 
                 # 下載按鈕
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -329,8 +474,13 @@ def main():
                     use_container_width=True
                 )
                 
+                # 顯示對方帳號列表
+                if not cp_df.empty:
+                    with st.expander(f"📋 對方帳號清單 (共 {len(cp_df)} 筆)"):
+                        st.dataframe(cp_df, use_container_width=True)
+
                 # 數據預覽
-                st.subheader("🔍 Result Preview (Top 10)")
+                st.subheader("🔍 結果預覽 (前 10 筆)")
                 st.dataframe(result_df.head(10), use_container_width=True)
 
         else:
