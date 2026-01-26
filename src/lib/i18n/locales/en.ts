@@ -58,6 +58,14 @@ const en: Translations = {
     stateReset: 'State reset',
     logCleared: 'Log cleared',
   },
+  updateDialog: {
+    title: 'Update Available',
+    newVersion: 'New Version',
+    releaseNotes: 'What\'s New:',
+    updateNow: 'Update Now',
+    remindLater: 'Remind Me Later',
+    skipVersion: 'Skip This Version',
+  },
 };
 
 export default en;

@@ -58,6 +58,14 @@ const zhTW: Translations = {
     stateReset: '狀態已重設',
     logCleared: '日誌已清除',
   },
+  updateDialog: {
+    title: '有可用的更新',
+    newVersion: '新版本',
+    releaseNotes: '更新內容：',
+    updateNow: '立即更新',
+    remindLater: '稍後提醒',
+    skipVersion: '略過此版本',
+  },
 };
 
 export default zhTW;

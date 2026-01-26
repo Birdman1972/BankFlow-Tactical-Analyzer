@@ -74,6 +74,16 @@ export interface Translations {
     stateReset: string;
     logCleared: string;
   };
+
+  // UpdateDialog component
+  updateDialog: {
+    title: string;
+    newVersion: string;
+    releaseNotes: string;
+    updateNow: string;
+    remindLater: string;
+    skipVersion: string;
+  };
 }
 
 // Helper type for nested key access

@@ -59,7 +59,8 @@ export class WasmPlatform implements PlatformAPI {
       } else {
         // Production: explicitly provide WASM URL from public folder
         const wasmUrl = new URL('/wasm/bankflow_core_bg.wasm', window.location.origin);
-        await wasm.default(wasmUrl);
+        // Cast to any to handle wasm-bindgen init signature variation
+        await (wasm.default as (input?: URL | string) => Promise<void>)(wasmUrl);
       }
 
       wasmModule = wasm;
