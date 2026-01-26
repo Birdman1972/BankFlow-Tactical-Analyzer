@@ -34,6 +34,7 @@ pub fn run() {
             commands::file_ops::export_excel,
             commands::whois::query_whois,
             commands::whois::query_whois_batch,
+            commands::system::check_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
