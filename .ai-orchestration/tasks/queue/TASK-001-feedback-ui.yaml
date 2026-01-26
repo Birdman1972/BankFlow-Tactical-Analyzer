@@ -1,0 +1,83 @@
+# 使用者意見回饋系統 - UI 元件
+# 指派給：Claude Sonnet (IDE) - 中等複雜度 UI 任務
+
+id: "TASK-001"
+created: "2026-01-26T12:00:00+08:00"
+
+metadata:
+  title: "建立意見回饋表單 UI 元件"
+  description: |
+    建立一個 Svelte 5 的意見回饋表單元件，讓使用者可以提交：
+    - 功能建議
+    - Bug 回報
+    - 使用體驗回饋
+  category: feature
+  priority: medium
+  tags:
+    - ui
+    - feedback
+    - svelte
+
+classification:
+  complexity: moderate
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: false
+  requires_translation: false
+  files_count: 2
+
+routing:
+  suggested_agent: claude-sonnet-ide
+  reasoning: "中等複雜度的 UI 元件，適合 Sonnet"
+  override: false
+
+context:
+  files:
+    - path: "src/lib/components/"
+      reason: "參考現有元件風格"
+    - path: "src/lib/i18n/locales/zh-TW.ts"
+      reason: "新增翻譯 key"
+    - path: "src/lib/i18n/locales/en.ts"
+      reason: "新增翻譯 key"
+  references:
+    - "CLAUDE.md 中的 Feature Backlog - 功能一"
+
+requirements:
+  functional:
+    - "建立 FeedbackForm.svelte 元件"
+    - "表單欄位：類型（功能建議/Bug/體驗）、標題、詳細描述"
+    - "自動附帶版本資訊（從 package.json 讀取）"
+    - "表單驗證（必填欄位）"
+    - "支援 i18n（使用 $t 函數）"
+  non_functional:
+    - "符合現有元件風格（深色主題、Tailwind CSS）"
+    - "響應式設計"
+  constraints:
+    - "使用 Svelte 5 runes 語法"
+    - "不使用外部表單庫"
+
+acceptance:
+  checklist:
+    - "[ ] FeedbackForm.svelte 建立完成"
+    - "[ ] 表單驗證正常運作"
+    - "[ ] i18n 翻譯 key 已新增"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-001"
+  expected_files:
+    - "FeedbackForm.svelte"
+    - "i18n-additions.md"
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

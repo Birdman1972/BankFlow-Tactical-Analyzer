@@ -1,0 +1,86 @@
+# 版本檢查與更新通知 - 核心邏輯
+# 指派給：Claude Sonnet (IDE) - 中等複雜度
+
+id: "TASK-003"
+created: "2026-01-26T12:00:00+08:00"
+
+metadata:
+  title: "版本檢查邏輯實作"
+  description: |
+    實作桌面版啟動時的版本檢查機制：
+    - 從 Vercel 讀取 version.json
+    - 比對本地版本與遠端版本
+    - 決定是否需要更新
+  category: feature
+  priority: medium
+  tags:
+    - version
+    - tauri
+    - typescript
+
+classification:
+  complexity: moderate
+  domain: fullstack
+  languages:
+    - typescript
+    - rust
+  requires_reasoning: false
+  requires_translation: false
+  files_count: 3
+
+routing:
+  suggested_agent: claude-sonnet-ide
+  reasoning: "中等複雜度的邏輯實作"
+  override: false
+
+context:
+  files:
+    - path: "src/lib/stores/platform.ts"
+      reason: "了解平台偵測機制"
+    - path: "src-tauri/src/commands/"
+      reason: "參考現有 Tauri 命令"
+    - path: "package.json"
+      reason: "版本號來源"
+  references:
+    - "CLAUDE.md 中的 Feature Backlog - 功能二"
+
+requirements:
+  functional:
+    - "建立 version.json 檔案結構"
+    - "建立 versionService.ts 服務模組"
+    - "實作 checkForUpdates() 函數"
+    - "實作 compareVersions() 函數（semver 比較）"
+    - "Tauri 版本：使用 Rust HTTP 請求"
+    - "Web 版本：使用 fetch API"
+  non_functional:
+    - "請求超時處理（5 秒）"
+    - "網路錯誤時靜默失敗"
+    - "快取檢查結果（每日檢查一次）"
+  constraints:
+    - "不阻塞應用啟動"
+    - "相容雙平台架構"
+
+acceptance:
+  checklist:
+    - "[ ] version.json 建立於專案根目錄"
+    - "[ ] versionService.ts 實作完成"
+    - "[ ] 版本比較邏輯正確"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-003"
+  expected_files:
+    - "version.json"
+    - "versionService.ts"
+    - "implementation-notes.md"
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

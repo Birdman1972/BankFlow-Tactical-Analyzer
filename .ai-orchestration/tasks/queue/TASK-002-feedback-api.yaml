@@ -1,0 +1,83 @@
+# 使用者意見回饋系統 - API 整合
+# 指派給：Claude Opus (Code) - 需要架構決策
+
+id: "TASK-002"
+created: "2026-01-26T12:00:00+08:00"
+
+metadata:
+  title: "意見回饋 API 整合方案設計"
+  description: |
+    設計並實作意見回饋的後端收集機制。
+    需要評估並選擇最適合的方案：
+    - GitHub Issues API
+    - Google Forms
+    - 自建 API（Vercel Serverless）
+  category: architecture
+  priority: medium
+  tags:
+    - api
+    - architecture
+    - backend
+
+classification:
+  complexity: complex
+  domain: fullstack
+  languages:
+    - typescript
+  requires_reasoning: true
+  requires_translation: false
+  files_count: 3
+
+routing:
+  suggested_agent: claude-code
+  reasoning: "需要架構決策和 API 設計"
+  override: false
+
+context:
+  files:
+    - path: "CLAUDE.md"
+      reason: "了解專案背景"
+    - path: "package.json"
+      reason: "了解現有依賴"
+  references:
+    - "CLAUDE.md 中的 Feature Backlog - 功能一"
+
+requirements:
+  functional:
+    - "評估三種方案的優缺點"
+    - "選擇最適合的方案並說明理由"
+    - "實作所選方案的 API 層"
+    - "建立 feedbackService.ts 服務模組"
+  non_functional:
+    - "考慮隱私和資料安全"
+    - "錯誤處理和重試機制"
+    - "離線時暫存回饋"
+  constraints:
+    - "不儲存敏感個人資訊"
+    - "符合 Vercel 部署限制"
+
+acceptance:
+  checklist:
+    - "[ ] 方案評估文件完成"
+    - "[ ] feedbackService.ts 實作完成"
+    - "[ ] 錯誤處理完善"
+    - "[ ] TypeScript 檢查通過"
+  test_commands:
+    - "npm run check"
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-002"
+  expected_files:
+    - "architecture-decision.md"
+    - "feedbackService.ts"
+
+status: pending
+
+dependencies:
+  blocked_by: []
+  blocks: []
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

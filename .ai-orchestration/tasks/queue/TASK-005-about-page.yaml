@@ -1,0 +1,89 @@
+# 版本檢查與更新通知 - 關於頁面
+# 指派給：Gemini CLI - 包含文案撰寫
+
+id: "TASK-005"
+created: "2026-01-26T12:00:00+08:00"
+
+metadata:
+  title: "建立關於頁面 (About)"
+  description: |
+    建立應用程式的「關於」頁面，包含：
+    - 版本資訊
+    - 更新歷史
+    - 開發者資訊
+    - 授權條款
+  category: docs
+  priority: low
+  tags:
+    - ui
+    - about
+    - documentation
+
+classification:
+  complexity: simple
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: false
+  requires_translation: true  # 需要中英文內容
+  files_count: 2
+
+routing:
+  suggested_agent: gemini-cli
+  reasoning: "包含多語言文案撰寫"
+  override: false
+
+context:
+  files:
+    - path: "package.json"
+      reason: "版本資訊"
+    - path: "CLAUDE.md"
+      reason: "專案背景"
+    - path: "README.md"
+      reason: "專案說明"
+  references:
+    - "CLAUDE.md 中的 Feature Backlog - 功能二"
+
+requirements:
+  functional:
+    - "建立 AboutPage.svelte 元件"
+    - "顯示目前版本號"
+    - "顯示更新歷史（Changelog）"
+    - "顯示開發者資訊"
+    - "顯示 MIT 授權條款"
+    - "支援 i18n（中英文切換）"
+  non_functional:
+    - "符合現有設計風格"
+    - "可捲動的 Changelog 區塊"
+  constraints:
+    - "Changelog 從 version.json 讀取"
+    - "使用 Svelte 5 語法"
+
+acceptance:
+  checklist:
+    - "[ ] AboutPage.svelte 建立完成"
+    - "[ ] 中英文內容完整"
+    - "[ ] i18n 翻譯 key 已新增"
+    - "[ ] TypeScript 檢查通過"
+  test_commands:
+    - "npm run check"
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-005"
+  expected_files:
+    - "AboutPage.svelte"
+    - "i18n-zh-TW.json"
+    - "i18n-en.json"
+
+status: pending
+
+dependencies:
+  blocked_by:
+    - "TASK-003"  # 需要 version.json 結構
+  blocks: []
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []
