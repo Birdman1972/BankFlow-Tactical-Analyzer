@@ -84,6 +84,30 @@ export interface Translations {
     remindLater: string;
     skipVersion: string;
   };
+
+  // FeedbackForm component
+  feedbackForm: {
+    title: string;
+    typeLabel: string;
+    typeFeature: string;
+    typeBug: string;
+    typeUx: string;
+    titleLabel: string;
+    titlePlaceholder: string;
+    descriptionLabel: string;
+    descriptionPlaceholder: string;
+    versionLabel: string;
+    submit: string;
+    submitting: string;
+    success: string;
+    error: string;
+    privacyNote: string;
+    errors: {
+      typeRequired: string;
+      titleRequired: string;
+      descriptionRequired: string;
+    };
+  };
 }
 
 // Helper type for nested key access

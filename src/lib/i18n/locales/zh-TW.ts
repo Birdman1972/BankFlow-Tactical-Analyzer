@@ -66,6 +66,28 @@ const zhTW: Translations = {
     remindLater: '稍後提醒',
     skipVersion: '略過此版本',
   },
+  feedbackForm: {
+    title: '提交意見回饋',
+    typeLabel: '回饋類型',
+    typeFeature: '功能建議',
+    typeBug: 'Bug 回報',
+    typeUx: '使用體驗',
+    titleLabel: '標題',
+    titlePlaceholder: '請簡要描述',
+    descriptionLabel: '詳細內容',
+    descriptionPlaceholder: '請描述問題或建議…',
+    versionLabel: '版本',
+    submit: '送出回饋',
+    submitting: '送出中...',
+    success: '感謝！你的回饋已送出。',
+    error: '送出失敗，稍後會重試。',
+    privacyNote: '請避免提供個人或敏感資訊。',
+    errors: {
+      typeRequired: '請選擇回饋類型。',
+      titleRequired: '請填寫標題。',
+      descriptionRequired: '請填寫詳細內容。',
+    },
+  },
 };
 
 export default zhTW;

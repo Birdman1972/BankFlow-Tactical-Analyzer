@@ -66,6 +66,28 @@ const en: Translations = {
     remindLater: 'Remind Me Later',
     skipVersion: 'Skip This Version',
   },
+  feedbackForm: {
+    title: 'Send Feedback',
+    typeLabel: 'Feedback Type',
+    typeFeature: 'Feature Request',
+    typeBug: 'Bug Report',
+    typeUx: 'User Experience',
+    titleLabel: 'Title',
+    titlePlaceholder: 'Short summary',
+    descriptionLabel: 'Details',
+    descriptionPlaceholder: 'Describe the issue or suggestion...',
+    versionLabel: 'Version',
+    submit: 'Submit Feedback',
+    submitting: 'Submitting...',
+    success: 'Thanks! Your feedback was sent.',
+    error: 'Unable to send. We\'ll retry later.',
+    privacyNote: 'Please avoid including personal or sensitive information.',
+    errors: {
+      typeRequired: 'Please select a feedback type.',
+      titleRequired: 'Title is required.',
+      descriptionRequired: 'Details are required.',
+    },
+  },
 };
 
 export default en;
