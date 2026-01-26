@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/i18n';
   import { logs, clearLogs, type LogEntry } from '../stores/app';
   import { afterUpdate } from 'svelte';
 
@@ -53,12 +54,12 @@
 
 <div class="cyber-panel p-4 flex flex-col h-full">
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-lg font-semibold text-neon-green">Log Console</h2>
+    <h2 class="text-lg font-semibold text-neon-green">{$t('logConsole.title')}</h2>
     <button
       class="text-xs text-gray-500 hover:text-neon-pink transition-colors"
       on:click={clearLogs}
     >
-      Clear
+      {$t('logConsole.clear')}
     </button>
   </div>
 

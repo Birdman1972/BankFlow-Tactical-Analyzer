@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/i18n';
   import { settings } from '../stores/app';
 
   export let show: boolean = false;
@@ -12,14 +13,12 @@
       !
     </div>
     <div class="flex-1">
-      <div class="text-neon-pink font-bold mb-1">OpSec Warning</div>
+      <div class="text-neon-pink font-bold mb-1">{$t('warningBanner.title')}</div>
       <div class="text-sm text-gray-300">
         {#if $settings.whoisLookup}
-          Whois lookup is enabled. External network requests will be made to ip-api.com.
-          This may expose your analysis activity. Use only in authorized environments.
+          {$t('warningBanner.whoisWarning')}
         {:else}
-          Be cautious when handling sensitive financial data.
-          Ensure proper authorization before analysis.
+          {$t('warningBanner.generalWarning')}
         {/if}
       </div>
     </div>

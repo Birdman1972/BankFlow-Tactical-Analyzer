@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t, locale, setLocale } from '$lib/i18n';
   import DropZone from './lib/components/DropZone.svelte';
   import ControlPanel from './lib/components/ControlPanel.svelte';
   import LogConsole from './lib/components/LogConsole.svelte';
@@ -37,21 +38,39 @@
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-4">
         <h1 class="text-2xl font-bold neon-text">
-          BankFlow Tactical Analyzer
+          {$t('app.title')}
         </h1>
         <span class="text-xs text-gray-500 bg-cyber-card px-2 py-1 rounded">
           v{appVersion}
         </span>
       </div>
       <div class="flex items-center gap-4">
-        <span class="text-sm text-gray-400">Digital Forensics Tool</span>
+        <span class="text-sm text-gray-400">{$t('app.subtitle')}</span>
+
+        <!-- Language Switcher -->
+        <div class="flex items-center gap-1 text-xs">
+          <button
+            class="px-2 py-1 rounded transition-colors {$locale === 'zh-TW' ? 'bg-neon-green text-black font-medium' : 'text-gray-500 hover:text-white'}"
+            on:click={() => setLocale('zh-TW')}
+          >
+            繁中
+          </button>
+          <span class="text-gray-600">|</span>
+          <button
+            class="px-2 py-1 rounded transition-colors {$locale === 'en' ? 'bg-neon-green text-black font-medium' : 'text-gray-500 hover:text-white'}"
+            on:click={() => setLocale('en')}
+          >
+            EN
+          </button>
+        </div>
+
         {#if $fileA || $fileB}
           <button
             class="text-xs text-gray-500 hover:text-neon-pink transition-colors"
             on:click={handleClear}
             disabled={$isAnalyzing}
           >
-            Clear All
+            {$t('app.clearAll')}
           </button>
         {/if}
       </div>
@@ -69,8 +88,8 @@
       <div class="grid grid-cols-2 gap-4">
         <DropZone
           label="A"
-          title="Drop Transaction File"
-          subtitle="(.xlsx)"
+          title={$t('dropZone.transactionFile')}
+          subtitle={$t('dropZone.fileFormat')}
           file={$fileA}
           disabled={$isAnalyzing}
           on:click={handleFileAClick}
@@ -78,8 +97,8 @@
 
         <DropZone
           label="B"
-          title="Drop IP Log File"
-          subtitle="(.xlsx)"
+          title={$t('dropZone.ipLogFile')}
+          subtitle={$t('dropZone.fileFormat')}
           file={$fileB}
           disabled={$isAnalyzing}
           on:click={handleFileBClick}
@@ -103,6 +122,6 @@
 
   <!-- Footer -->
   <footer class="mt-6 text-center text-xs text-gray-600">
-    Built with Tauri + Svelte + Rust | Offline-First Design
+    {$t('app.footer')}
   </footer>
 </main>

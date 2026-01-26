@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/i18n';
   import { settings, canAnalyze, canExport, isAnalyzing, progress } from '../stores/app';
   import { runAnalysis, exportReport } from '../stores/tauri';
 
@@ -20,7 +21,7 @@
 </script>
 
 <div class="cyber-panel p-4">
-  <h2 class="text-lg font-semibold text-neon-green mb-4">Control Panel</h2>
+  <h2 class="text-lg font-semibold text-neon-green mb-4">{$t('controlPanel.title')}</h2>
 
   <!-- Options Grid -->
   <div class="grid grid-cols-2 gap-4">
@@ -31,7 +32,7 @@
         bind:checked={$settings.hideSensitive}
         disabled={$isAnalyzing}
       />
-      <span class="text-gray-300">Hide Sensitive Columns</span>
+      <span class="text-gray-300">{$t('controlPanel.hideSensitive')}</span>
     </label>
 
     <label class="flex items-center gap-2 cursor-pointer">
@@ -41,7 +42,7 @@
         bind:checked={$settings.splitIncomeExpense}
         disabled={$isAnalyzing}
       />
-      <span class="text-gray-300">Split Income/Expense</span>
+      <span class="text-gray-300">{$t('controlPanel.splitIncomeExpense')}</span>
     </label>
 
     <label class="flex items-center gap-2 cursor-pointer">
@@ -51,7 +52,7 @@
         bind:checked={$settings.ipCrossReference}
         disabled={$isAnalyzing}
       />
-      <span class="text-gray-300">IP Cross-Reference</span>
+      <span class="text-gray-300">{$t('controlPanel.ipCrossReference')}</span>
     </label>
 
     <label class="flex items-center gap-2 cursor-pointer">
@@ -61,7 +62,7 @@
         bind:checked={$settings.whoisLookup}
         disabled={$isAnalyzing}
       />
-      <span class="text-neon-pink">Whois Lookup (OpSec Risk)</span>
+      <span class="text-neon-pink">{$t('controlPanel.whoisLookup')}</span>
     </label>
   </div>
 
@@ -90,9 +91,9 @@
       on:click={handleAnalyze}
     >
       {#if $isAnalyzing}
-        <span class="animate-pulse">Analyzing...</span>
+        <span class="animate-pulse">{$t('controlPanel.analyzing')}</span>
       {:else}
-        Execute Analysis
+        {$t('controlPanel.executeAnalysis')}
       {/if}
     </button>
 
@@ -101,7 +102,7 @@
       disabled={!$canExport}
       on:click={handleExport}
     >
-      Export Report
+      {$t('controlPanel.exportReport')}
     </button>
   </div>
 </div>

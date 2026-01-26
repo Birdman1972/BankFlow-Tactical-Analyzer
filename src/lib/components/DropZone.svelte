@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/i18n';
   import { createEventDispatcher } from 'svelte';
   import type { FileInfo } from '../stores/app';
 
@@ -72,7 +73,7 @@
     <div class="text-neon-green text-2xl font-bold">{label}</div>
     <div class="text-neon-green text-sm font-medium truncate max-w-full px-4">{file.filename}</div>
     <div class="text-gray-500 text-xs">
-      {file.rowCount.toLocaleString()} rows
+      {file.rowCount.toLocaleString()} {$t('dropZone.rows')}
     </div>
   {:else}
     <!-- Empty state -->
