@@ -55,18 +55,45 @@ interface TauriWhoisResult {
 // Utility & Environment
 // ============================================
 
+// Mock Data Definitions
+const MOCK_FILE_METADATA: TauriFileMetadata = {
+  path: '/mock/path/to/file.xlsx',
+  filename: 'mock_data.xlsx',
+  row_count: 1234,
+  column_count: 15,
+  file_type: 'xlsx'
+};
+
+const MOCK_ANALYSIS_RESULT: TauriAnalysisResult = {
+  total_records: 1234,
+  matched_count: 56,
+  multi_ip_count: 3,
+  whois_queried: 12,
+  settings: {
+    hide_sensitive: false,
+    split_income_expense: true,
+    ip_cross_reference: true,
+    whois_lookup: false
+  }
+};
+
 /**
- * Helper to handle Tauri invocation errors
+ * Helper to handle Tauri invocation errors and return mocks in browser
  */
-function handleTauriError(error: unknown, actionName: string): never {
+function handleTauriError<T>(error: unknown, actionName: string, mockData?: T): T {
   const msg = String(error);
   
   // Check for common environment errors
   if (msg.includes('__TAURI_INTERNALS__') || msg.includes('ipc not connected')) {
-    const friendlyMsg = `Tauri API not available. Please run this app using 'tauri dev' or 'tauri build'. (${actionName})`;
-    addLog('error', friendlyMsg);
-    console.error(`[Tauri Error] ${friendlyMsg}`, error);
-    throw new Error(friendlyMsg);
+    const friendlyMsg = `[Browser Mode] Mocking ${actionName} response.`;
+    addLog('warning', friendlyMsg);
+    console.warn(friendlyMsg, error);
+    
+    if (mockData) {
+      return mockData;
+    }
+    
+    throw new Error(`Tauri API unavailable and no mock data provided for ${actionName}`);
   }
   
   // Pass through other errors
@@ -80,7 +107,9 @@ function handleTauriError(error: unknown, actionName: string): never {
 export async function loadFileA(path: string): Promise<void> {
   try {
     addLog('info', `Loading File A: ${path.split(/[/\\]/).pop()}`);
-    const result = await invoke<TauriFileMetadata>('load_file', { path }).catch(err => handleTauriError(err, 'load_file'));
+    
+    const result = await invoke<TauriFileMetadata>('load_file', { path })
+      .catch(err => handleTauriError(err, 'load_file', { ...MOCK_FILE_METADATA, filename: path.split(/[/\\]/).pop() || 'mock.xlsx' }));
 
     fileA.set({
       path: result.path,
@@ -93,23 +122,25 @@ export async function loadFileA(path: string): Promise<void> {
     addLog('success', `File A loaded: ${result.filename} (${result.row_count} rows)`);
   } catch (error) {
     addLog('error', `Failed to load File A: ${error}`);
-    // Error is already logged/handled in handleTauriError if it was environmental
   }
 }
 
 export async function selectAndLoadFileA(): Promise<void> {
   try {
-    // Determine if we can use native dialog
-    // We try to call open directly. If it fails with the specific error, we know we are in browser.
-    
+    // In browser, open() will fail. We can't really mock the dialog selection easily 
+    // without UI changes, but we can catch it.
     const selected = await open({
       multiple: false,
       filters: [{ name: 'Excel', extensions: ['xlsx', 'xls'] }],
       title: 'Select Transaction File (File A)',
-    }).catch(err => handleTauriError(err, 'open_dialog'));
+    }).catch(err => handleTauriError(err, 'open_dialog', null));
 
     if (selected && typeof selected === 'string') {
       await loadFileA(selected);
+    } else if (!selected) {
+        // If mocked with null (browser), we can optionally auto-load a mock file for testing
+        // For now, let's just log.
+        console.log('Dialog cancelled or mocked with null');
     }
   } catch (error) {
     addLog('error', `Failed to select File A: ${error}`);
@@ -119,7 +150,8 @@ export async function selectAndLoadFileA(): Promise<void> {
 export async function loadFileB(path: string): Promise<void> {
   try {
     addLog('info', `Loading File B: ${path.split(/[/\\]/).pop()}`);
-    const result = await invoke<TauriFileMetadata>('load_ip_file', { path }).catch(err => handleTauriError(err, 'load_ip_file'));
+    const result = await invoke<TauriFileMetadata>('load_ip_file', { path })
+      .catch(err => handleTauriError(err, 'load_ip_file', { ...MOCK_FILE_METADATA, filename: path.split(/[/\\]/).pop() || 'mock_ip.xlsx', row_count: 500 }));
 
     fileB.set({
       path: result.path,
@@ -141,7 +173,7 @@ export async function selectAndLoadFileB(): Promise<void> {
       multiple: false,
       filters: [{ name: 'Excel', extensions: ['xlsx', 'xls'] }],
       title: 'Select IP Log File (File B)',
-    }).catch(err => handleTauriError(err, 'open_dialog'));
+    }).catch(err => handleTauriError(err, 'open_dialog', null));
 
     if (selected && typeof selected === 'string') {
       await loadFileB(selected);
@@ -181,7 +213,7 @@ export async function runAnalysis(): Promise<void> {
       splitIncomeExpense: currentSettings.splitIncomeExpense,
       ipCrossReference: currentSettings.ipCrossReference,
       whoisLookup: currentSettings.whoisLookup,
-    }).catch(err => handleTauriError(err, 'run_analysis'));
+    }).catch(err => handleTauriError(err, 'run_analysis', MOCK_ANALYSIS_RESULT));
 
     analysisResult.set({
       totalRecords: result.total_records,
@@ -203,7 +235,6 @@ export async function runAnalysis(): Promise<void> {
     }
   } catch (error) {
     addLog('error', `Analysis failed: ${error}`);
-    // throw error; // Don't crash UI
   } finally {
     isAnalyzing.set(false);
     progress.set(null);
@@ -220,17 +251,23 @@ export async function runAnalysis(): Promise<void> {
 
 export async function exportReport(): Promise<void> {
   try {
+    const defaultFileName = `bankflow_report_${new Date().toISOString().split('T')[0]}.xlsx`;
     const outputPath = await save({
       filters: [{ name: 'Excel', extensions: ['xlsx'] }],
-      defaultPath: `bankflow_report_${new Date().toISOString().split('T')[0]}.xlsx`,
+      defaultPath: defaultFileName,
       title: 'Save Analysis Report',
-    }).catch(err => handleTauriError(err, 'save_dialog'));
+    }).catch(err => handleTauriError<string | null>(err, 'save_dialog', null));
 
     if (outputPath) {
       addLog('info', `Exporting report to: ${outputPath.split('/').pop()}`);
 
-      const result = await invoke<string>('export_excel', { outputPath }).catch(err => handleTauriError(err, 'export_excel'));
+      const mockExportResult = `[Mock] Report exported to ${defaultFileName}`;
+      const result = await invoke<string>('export_excel', { outputPath })
+        .catch(err => handleTauriError(err, 'export_excel', mockExportResult));
       addLog('success', result);
+    } else {
+      // Browser mock mode - simulate export
+      addLog('warning', '[Browser Mode] Export simulated - in real app, file would be saved');
     }
   } catch (error) {
     addLog('error', `Export failed: ${error}`);
@@ -250,7 +287,17 @@ export interface WhoisResult {
 
 export async function queryWhois(ip: string): Promise<WhoisResult> {
   try {
-    const result = await invoke<TauriWhoisResult>('query_whois', { ip }).catch(err => handleTauriError(err, 'query_whois'));
+    // Mock whois data for browser mode
+    const mockWhoisResult: TauriWhoisResult = {
+      ip,
+      country: 'Taiwan',
+      isp: 'Mock ISP Provider',
+      query_success: true,
+    };
+
+    const result = await invoke<TauriWhoisResult>('query_whois', { ip })
+      .catch(err => handleTauriError(err, 'query_whois', mockWhoisResult));
+
     return {
       ip: result.ip,
       country: result.country,
