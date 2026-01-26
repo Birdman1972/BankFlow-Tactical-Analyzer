@@ -1,0 +1,127 @@
+# UI 整合任務 - Header 導航與 Modal 機制
+# 將 AboutPage 和 FeedbackForm 整合到主 UI
+
+id: "TASK-006"
+created: "2026-01-26T10:25:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "整合 AboutPage 和 FeedbackForm 到主 UI"
+  description: |
+    在 App.svelte 的 Header 區域新增「關於」和「回饋」按鈕，
+    點擊後以 Modal/Overlay 方式顯示對應頁面。
+
+    需要：
+    1. 建立一個通用的 Modal 元件
+    2. 在 Header 新增兩個按鈕（圖示或文字）
+    3. 點擊按鈕時顯示對應的 Modal
+    4. Modal 需支援 ESC 鍵關閉、點擊背景關閉
+  category: feature
+  priority: high
+  tags:
+    - ui
+    - modal
+    - navigation
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: false
+  requires_translation: false
+  pattern_based: false
+  files_count: 3
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: codex
+  reasoning: "UI 元件建立，模式明確，適合 Codex 批量處理"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/App.svelte"
+      reason: "主應用元件，需新增導航按鈕"
+    - path: "src/lib/components/AboutPage.svelte"
+      reason: "已完成的關於頁面元件"
+    - path: "src/lib/components/FeedbackForm.svelte"
+      reason: "已完成的回饋表單元件"
+  references:
+    - url: "https://svelte.dev/docs/svelte/svelte-transition"
+      reason: "Modal 動畫參考"
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "建立 Modal.svelte 通用元件"
+    - "Header 右側新增「關於」按鈕（📖 或 ℹ️ 圖示）"
+    - "Header 右側新增「回饋」按鈕（💬 或 📝 圖示）"
+    - "點擊按鈕時以 Modal 顯示對應頁面"
+    - "Modal 支援 ESC 鍵關閉"
+    - "Modal 支援點擊背景（overlay）關閉"
+    - "Modal 進出場動畫（fade + scale）"
+  non_functional:
+    - "使用 Svelte 5 runes 語法"
+    - "樣式與現有 cyber-panel 風格一致"
+  constraints:
+    - "不要修改 AboutPage 和 FeedbackForm 的內部邏輯"
+    - "使用 $state 時需用 let 而非 const"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] Modal.svelte 元件建立完成"
+    - "[ ] Header 顯示兩個導航按鈕"
+    - "[ ] 點擊「關於」顯示 AboutPage"
+    - "[ ] 點擊「回饋」顯示 FeedbackForm"
+    - "[ ] ESC 鍵可關閉 Modal"
+    - "[ ] 點擊背景可關閉 Modal"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-006"
+  expected_files:
+    - "Modal.svelte"
+    - "App.svelte.patch"
+    - "i18n-keys.json"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

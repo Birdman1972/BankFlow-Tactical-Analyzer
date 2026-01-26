@@ -1,6 +1,6 @@
 {
   "name": "bankflow-tactical-analyzer",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Digital forensics tactical analysis tool for bank transaction and IP log correlation",
   "type": "module",
   "scripts": {
