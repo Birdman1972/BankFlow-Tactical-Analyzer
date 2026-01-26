@@ -108,6 +108,22 @@ export interface Translations {
       descriptionRequired: string;
     };
   };
+
+  // AboutPage component
+  about: {
+    title: string;
+    subtitle: string;
+    currentVersion: string;
+    versionInfo: string;
+    releaseDate: string;
+    changelog: string;
+    loading: string;
+    loadError: string;
+    changelogEmpty: string;
+    developer: string;
+    license: string;
+    licenseText: string;
+  };
 }
 
 // Helper type for nested key access

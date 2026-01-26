@@ -76,7 +76,7 @@ output:
     - "i18n-zh-TW.json"
     - "i18n-en.json"
 
-status: pending
+status: completed
 
 dependencies:
   blocked_by:

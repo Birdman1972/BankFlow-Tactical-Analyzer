@@ -88,6 +88,28 @@ const zhTW: Translations = {
       descriptionRequired: '請填寫詳細內容。',
     },
   },
+  about: {
+    title: '關於 BankFlow 戰術分析器',
+    subtitle: '離線數位鑑識分析工具',
+    currentVersion: '目前版本',
+    versionInfo: '版本資訊',
+    releaseDate: '發佈日期',
+    changelog: '更新歷史',
+    loading: '載入中...',
+    loadError: '無法載入版本歷史。',
+    changelogEmpty: '目前沒有更新紀錄。',
+    developer: '開發者',
+    license: '授權條款',
+    licenseText: `MIT 授權條款
+
+Copyright (c) 2026 Antigravity AICoder
+
+特此授權，任何取得本軟體與相關文件（以下稱「軟體」）之人，得以免費取得且不受限制地使用本軟體，包括但不限於使用、複製、修改、合併、出版、散布、再授權及／或販售本軟體之副本，並允許提供本軟體之人行使上述權利，惟須符合以下條件：
+
+上述著作權聲明與本授權聲明須包含於所有副本或軟體重要部分之中。
+
+本軟體係依「現狀」提供，不作任何明示或默示之保證，包括但不限於適售性、特定用途適用性及不侵權之保證。作者或著作權人不對因本軟體或本軟體之使用或其他交易行為所生之任何索賠、損害或其他責任負責，無論係因契約、侵權或其他原因所致。`,
+  },
 };
 
 export default zhTW;
