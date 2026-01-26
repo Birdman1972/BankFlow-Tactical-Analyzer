@@ -1,0 +1,163 @@
+# 分析進度視覺化任務
+# 改進分析進度的顯示方式
+
+id: "TASK-013"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "分析進度視覺化改進"
+  description: |
+    改進分析過程的進度顯示，提供更好的用戶體驗。
+
+    目標：
+    1. 建立 AnalysisProgress.svelte 元件
+    2. 顯示多階段進度條
+    3. 顯示目前處理階段和百分比
+    4. 顯示預估剩餘時間（可選）
+    5. 支援取消分析（可選）
+
+    進度階段：
+    1. parsing: 解析檔案
+    2. matching: 比對記錄
+    3. whois: Whois 查詢
+    4. generating: 產生報告
+
+    設計風格：
+    - 符合 cyber/neon 主題
+    - 動態進度條動畫
+    - 階段指示器（已完成/進行中/待處理）
+  category: feature
+  priority: low
+  tags:
+    - ui
+    - progress
+    - ux
+    - analysis
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: simple
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: false
+  requires_translation: true
+  pattern_based: true
+  files_count: 2
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: gpt-5.1-codex-max
+  reasoning: "UI 元件生成"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/lib/stores/app.ts"
+      reason: "ProgressInfo 型別定義"
+    - path: "src/lib/components/ControlPanel.svelte"
+      reason: "目前的進度顯示位置"
+    - path: "src/app.css"
+      reason: "全域樣式參考"
+  references: []
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "建立 AnalysisProgress.svelte 元件"
+    - "接收 ProgressInfo 作為 props"
+    - "顯示四個階段的進度指示器"
+    - "顯示目前階段名稱（i18n）"
+    - "顯示百分比進度條"
+    - "顯示階段訊息"
+    - "在 ControlPanel 中整合（取代目前的簡單進度）"
+  non_functional:
+    - "使用 Svelte 5 runes 語法"
+    - "進度條有動態動畫效果"
+    - "符合 cyber/neon 主題"
+  constraints:
+    - "使用 let 而非 const 宣告 $state 變數"
+    - "使用 Tailwind CSS"
+    - "i18n 鍵值加入翻譯檔"
+
+# ============================================
+# 進度階段定義
+# ============================================
+
+stages:
+  - id: parsing
+    name_en: "Parsing Files"
+    name_zh: "解析檔案"
+    icon: "📄"
+
+  - id: matching
+    name_en: "Matching Records"
+    name_zh: "比對記錄"
+    icon: "🔗"
+
+  - id: whois
+    name_en: "Whois Lookup"
+    name_zh: "Whois 查詢"
+    icon: "🌐"
+
+  - id: generating
+    name_en: "Generating Report"
+    name_zh: "產生報告"
+    icon: "📊"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] AnalysisProgress.svelte 建立完成"
+    - "[ ] 四階段指示器顯示正確"
+    - "[ ] 進度條動畫流暢"
+    - "[ ] ControlPanel 整合完成"
+    - "[ ] i18n 翻譯完成"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-013"
+  expected_files:
+    - "AnalysisProgress.svelte"
+    - "ControlPanel.svelte.patch"
+    - "i18n-additions.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

@@ -1,0 +1,158 @@
+# 導覽側邊欄任務
+# 增加側邊欄導覽（首頁、關於、意見回饋）
+
+id: "TASK-010"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "導覽側邊欄 - 頁面切換機制"
+  description: |
+    建立側邊欄導覽系統，讓用戶可以在不同頁面間切換。
+
+    頁面結構：
+    1. 首頁（分析工具）- 目前的主畫面
+    2. 關於（About）- 已有 AboutPage.svelte
+    3. 意見回饋（Feedback）- 已有 FeedbackForm.svelte
+
+    實作方式：
+    1. 建立 Sidebar.svelte 元件
+    2. 建立簡單的路由狀態（不使用 SvelteKit router）
+    3. 在 App.svelte 中整合
+    4. 支援收合/展開側邊欄
+
+    設計風格：
+    - 符合現有 cyber/neon 主題
+    - 收合時只顯示圖示
+    - 展開時顯示圖示+文字
+    - 使用 emoji 或 SVG 圖示
+  category: feature
+  priority: medium
+  tags:
+    - ui
+    - navigation
+    - sidebar
+    - routing
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: false
+  requires_translation: true
+  pattern_based: false
+  files_count: 4
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: gpt-5.1-codex-max
+  reasoning: "UI 元件生成，適合 Codex"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/App.svelte"
+      reason: "主應用元件，需要整合側邊欄"
+    - path: "src/lib/components/AboutPage.svelte"
+      reason: "關於頁面元件"
+    - path: "src/lib/components/FeedbackForm.svelte"
+      reason: "意見回饋元件"
+    - path: "src/lib/i18n/locales/en.ts"
+      reason: "英文翻譯參考"
+    - path: "src/lib/i18n/locales/zh-TW.ts"
+      reason: "中文翻譯參考"
+    - path: "src/app.css"
+      reason: "全域樣式參考"
+  references: []
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "建立 Sidebar.svelte 元件"
+    - "建立 router.ts 簡單路由狀態管理"
+    - "導覽項目：首頁、關於、意見回饋"
+    - "收合/展開功能（localStorage 記住偏好）"
+    - "目前頁面高亮顯示"
+    - "點擊導覽項目切換頁面"
+    - "在 App.svelte 整合側邊欄和頁面切換"
+  non_functional:
+    - "使用 Svelte 5 runes 語法"
+    - "符合 cyber/neon 主題風格"
+    - "側邊欄收合動畫流暢"
+    - "響應式設計（手機版可隱藏）"
+  constraints:
+    - "使用 let 而非 const 宣告 $state 變數"
+    - "不使用 SvelteKit router"
+    - "i18n 鍵值加入翻譯檔"
+
+# ============================================
+# 翻譯鍵值
+# ============================================
+
+i18n_keys:
+  nav:
+    home: "首頁 / Home"
+    about: "關於 / About"
+    feedback: "意見回饋 / Feedback"
+    collapse: "收合側邊欄 / Collapse"
+    expand: "展開側邊欄 / Expand"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] Sidebar.svelte 建立完成"
+    - "[ ] router.ts 建立完成"
+    - "[ ] App.svelte 整合完成"
+    - "[ ] 頁面切換正常運作"
+    - "[ ] 收合/展開功能正常"
+    - "[ ] i18n 翻譯完成"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-010"
+  expected_files:
+    - "Sidebar.svelte"
+    - "router.ts"
+    - "App.svelte.patch"
+    - "i18n-additions.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

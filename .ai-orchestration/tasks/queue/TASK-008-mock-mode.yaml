@@ -1,0 +1,166 @@
+# Mock Mode / Platform Adapter 任務
+# 讓開發時可以用 Mock Data，解決 Tauri IPC 問題
+
+id: "TASK-008"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "Mock Mode - 開發環境模擬資料層"
+  description: |
+    解決 Tauri v2 IPC 在純瀏覽器環境無法運作的問題。
+
+    目標：
+    1. 建立 MockPlatformImpl，在 `npm run dev` 時自動使用
+    2. 提供模擬資料（檔案載入、分析結果、Whois 查詢）
+    3. 讓開發者可以在瀏覽器中測試 UI，不需要 Tauri 環境
+
+    實作方式：
+    1. 在 platform.ts 中增加 'mock' 平台類型
+    2. 建立 src/lib/stores/mock-impl.ts
+    3. 提供 mockFileA, mockFileB, mockAnalysisResult 等假資料
+    4. 環境偵測：import.meta.env.DEV && !window.__TAURI__
+
+    參考：gemini-to-fix.md 中的建議
+  category: architecture
+  priority: high
+  tags:
+    - architecture
+    - developer-experience
+    - mock-data
+    - platform
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate
+  domain: frontend
+  languages:
+    - typescript
+  requires_reasoning: true
+  requires_translation: false
+  pattern_based: false
+  files_count: 3
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: claude-sonnet
+  reasoning: "中等複雜度架構任務，需要理解現有 platform 抽象"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/lib/stores/platform.ts"
+      reason: "現有平台抽象層"
+    - path: "src/lib/stores/tauri-impl.ts"
+      reason: "Tauri 實現參考"
+    - path: "src/lib/stores/wasm-impl.ts"
+      reason: "WASM 實現參考"
+    - path: "src/lib/stores/app.ts"
+      reason: "應用狀態型別定義"
+    - path: "gemini-to-fix.md"
+      reason: "問題描述與建議"
+  references: []
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "建立 mock-impl.ts，實作 PlatformImplementation 介面"
+    - "mockLoadFile(): 回傳模擬的 FileInfo"
+    - "mockRunAnalysis(): 回傳模擬的 AnalysisResult（延遲 2 秒模擬處理）"
+    - "mockQueryWhois(): 回傳模擬的 Whois 資料"
+    - "mockExportReport(): console.log 模擬匯出"
+    - "在 platform.ts 中增加 mock 平台偵測邏輯"
+    - "開發模式（npm run dev）自動使用 mock"
+    - "console 提示目前使用的平台模式"
+  non_functional:
+    - "使用 Svelte 5 runes 語法"
+    - "Mock 資料應該合理（不是亂數）"
+    - "模擬延遲應該接近真實（1-3 秒）"
+  constraints:
+    - "不要修改 tauri-impl.ts 和 wasm-impl.ts"
+    - "使用 let 而非 const 宣告 $state 變數"
+    - "保持與現有 PlatformImplementation 介面相容"
+
+# ============================================
+# Mock 資料規格
+# ============================================
+
+mock_data:
+  fileA:
+    filename: "mock_transactions.xlsx"
+    rowCount: 1234
+    columnCount: 8
+    fileType: "xlsx"
+  fileB:
+    filename: "mock_ip_logs.xlsx"
+    rowCount: 5678
+    columnCount: 5
+    fileType: "xlsx"
+  analysisResult:
+    totalRecords: 1234
+    matchedCount: 892
+    multiIpCount: 45
+    whoisQueried: 120
+  whois:
+    - ip: "203.145.67.89"
+      country: "Taiwan"
+      isp: "Chunghwa Telecom"
+    - ip: "8.8.8.8"
+      country: "United States"
+      isp: "Google LLC"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] mock-impl.ts 建立完成"
+    - "[ ] platform.ts 支援 mock 平台"
+    - "[ ] npm run dev 時自動使用 mock"
+    - "[ ] 可以模擬載入檔案"
+    - "[ ] 可以模擬執行分析"
+    - "[ ] 可以模擬匯出報告"
+    - "[ ] console 顯示目前平台模式"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-008"
+  expected_files:
+    - "mock-impl.ts"
+    - "platform.ts.patch"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

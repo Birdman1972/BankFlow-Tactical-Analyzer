@@ -1,0 +1,168 @@
+# 主題切換任務
+# 深色/淺色主題切換功能
+
+id: "TASK-016"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "深色/淺色主題切換"
+  description: |
+    新增主題切換功能，支援深色和淺色模式。
+
+    目標：
+    1. 建立主題狀態管理
+    2. 定義淺色主題的色彩變數
+    3. 實作主題切換 UI
+    4. 支援系統偏好（prefers-color-scheme）
+    5. 記住用戶偏好（localStorage）
+
+    設計：
+    - 深色（目前）：cyber/neon 風格
+    - 淺色：專業/乾淨風格
+    - 切換按鈕放在 Header
+
+    實作方式：
+    1. CSS 變數定義色彩
+    2. data-theme 屬性切換
+    3. Tailwind dark: 前綴支援
+  category: feature
+  priority: low
+  tags:
+    - ui
+    - theme
+    - dark-mode
+    - accessibility
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+    - css
+  requires_reasoning: false
+  requires_translation: true
+  pattern_based: true
+  files_count: 4
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: gpt-5.1-codex-max
+  reasoning: "UI 樣式批量修改"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/app.css"
+      reason: "全域樣式，需要改為 CSS 變數"
+    - path: "tailwind.config.js"
+      reason: "Tailwind 配置"
+    - path: "src/App.svelte"
+      reason: "需要加入切換按鈕"
+  references: []
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "建立 themeStore.ts 主題狀態管理"
+    - "修改 app.css 使用 CSS 變數"
+    - "定義深色主題色彩變數"
+    - "定義淺色主題色彩變數"
+    - "建立 ThemeSwitcher.svelte 切換按鈕"
+    - "支援 system/dark/light 三種模式"
+    - "localStorage 記住偏好"
+    - "初始載入時套用偏好"
+  non_functional:
+    - "切換動畫平滑（transition）"
+    - "不閃爍（FOUC）"
+    - "符合 WCAG 對比度要求"
+  constraints:
+    - "使用 Svelte 5 runes 語法"
+    - "使用 let 而非 const 宣告 $state 變數"
+    - "保持現有深色風格不變"
+
+# ============================================
+# 色彩定義
+# ============================================
+
+colors:
+  dark:
+    bg-primary: "#0a0a0f"
+    bg-secondary: "#12121a"
+    text-primary: "#ffffff"
+    text-secondary: "#a0a0a0"
+    neon-green: "#00ff88"
+    neon-blue: "#00d4ff"
+    neon-pink: "#ff0080"
+    neon-yellow: "#ffdd00"
+
+  light:
+    bg-primary: "#f8f9fa"
+    bg-secondary: "#ffffff"
+    text-primary: "#1a1a2e"
+    text-secondary: "#6c757d"
+    accent-green: "#10b981"
+    accent-blue: "#3b82f6"
+    accent-pink: "#ec4899"
+    accent-yellow: "#f59e0b"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] themeStore.ts 建立完成"
+    - "[ ] app.css 改為 CSS 變數"
+    - "[ ] ThemeSwitcher.svelte 建立完成"
+    - "[ ] 深色模式正常顯示"
+    - "[ ] 淺色模式正常顯示"
+    - "[ ] 系統偏好偵測正常"
+    - "[ ] localStorage 記住偏好"
+    - "[ ] 無閃爍問題"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-016"
+  expected_files:
+    - "themeStore.ts"
+    - "ThemeSwitcher.svelte"
+    - "app.css"
+    - "i18n-additions.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

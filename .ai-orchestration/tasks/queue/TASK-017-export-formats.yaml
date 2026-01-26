@@ -1,0 +1,164 @@
+# 匯出格式擴充任務
+# 支援 CSV、JSON、PDF 等格式
+
+id: "TASK-017"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "匯出格式擴充 - CSV、JSON、PDF"
+  description: |
+    擴充分析結果的匯出格式選項。
+
+    目前：只支援 Excel (.xlsx)
+
+    新增格式：
+    1. CSV - 簡單文字格式，易於處理
+    2. JSON - 結構化資料，適合程式處理
+    3. PDF - 正式報告格式（可選，複雜度較高）
+
+    實作方式：
+    - CSV/JSON: 前端生成（Web 可用）
+    - Excel: 維持使用 Rust 後端
+    - PDF: 可用 jspdf 或後端生成
+
+    UI：
+    - 匯出按鈕改為下拉選單
+    - 選擇格式後執行匯出
+  category: feature
+  priority: low
+  tags:
+    - export
+    - csv
+    - json
+    - feature
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: false
+  requires_translation: true
+  pattern_based: false
+  files_count: 4
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: claude-sonnet
+  reasoning: "需要處理資料轉換邏輯"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/lib/stores/app.ts"
+      reason: "AnalysisResult 型別"
+    - path: "src/lib/stores/tauri.ts"
+      reason: "現有 exportReport 函數"
+    - path: "src/lib/components/ControlPanel.svelte"
+      reason: "匯出按鈕位置"
+  references: []
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "建立 exportService.ts 匯出服務"
+    - "exportToCSV(): 產生 CSV 字串並下載"
+    - "exportToJSON(): 產生 JSON 字串並下載"
+    - "建立 ExportDropdown.svelte 下拉選單"
+    - "選項：Excel、CSV、JSON"
+    - "Excel 使用現有 Rust 後端（Tauri only）"
+    - "CSV/JSON 前端生成（Web 也可用）"
+    - "下載檔名包含日期時間"
+  non_functional:
+    - "使用 Svelte 5 runes 語法"
+    - "大資料量時不卡頓（> 10000 筆）"
+  constraints:
+    - "使用 let 而非 const 宣告 $state 變數"
+    - "不使用外部套件（CSV/JSON 自行處理）"
+    - "i18n 鍵值加入翻譯檔"
+
+# ============================================
+# 匯出格式規格
+# ============================================
+
+export_formats:
+  csv:
+    columns:
+      - "交易日期"
+      - "金額"
+      - "帳號"
+      - "IP 位址"
+      - "國家"
+      - "ISP"
+      - "比對狀態"
+    delimiter: ","
+    encoding: "UTF-8 with BOM"
+
+  json:
+    structure:
+      metadata:
+        exportDate: "ISO 8601"
+        version: "app version"
+        totalRecords: "number"
+      records: "array of objects"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] exportService.ts 建立完成"
+    - "[ ] ExportDropdown.svelte 建立完成"
+    - "[ ] CSV 匯出正常"
+    - "[ ] JSON 匯出正常"
+    - "[ ] Excel 匯出維持正常"
+    - "[ ] Web 版可匯出 CSV/JSON"
+    - "[ ] i18n 翻譯完成"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-017"
+  expected_files:
+    - "exportService.ts"
+    - "ExportDropdown.svelte"
+    - "ControlPanel.svelte.patch"
+    - "i18n-additions.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

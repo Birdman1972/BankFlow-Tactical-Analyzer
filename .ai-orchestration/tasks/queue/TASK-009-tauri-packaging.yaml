@@ -1,0 +1,140 @@
+# Tauri 桌面應用打包任務 (Phase 6)
+# 設定打包選項、圖示、安裝程式
+
+id: "TASK-009"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "Phase 6 - Tauri 桌面應用打包配置"
+  description: |
+    完成 Tauri 桌面應用的打包配置，產出可發布的安裝檔。
+
+    目標：
+    1. 配置 tauri.conf.json 的打包選項
+    2. 設定應用程式圖示（已有 src-tauri/icons/）
+    3. 配置 macOS .app / .dmg
+    4. 配置 Windows .msi / .exe
+    5. 配置 Linux .deb / .AppImage
+    6. 設定版本號同步（從 package.json 讀取）
+    7. 設定應用程式簽章（可選，需憑證）
+
+    注意事項：
+    - macOS 需要 Xcode Command Line Tools
+    - Windows 需要 Visual Studio Build Tools
+    - 簽章需要開發者憑證（可跳過）
+  category: devops
+  priority: high
+  tags:
+    - tauri
+    - packaging
+    - desktop
+    - release
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate
+  domain: devops
+  languages:
+    - json
+    - rust
+  requires_reasoning: true
+  requires_translation: false
+  pattern_based: false
+  files_count: 3
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: claude-sonnet
+  reasoning: "Tauri 配置任務，需要理解打包流程"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src-tauri/tauri.conf.json"
+      reason: "主要配置檔"
+    - path: "src-tauri/Cargo.toml"
+      reason: "Rust 專案配置"
+    - path: "src-tauri/icons/"
+      reason: "應用程式圖示"
+    - path: "package.json"
+      reason: "版本號來源"
+  references:
+    - url: "https://v2.tauri.app/distribute/"
+      reason: "Tauri v2 打包文件"
+    - url: "https://v2.tauri.app/reference/config/"
+      reason: "Tauri v2 配置參考"
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "設定 bundle identifier: com.bankflow.tactical-analyzer"
+    - "設定應用程式名稱: BankFlow Tactical Analyzer"
+    - "設定版本號從 package.json 讀取"
+    - "配置 macOS: .app bundle 和 .dmg 映像檔"
+    - "配置 Windows: .msi 安裝程式"
+    - "配置 Linux: .deb 和 .AppImage"
+    - "設定應用程式圖示（使用現有 icons/）"
+    - "設定檔案關聯: .xlsx 檔案"
+    - "設定最小視窗大小: 1024x768"
+  non_functional:
+    - "打包後檔案大小合理（< 50MB）"
+    - "安裝流程簡單明瞭"
+  constraints:
+    - "使用 Tauri v2 配置格式"
+    - "不要修改 Rust 程式碼邏輯"
+    - "保持現有功能不變"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] tauri.conf.json 配置完成"
+    - "[ ] bundle identifier 設定正確"
+    - "[ ] 版本號同步設定"
+    - "[ ] macOS 打包配置"
+    - "[ ] Windows 打包配置"
+    - "[ ] Linux 打包配置"
+    - "[ ] npm run build:tauri 成功執行"
+    - "[ ] 產出安裝檔可正常安裝"
+  test_commands:
+    - "npm run build:tauri"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-009"
+  expected_files:
+    - "tauri.conf.json"
+    - "packaging-notes.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

@@ -1,0 +1,164 @@
+# 效能優化任務
+# WASM 懶載入、程式碼分割
+
+id: "TASK-015"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "效能優化 - WASM 懶載入與程式碼分割"
+  description: |
+    優化 Web 版本的載入效能，減少初始載入時間。
+
+    目標：
+    1. WASM 模組懶載入（需要時才載入）
+    2. 路由級別程式碼分割
+    3. 圖片和資源懶載入
+    4. 建置產物分析與優化
+
+    目前問題：
+    - WASM 檔案約 1.6MB，初始就載入
+    - 所有元件在初始就打包
+
+    優化策略：
+    1. 動態 import WASM 模組
+    2. 使用 Vite 的 manualChunks 分割
+    3. 延遲載入非關鍵元件
+  category: performance
+  priority: low
+  tags:
+    - performance
+    - optimization
+    - wasm
+    - lazy-loading
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate
+  domain: frontend
+  languages:
+    - typescript
+    - javascript
+  requires_reasoning: true
+  requires_translation: false
+  pattern_based: false
+  files_count: 4
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: claude-sonnet
+  reasoning: "需要理解 Vite 建置配置和 WASM 載入機制"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "vite.config.ts"
+      reason: "Vite 配置"
+    - path: "src/lib/stores/wasm-impl.ts"
+      reason: "WASM 載入邏輯"
+    - path: "src/lib/stores/platform.ts"
+      reason: "平台切換邏輯"
+    - path: "package.json"
+      reason: "依賴項目"
+  references:
+    - url: "https://vitejs.dev/guide/build.html#chunking-strategy"
+      reason: "Vite 程式碼分割"
+    - url: "https://rustwasm.github.io/docs/wasm-bindgen/examples/without-a-bundler.html"
+      reason: "WASM 動態載入"
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "修改 wasm-impl.ts 使用動態 import"
+    - "WASM 只在實際需要時才載入"
+    - "載入 WASM 時顯示載入指示器"
+    - "配置 vite.config.ts 的 manualChunks"
+    - "分離 vendor chunks（大型依賴）"
+    - "分析建置產物大小"
+  non_functional:
+    - "初始載入時間減少 50%"
+    - "WASM 載入時間 < 2 秒（3G 網路）"
+    - "總 bundle 大小 < 100KB（不含 WASM）"
+  constraints:
+    - "不破壞現有功能"
+    - "保持 TypeScript 型別安全"
+    - "相容 Tauri 和 Web 雙平台"
+
+# ============================================
+# 優化目標
+# ============================================
+
+optimization_targets:
+  initial_load:
+    current: "~2MB"
+    target: "< 100KB"
+    note: "不含 WASM"
+
+  wasm_load:
+    current: "初始載入"
+    target: "需要時載入"
+
+  chunks:
+    - name: "vendor"
+      includes: ["svelte"]
+    - name: "i18n"
+      includes: ["locales"]
+    - name: "wasm"
+      includes: ["bankflow-core"]
+      lazy: true
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] WASM 懶載入實作完成"
+    - "[ ] Vite 分割配置完成"
+    - "[ ] 初始 bundle < 100KB"
+    - "[ ] 載入指示器正常顯示"
+    - "[ ] 雙平台功能正常"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+    - "npx vite-bundle-visualizer"  # 可選
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-015"
+  expected_files:
+    - "wasm-impl.ts"
+    - "vite.config.ts"
+    - "performance-report.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

@@ -1,0 +1,171 @@
+# GitHub Actions CI/CD 任務
+# 自動化建置、測試、發布
+
+id: "TASK-014"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "GitHub Actions CI/CD 流程"
+  description: |
+    建立 GitHub Actions 工作流程，自動化建置、測試、發布。
+
+    工作流程：
+    1. ci.yml - 持續整合（每次 push/PR）
+       - TypeScript 檢查
+       - Rust 測試
+       - Web 建置
+       - WASM 建置
+
+    2. release.yml - 發布（tag 觸發）
+       - 建置 macOS/Windows/Linux
+       - 建立 GitHub Release
+       - 上傳安裝檔
+
+    3. deploy.yml - 部署（可選，main 分支）
+       - 建置 Web 版本
+       - 部署到 Vercel（或用 Vercel GitHub Integration）
+
+    注意：
+    - Tauri v2 需要特定的 action 配置
+    - 需要設定 GitHub Secrets（簽章憑證等）
+  category: devops
+  priority: medium
+  tags:
+    - ci-cd
+    - github-actions
+    - automation
+    - devops
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate
+  domain: devops
+  languages:
+    - yaml
+  requires_reasoning: true
+  requires_translation: false
+  pattern_based: true
+  files_count: 3
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: claude-sonnet
+  reasoning: "DevOps 配置需要理解 Tauri 建置流程"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "package.json"
+      reason: "npm scripts 參考"
+    - path: "src-tauri/Cargo.toml"
+      reason: "Rust 專案配置"
+    - path: "src-tauri/tauri.conf.json"
+      reason: "Tauri 配置"
+  references:
+    - url: "https://v2.tauri.app/distribute/ci-cd/github/"
+      reason: "Tauri v2 GitHub Actions 文件"
+    - url: "https://github.com/tauri-apps/tauri-action"
+      reason: "Tauri Action 官方 repo"
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "建立 .github/workflows/ci.yml"
+    - "ci.yml: 觸發於 push 和 pull_request"
+    - "ci.yml: 執行 npm run check"
+    - "ci.yml: 執行 cargo test -p bankflow-core"
+    - "ci.yml: 執行 npm run build:web"
+    - "建立 .github/workflows/release.yml"
+    - "release.yml: 觸發於 tag v*"
+    - "release.yml: 使用 tauri-apps/tauri-action"
+    - "release.yml: 建置 macOS (universal)"
+    - "release.yml: 建置 Windows (x64)"
+    - "release.yml: 建置 Linux (x64)"
+    - "release.yml: 自動建立 GitHub Release"
+    - "release.yml: 上傳安裝檔作為 assets"
+  non_functional:
+    - "使用 GitHub Actions 快取加速建置"
+    - "CI 流程 5 分鐘內完成"
+    - "Release 流程 30 分鐘內完成"
+  constraints:
+    - "使用 Tauri v2 相容的 action 版本"
+    - "不要在 workflow 中硬編碼敏感資訊"
+    - "提供 README 說明需要設定的 Secrets"
+
+# ============================================
+# Secrets 說明
+# ============================================
+
+secrets_required:
+  - name: "APPLE_CERTIFICATE"
+    description: "macOS 簽章憑證（base64）"
+    required: false
+
+  - name: "APPLE_CERTIFICATE_PASSWORD"
+    description: "憑證密碼"
+    required: false
+
+  - name: "APPLE_SIGNING_IDENTITY"
+    description: "簽章識別"
+    required: false
+
+  - name: "APPLE_ID"
+    description: "Apple ID（用於公證）"
+    required: false
+
+  - name: "APPLE_PASSWORD"
+    description: "App-specific password"
+    required: false
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] .github/workflows/ci.yml 建立完成"
+    - "[ ] .github/workflows/release.yml 建立完成"
+    - "[ ] ci.yml 在本機語法檢查通過"
+    - "[ ] 提供 Secrets 設定說明"
+    - "[ ] 提供版本發布流程說明"
+  test_commands:
+    - "yamllint .github/workflows/*.yml"  # 如果有 yamllint
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-014"
+  expected_files:
+    - "ci.yml"
+    - "release.yml"
+    - "CI-CD-README.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

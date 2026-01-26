@@ -1,0 +1,189 @@
+# 鍵盤快捷鍵任務
+# 增加鍵盤操作支援
+
+id: "TASK-012"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "鍵盤快捷鍵支援"
+  description: |
+    為應用程式增加鍵盤快捷鍵支援，提升進階用戶的操作效率。
+
+    快捷鍵定義：
+    - Ctrl/Cmd + O: 開啟檔案 A
+    - Ctrl/Cmd + Shift + O: 開啟檔案 B
+    - Ctrl/Cmd + Enter: 執行分析
+    - Ctrl/Cmd + E: 匯出報告
+    - Ctrl/Cmd + K: 清除所有檔案
+    - Escape: 關閉對話框/Modal
+    - ?: 顯示快捷鍵說明
+
+    實作方式：
+    1. 建立 useKeyboardShortcuts hook
+    2. 在 App.svelte 註冊全域快捷鍵
+    3. 建立 KeyboardShortcutsHelp 對話框
+    4. 確保焦點在 input 時不觸發（除了 Escape）
+  category: feature
+  priority: medium
+  tags:
+    - ux
+    - keyboard
+    - accessibility
+    - shortcuts
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: simple
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: false
+  requires_translation: true
+  pattern_based: true
+  files_count: 3
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: gpt-5.1-codex-max
+  reasoning: "模式化的事件處理實作"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/App.svelte"
+      reason: "需要整合快捷鍵監聽"
+    - path: "src/lib/stores/tauri.ts"
+      reason: "現有的操作函數"
+    - path: "src/lib/i18n/locales/en.ts"
+      reason: "英文翻譯"
+    - path: "src/lib/i18n/locales/zh-TW.ts"
+      reason: "中文翻譯"
+  references: []
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "建立 keyboardShortcuts.ts hook"
+    - "Ctrl/Cmd + O: 呼叫 selectAndLoadFileA()"
+    - "Ctrl/Cmd + Shift + O: 呼叫 selectAndLoadFileB()"
+    - "Ctrl/Cmd + Enter: 呼叫 runAnalysis()"
+    - "Ctrl/Cmd + E: 呼叫 exportReport()"
+    - "Ctrl/Cmd + K: 呼叫 clearAllFiles()"
+    - "Escape: 關閉任何開啟的對話框"
+    - "?: 顯示 KeyboardShortcutsHelp 對話框"
+    - "建立 KeyboardShortcutsHelp.svelte 說明對話框"
+  non_functional:
+    - "使用 Svelte 5 runes 語法"
+    - "跨平台支援（Mac 用 Cmd，其他用 Ctrl）"
+    - "焦點在 input/textarea 時不觸發（Escape 除外）"
+  constraints:
+    - "使用 let 而非 const 宣告 $state 變數"
+    - "確保快捷鍵不與瀏覽器預設衝突"
+    - "i18n 鍵值加入翻譯檔"
+
+# ============================================
+# 快捷鍵定義
+# ============================================
+
+shortcuts:
+  - key: "o"
+    modifiers: ["ctrl/cmd"]
+    action: "selectAndLoadFileA"
+    description_en: "Open File A"
+    description_zh: "開啟檔案 A"
+
+  - key: "o"
+    modifiers: ["ctrl/cmd", "shift"]
+    action: "selectAndLoadFileB"
+    description_en: "Open File B"
+    description_zh: "開啟檔案 B"
+
+  - key: "Enter"
+    modifiers: ["ctrl/cmd"]
+    action: "runAnalysis"
+    description_en: "Run Analysis"
+    description_zh: "執行分析"
+
+  - key: "e"
+    modifiers: ["ctrl/cmd"]
+    action: "exportReport"
+    description_en: "Export Report"
+    description_zh: "匯出報告"
+
+  - key: "k"
+    modifiers: ["ctrl/cmd"]
+    action: "clearAllFiles"
+    description_en: "Clear All Files"
+    description_zh: "清除所有檔案"
+
+  - key: "Escape"
+    modifiers: []
+    action: "closeDialog"
+    description_en: "Close Dialog"
+    description_zh: "關閉對話框"
+
+  - key: "?"
+    modifiers: []
+    action: "showHelp"
+    description_en: "Show Keyboard Shortcuts"
+    description_zh: "顯示快捷鍵說明"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] keyboardShortcuts.ts 建立完成"
+    - "[ ] KeyboardShortcutsHelp.svelte 建立完成"
+    - "[ ] App.svelte 整合完成"
+    - "[ ] 所有快捷鍵正常運作"
+    - "[ ] Mac/Windows 相容"
+    - "[ ] 焦點在 input 時不誤觸發"
+    - "[ ] i18n 翻譯完成"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-012"
+  expected_files:
+    - "keyboardShortcuts.ts"
+    - "KeyboardShortcutsHelp.svelte"
+    - "App.svelte.patch"
+    - "i18n-additions.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

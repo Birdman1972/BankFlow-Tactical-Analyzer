@@ -1,0 +1,177 @@
+# 資料視覺化任務
+# 分析結果的圖表展示
+
+id: "TASK-018"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "資料視覺化 - 分析結果圖表"
+  description: |
+    為分析結果新增視覺化圖表，提升資料可讀性。
+
+    圖表類型：
+    1. 圓餅圖：IP 國家分佈
+    2. 長條圖：每日交易量趨勢
+    3. 統計卡片：關鍵數據摘要
+    4. 地理分佈圖（可選，複雜度高）
+
+    實作方式：
+    - 使用 Chart.js 或 D3.js
+    - 或使用純 SVG 自行繪製（輕量）
+    - 建議使用 Chart.js（較簡單）
+
+    設計：
+    - 符合 cyber/neon 主題
+    - 深色背景、螢光色線條
+    - 互動式 hover 效果
+  category: feature
+  priority: low
+  tags:
+    - visualization
+    - charts
+    - ui
+    - data
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: complex
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: true
+  requires_translation: true
+  pattern_based: false
+  files_count: 5
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: claude-sonnet
+  reasoning: "複雜 UI 元件，需要整合圖表庫"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/lib/stores/app.ts"
+      reason: "AnalysisResult 型別"
+    - path: "src/lib/components/ResultSummary.svelte"
+      reason: "目前的結果顯示位置"
+    - path: "src/app.css"
+      reason: "全域樣式"
+    - path: "package.json"
+      reason: "依賴管理"
+  references:
+    - url: "https://www.chartjs.org/docs/latest/"
+      reason: "Chart.js 文件"
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "安裝並配置 Chart.js（或選擇其他圖表庫）"
+    - "建立 PieChart.svelte - 國家分佈圓餅圖"
+    - "建立 BarChart.svelte - 交易趨勢長條圖"
+    - "建立 StatCard.svelte - 統計數據卡片"
+    - "建立 AnalysisDashboard.svelte - 整合所有圖表"
+    - "在分析完成後顯示 Dashboard"
+    - "圖表可切換顯示/隱藏"
+  non_functional:
+    - "使用 Svelte 5 runes 語法"
+    - "圖表渲染流暢"
+    - "響應式設計"
+    - "符合 cyber/neon 主題"
+  constraints:
+    - "使用 let 而非 const 宣告 $state 變數"
+    - "圖表庫選擇要輕量（< 100KB）"
+    - "i18n 鍵值加入翻譯檔"
+
+# ============================================
+# 圖表規格
+# ============================================
+
+charts:
+  pieChart:
+    title: "IP 國家分佈"
+    data: "按國家分組的 IP 數量"
+    colors: ["neon-green", "neon-blue", "neon-pink", "neon-yellow"]
+
+  barChart:
+    title: "每日交易量"
+    xAxis: "日期"
+    yAxis: "交易數量"
+    color: "neon-blue"
+
+  statCards:
+    - label: "總交易數"
+      value: "totalRecords"
+      icon: "📊"
+    - label: "比對成功"
+      value: "matchedCount"
+      icon: "✅"
+    - label: "多重 IP"
+      value: "multiIpCount"
+      icon: "⚠️"
+    - label: "Whois 查詢"
+      value: "whoisQueried"
+      icon: "🌐"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] Chart.js 安裝配置"
+    - "[ ] PieChart.svelte 建立完成"
+    - "[ ] BarChart.svelte 建立完成"
+    - "[ ] StatCard.svelte 建立完成"
+    - "[ ] AnalysisDashboard.svelte 建立完成"
+    - "[ ] 圖表樣式符合主題"
+    - "[ ] 響應式設計正常"
+    - "[ ] i18n 翻譯完成"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-018"
+  expected_files:
+    - "PieChart.svelte"
+    - "BarChart.svelte"
+    - "StatCard.svelte"
+    - "AnalysisDashboard.svelte"
+    - "chartConfig.ts"
+    - "i18n-additions.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

@@ -1,0 +1,167 @@
+# Toast 通知元件任務
+# 統一的通知系統（成功、錯誤、警告）
+
+id: "TASK-011"
+created: "2026-01-26T14:00:00+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "Toast 通知系統 - 統一錯誤與成功提示"
+  description: |
+    建立統一的 Toast 通知系統，取代目前分散的提示方式。
+
+    目標：
+    1. 建立 Toast.svelte 元件
+    2. 建立 toastStore.ts 狀態管理
+    3. 支援多種類型：success, error, warning, info
+    4. 自動消失（可配置時間）
+    5. 可手動關閉
+    6. 支援堆疊多個通知
+
+    設計風格：
+    - 右上角顯示
+    - 符合 cyber/neon 主題
+    - 進入/離開動畫
+    - 不同類型不同顏色
+      - success: neon-green
+      - error: neon-pink
+      - warning: neon-yellow
+      - info: neon-blue
+  category: feature
+  priority: medium
+  tags:
+    - ui
+    - notification
+    - toast
+    - ux
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: simple
+  domain: frontend
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: false
+  requires_translation: true
+  pattern_based: true
+  files_count: 3
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: gpt-5.1-codex-max
+  reasoning: "UI 元件模式化生成"
+  override: false
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/lib/stores/app.ts"
+      reason: "現有 addLog 函數參考"
+    - path: "src/app.css"
+      reason: "全域樣式參考"
+    - path: "src/App.svelte"
+      reason: "需要整合 Toast 容器"
+  references: []
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "建立 Toast.svelte 單個通知元件"
+    - "建立 ToastContainer.svelte 容器元件"
+    - "建立 toastStore.ts 狀態管理"
+    - "showToast(type, message, duration?) 函數"
+    - "支援類型：success, error, warning, info"
+    - "預設顯示 5 秒後自動消失"
+    - "可手動點擊 X 關閉"
+    - "支援同時顯示多個通知（堆疊）"
+    - "在 App.svelte 加入 ToastContainer"
+  non_functional:
+    - "使用 Svelte 5 runes 語法"
+    - "進入動畫：從右側滑入"
+    - "離開動畫：淡出"
+    - "最多同時顯示 5 個通知"
+  constraints:
+    - "使用 let 而非 const 宣告 $state 變數"
+    - "使用 Tailwind CSS"
+    - "不依賴外部套件"
+
+# ============================================
+# API 設計
+# ============================================
+
+api_design:
+  toastStore:
+    functions:
+      - "showToast(type: ToastType, message: string, duration?: number): void"
+      - "showSuccess(message: string): void"
+      - "showError(message: string): void"
+      - "showWarning(message: string): void"
+      - "showInfo(message: string): void"
+      - "dismiss(id: string): void"
+      - "dismissAll(): void"
+    types:
+      ToastType: "success | error | warning | info"
+      Toast:
+        id: string
+        type: ToastType
+        message: string
+        duration: number
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] Toast.svelte 建立完成"
+    - "[ ] ToastContainer.svelte 建立完成"
+    - "[ ] toastStore.ts 建立完成"
+    - "[ ] App.svelte 整合完成"
+    - "[ ] 四種類型顯示正確顏色"
+    - "[ ] 自動消失功能正常"
+    - "[ ] 手動關閉功能正常"
+    - "[ ] 動畫流暢"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-011"
+  expected_files:
+    - "Toast.svelte"
+    - "ToastContainer.svelte"
+    - "toastStore.ts"
+    - "App.svelte.patch"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []
