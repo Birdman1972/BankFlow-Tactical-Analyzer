@@ -20,6 +20,9 @@ export interface VersionInfo {
 const VERSION_JSON_URL = 'https://bankflow-tactical-analyzer.vercel.app/version.json';
 const CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 const STORAGE_KEY = 'bankflow_last_update_check';
+const SKIPPED_VERSION_KEY = 'bankflow_skipped_version';
+
+export const currentVersion = pkg.version;
 
 /**
  * Compare two semver strings
@@ -39,8 +42,16 @@ export function compareVersions(v1: string, v2: string): number {
 }
 
 /**
+ * Skip a specific version
+ */
+export function skipVersion(version: string): void {
+  localStorage.setItem(SKIPPED_VERSION_KEY, version);
+  console.log(`Skipping version ${version}`);
+}
+
+/**
  * Check for updates
- * @param force If true, ignores rate limiting
+ * @param force If true, ignores rate limiting and skipped version
  */
 export async function checkForUpdates(force: boolean = false): Promise<VersionInfo | null> {
   // Check rate limit
@@ -60,6 +71,11 @@ export async function checkForUpdates(force: boolean = false): Promise<VersionIn
     let remoteInfo: VersionInfo;
     const platform = get(currentPlatform);
 
+    // Only check updates on Tauri
+    if (platform !== 'tauri' && !force) {
+      return null;
+    }
+
     console.log(`Checking for updates... (Platform: ${platform})`);
 
     if (platform === 'tauri') {
@@ -75,10 +91,18 @@ export async function checkForUpdates(force: boolean = false): Promise<VersionIn
     // Update last check time
     localStorage.setItem(STORAGE_KEY, Date.now().toString());
 
-    const currentVersion = pkg.version;
-    console.log(`Current: ${currentVersion}, Remote: ${remoteInfo.version}`);
+    const myVersion = currentVersion;
+    console.log(`Current: ${myVersion}, Remote: ${remoteInfo.version}`);
 
-    if (compareVersions(remoteInfo.version, currentVersion) > 0) {
+    if (compareVersions(remoteInfo.version, myVersion) > 0) {
+      // Check if version is skipped
+      if (!force) {
+        const skipped = localStorage.getItem(SKIPPED_VERSION_KEY);
+        if (skipped === remoteInfo.version) {
+          console.log(`Skipping update ${remoteInfo.version} (user preference)`);
+          return null;
+        }
+      }
       return remoteInfo;
     }
   } catch (error) {

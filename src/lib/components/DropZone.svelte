@@ -35,9 +35,18 @@
 
     const files = e.dataTransfer?.files;
     if (files && files.length > 0) {
-      // In Tauri, files have a path property (not in standard Web API)
-      const file = files[0] as File & { path?: string };
-      const filePath = file.path || file.name;
+      console.log('Dropped files:', files);
+      // In Tauri, files should have a path property if configured correctly
+      // We cast to any to access the path property safely
+      const file = files[0] as any;
+      const filePath = file.path || file.name; // Fallback to name if path is missing
+      
+      console.log('Detected file path:', filePath);
+      
+      if (!file.path) {
+        console.warn('File path is missing. Drag & Drop might not work fully in browser mode.');
+      }
+      
       dispatch('drop', filePath);
     }
   }

@@ -52,34 +52,86 @@ interface TauriWhoisResult {
 }
 
 // ============================================
+// Utility & Environment
+// ============================================
+
+/**
+ * Helper to handle Tauri invocation errors
+ */
+function handleTauriError(error: unknown, actionName: string): never {
+  const msg = String(error);
+  
+  // Check for common environment errors
+  if (msg.includes('__TAURI_INTERNALS__') || msg.includes('ipc not connected')) {
+    const friendlyMsg = `Tauri API not available. Please run this app using 'tauri dev' or 'tauri build'. (${actionName})`;
+    addLog('error', friendlyMsg);
+    console.error(`[Tauri Error] ${friendlyMsg}`, error);
+    throw new Error(friendlyMsg);
+  }
+  
+  // Pass through other errors
+  throw error;
+}
+
+// ============================================
 // File Operations
 // ============================================
 
+export async function loadFileA(path: string): Promise<void> {
+  try {
+    addLog('info', `Loading File A: ${path.split(/[/\\]/).pop()}`);
+    const result = await invoke<TauriFileMetadata>('load_file', { path }).catch(err => handleTauriError(err, 'load_file'));
+
+    fileA.set({
+      path: result.path,
+      filename: result.filename,
+      rowCount: result.row_count,
+      columnCount: result.column_count,
+      fileType: result.file_type,
+    });
+
+    addLog('success', `File A loaded: ${result.filename} (${result.row_count} rows)`);
+  } catch (error) {
+    addLog('error', `Failed to load File A: ${error}`);
+    // Error is already logged/handled in handleTauriError if it was environmental
+  }
+}
+
 export async function selectAndLoadFileA(): Promise<void> {
   try {
+    // Determine if we can use native dialog
+    // We try to call open directly. If it fails with the specific error, we know we are in browser.
+    
     const selected = await open({
       multiple: false,
       filters: [{ name: 'Excel', extensions: ['xlsx', 'xls'] }],
       title: 'Select Transaction File (File A)',
-    });
+    }).catch(err => handleTauriError(err, 'open_dialog'));
 
     if (selected && typeof selected === 'string') {
-      addLog('info', `Loading File A: ${selected.split('/').pop()}`);
-      const result = await invoke<TauriFileMetadata>('load_file', { path: selected });
-
-      fileA.set({
-        path: result.path,
-        filename: result.filename,
-        rowCount: result.row_count,
-        columnCount: result.column_count,
-        fileType: result.file_type,
-      });
-
-      addLog('success', `File A loaded: ${result.filename} (${result.row_count} rows)`);
+      await loadFileA(selected);
     }
   } catch (error) {
-    addLog('error', `Failed to load File A: ${error}`);
-    throw error;
+    addLog('error', `Failed to select File A: ${error}`);
+  }
+}
+
+export async function loadFileB(path: string): Promise<void> {
+  try {
+    addLog('info', `Loading File B: ${path.split(/[/\\]/).pop()}`);
+    const result = await invoke<TauriFileMetadata>('load_ip_file', { path }).catch(err => handleTauriError(err, 'load_ip_file'));
+
+    fileB.set({
+      path: result.path,
+      filename: result.filename,
+      rowCount: result.row_count,
+      columnCount: result.column_count,
+      fileType: result.file_type,
+    });
+
+    addLog('success', `File B loaded: ${result.filename} (${result.row_count} rows)`);
+  } catch (error) {
+    addLog('error', `Failed to load File B: ${error}`);
   }
 }
 
@@ -89,25 +141,13 @@ export async function selectAndLoadFileB(): Promise<void> {
       multiple: false,
       filters: [{ name: 'Excel', extensions: ['xlsx', 'xls'] }],
       title: 'Select IP Log File (File B)',
-    });
+    }).catch(err => handleTauriError(err, 'open_dialog'));
 
     if (selected && typeof selected === 'string') {
-      addLog('info', `Loading File B: ${selected.split('/').pop()}`);
-      const result = await invoke<TauriFileMetadata>('load_ip_file', { path: selected });
-
-      fileB.set({
-        path: result.path,
-        filename: result.filename,
-        rowCount: result.row_count,
-        columnCount: result.column_count,
-        fileType: result.file_type,
-      });
-
-      addLog('success', `File B loaded: ${result.filename} (${result.row_count} rows)`);
+      await loadFileB(selected);
     }
   } catch (error) {
-    addLog('error', `Failed to load File B: ${error}`);
-    throw error;
+    addLog('error', `Failed to select File B: ${error}`);
   }
 }
 
@@ -126,10 +166,14 @@ export async function runAnalysis(): Promise<void> {
     addLog('info', 'Starting analysis...');
 
     // Listen for progress events
-    progressUnlisten = await listen<ProgressInfo>('analysis-progress', (event) => {
-      progress.set(event.payload);
-      addLog('info', `[${event.payload.stage}] ${event.payload.message}`);
-    });
+    try {
+      progressUnlisten = await listen<ProgressInfo>('analysis-progress', (event) => {
+        progress.set(event.payload);
+        addLog('info', `[${event.payload.stage}] ${event.payload.message}`);
+      });
+    } catch (err) {
+      console.warn('Failed to setup progress listener (likely non-Tauri env)', err);
+    }
 
     // Run analysis
     const result = await invoke<TauriAnalysisResult>('run_analysis', {
@@ -137,7 +181,7 @@ export async function runAnalysis(): Promise<void> {
       splitIncomeExpense: currentSettings.splitIncomeExpense,
       ipCrossReference: currentSettings.ipCrossReference,
       whoisLookup: currentSettings.whoisLookup,
-    });
+    }).catch(err => handleTauriError(err, 'run_analysis'));
 
     analysisResult.set({
       totalRecords: result.total_records,
@@ -159,7 +203,7 @@ export async function runAnalysis(): Promise<void> {
     }
   } catch (error) {
     addLog('error', `Analysis failed: ${error}`);
-    throw error;
+    // throw error; // Don't crash UI
   } finally {
     isAnalyzing.set(false);
     progress.set(null);
@@ -180,17 +224,16 @@ export async function exportReport(): Promise<void> {
       filters: [{ name: 'Excel', extensions: ['xlsx'] }],
       defaultPath: `bankflow_report_${new Date().toISOString().split('T')[0]}.xlsx`,
       title: 'Save Analysis Report',
-    });
+    }).catch(err => handleTauriError(err, 'save_dialog'));
 
     if (outputPath) {
       addLog('info', `Exporting report to: ${outputPath.split('/').pop()}`);
 
-      const result = await invoke<string>('export_excel', { outputPath });
+      const result = await invoke<string>('export_excel', { outputPath }).catch(err => handleTauriError(err, 'export_excel'));
       addLog('success', result);
     }
   } catch (error) {
     addLog('error', `Export failed: ${error}`);
-    throw error;
   }
 }
 
@@ -207,7 +250,7 @@ export interface WhoisResult {
 
 export async function queryWhois(ip: string): Promise<WhoisResult> {
   try {
-    const result = await invoke<TauriWhoisResult>('query_whois', { ip });
+    const result = await invoke<TauriWhoisResult>('query_whois', { ip }).catch(err => handleTauriError(err, 'query_whois'));
     return {
       ip: result.ip,
       country: result.country,
@@ -216,7 +259,8 @@ export async function queryWhois(ip: string): Promise<WhoisResult> {
     };
   } catch (error) {
     addLog('error', `Whois query failed for ${ip}: ${error}`);
-    throw error;
+    // Return dummy data instead of crashing
+    return { ip, country: 'Error', isp: String(error), querySuccess: false };
   }
 }
 
@@ -226,13 +270,17 @@ export async function queryWhois(ip: string): Promise<WhoisResult> {
 
 export async function clearAllFiles(): Promise<void> {
   try {
-    await invoke('clear_files');
+    // Try to clear backend first
+    await invoke('clear_files').catch(err => {
+        // If backend fails (e.g. browser), we still clear frontend
+        console.warn('Backend clear failed, proceeding with frontend clear', err);
+    });
+    
     fileA.set(null);
     fileB.set(null);
     analysisResult.set(null);
     addLog('info', 'All files cleared');
   } catch (error) {
     addLog('error', `Failed to clear files: ${error}`);
-    throw error;
   }
 }

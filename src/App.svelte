@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { t, locale, setLocale } from '$lib/i18n';
   import DropZone from './lib/components/DropZone.svelte';
   import ControlPanel from './lib/components/ControlPanel.svelte';
   import LogConsole from './lib/components/LogConsole.svelte';
   import ResultSummary from './lib/components/ResultSummary.svelte';
   import WarningBanner from './lib/components/WarningBanner.svelte';
+  import UpdateDialog from './lib/components/UpdateDialog.svelte';
   import {
     fileA,
     fileB,
@@ -14,10 +16,46 @@
   import {
     selectAndLoadFileA,
     selectAndLoadFileB,
+    loadFileA,
+    loadFileB,
     clearAllFiles,
   } from './lib/stores/tauri';
+  import { 
+    checkForUpdates, 
+    skipVersion, 
+    currentVersion,
+    type VersionInfo 
+  } from '$lib/services/versionService';
 
-  const appVersion = '2.1.0';
+  const appVersion = currentVersion;
+  let updateInfo: VersionInfo | null = null;
+
+  onMount(async () => {
+    // Check for updates on startup
+    const info = await checkForUpdates();
+    if (info) {
+      updateInfo = info;
+    }
+  });
+
+  function handleUpdate() {
+    // Open download page
+    // Using window.open requires tauri.conf.json allowlist or shell plugin
+    // Assuming basic external link capability or will silently fail if restricted
+    window.open('https://github.com/project-bob/bankflow-tactical-analyzer/releases', '_blank');
+    updateInfo = null;
+  }
+
+  function handleRemindLater() {
+    updateInfo = null;
+  }
+
+  function handleSkip() {
+    if (updateInfo) {
+      skipVersion(updateInfo.version);
+      updateInfo = null;
+    }
+  }
 
   async function handleFileAClick() {
     await selectAndLoadFileA();
@@ -25,6 +63,14 @@
 
   async function handleFileBClick() {
     await selectAndLoadFileB();
+  }
+  
+  async function handleFileADrop(e: CustomEvent<string>) {
+    await loadFileA(e.detail);
+  }
+
+  async function handleFileBDrop(e: CustomEvent<string>) {
+    await loadFileB(e.detail);
   }
 
   async function handleClear() {
@@ -80,6 +126,16 @@
   <!-- Warning Banner -->
   <WarningBanner show={false} />
 
+  {#if updateInfo}
+    <UpdateDialog
+      version={updateInfo.version}
+      changelog={updateInfo.changelog.flatMap(c => c.changes)}
+      onUpdate={handleUpdate}
+      onRemindLater={handleRemindLater}
+      onSkip={handleSkip}
+    />
+  {/if}
+
   <!-- Main Content Grid -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Left Panel: File Input & Control -->
@@ -93,6 +149,7 @@
           file={$fileA}
           disabled={$isAnalyzing}
           on:click={handleFileAClick}
+          on:drop={handleFileADrop}
         />
 
         <DropZone
@@ -102,6 +159,7 @@
           file={$fileB}
           disabled={$isAnalyzing}
           on:click={handleFileBClick}
+          on:drop={handleFileBDrop}
         />
       </div>
 
