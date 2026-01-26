@@ -1,0 +1,102 @@
+# 程式碼任務模板
+# 用於：新功能、重構、批量修改等
+
+id: "TASK-XXX"
+created: "YYYY-MM-DDTHH:MM:SS+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "任務標題"
+  description: |
+    詳細描述任務內容...
+  category: feature  # feature | bugfix | refactor | batch_modify
+  priority: medium   # critical | high | medium | low
+  tags:
+    - tag1
+    - tag2
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate  # trivial | simple | moderate | complex | expert
+  domain: frontend      # frontend | backend | fullstack | devops
+  languages:
+    - typescript
+    - svelte
+  requires_reasoning: false
+  requires_translation: false
+  pattern_based: false
+  files_count: 1
+
+# ============================================
+# 路由決策（由系統自動填入）
+# ============================================
+
+routing:
+  suggested_agent: null  # 根據 routing.yaml 規則自動建議
+  reasoning: null
+  override: false        # 設為 true 可強制指定 agent
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "src/example/file.ts"
+      reason: "需要修改的檔案"
+  references:
+    - url: "https://example.com/docs"
+      reason: "參考文件"
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  functional:
+    - "功能需求 1"
+    - "功能需求 2"
+  non_functional:
+    - "非功能需求（效能、相容性等）"
+  constraints:
+    - "限制條件"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] 驗收項目 1"
+    - "[ ] 驗收項目 2"
+    - "[ ] TypeScript 檢查通過"
+    - "[ ] 建置成功"
+  test_commands:
+    - "npm run check"
+    - "npm run build:web"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-XXX"
+  expected_files:
+    - "path/to/output/file.ts"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending  # pending | assigned | in_progress | review | completed | failed
+
+execution:
+  attempts: 0
+  max_attempts: 3
+  history: []

@@ -1,0 +1,110 @@
+# 審查任務模板
+# 用於：程式碼審查、架構審查、安全審查等
+
+id: "TASK-XXX"
+created: "YYYY-MM-DDTHH:MM:SS+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "審查任務標題"
+  description: |
+    詳細描述審查範圍和重點...
+  category: review
+  priority: high  # 審查通常優先度較高
+  tags:
+    - code-review
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: moderate  # 審查需要理解能力
+  domain: fullstack
+  review_type: code     # code | architecture | security | translation
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: claude-code  # 審查預設用 Claude
+  reasoning: "Claude 程式碼分析能力最強"
+
+# ============================================
+# 審查脈絡
+# ============================================
+
+context:
+  # 要審查的檔案或變更
+  target:
+    type: files  # files | pr | commit
+    paths:
+      - "src/lib/example.ts"
+    # 或者
+    # pr_number: 123
+    # commit_hash: "abc123"
+
+  # 參考資料
+  references:
+    - "CLAUDE.md"           # 專案規範
+    - "docs/ARCHITECTURE.md" # 架構文件
+
+# ============================================
+# 審查重點
+# ============================================
+
+review_focus:
+  required:
+    - "程式碼品質"
+    - "邏輯正確性"
+    - "錯誤處理"
+  optional:
+    - "效能考量"
+    - "可維護性"
+    - "命名慣例"
+
+  # 特定檢查項目
+  checklist:
+    - "[ ] 無明顯 bug"
+    - "[ ] 符合專案風格"
+    - "[ ] 適當的錯誤處理"
+    - "[ ] 無安全漏洞"
+    - "[ ] 無敏感資訊外洩"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-XXX"
+  format: markdown
+  expected_files:
+    - "review-report.md"
+
+  # 報告結構
+  report_structure:
+    - summary          # 總結
+    - critical_issues  # 嚴重問題
+    - suggestions      # 改進建議
+    - positive_points  # 做得好的地方
+    - action_items     # 待辦事項
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  deliverables:
+    - "審查報告完整"
+    - "問題有具體行號"
+    - "建議可執行"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending

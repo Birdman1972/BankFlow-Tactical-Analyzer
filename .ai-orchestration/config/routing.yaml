@@ -1,0 +1,188 @@
+# 任務路由配置檔
+# 定義任務如何自動分派給最適合的 AI
+
+version: "1.0"
+updated: "2026-01-26"
+
+# ============================================
+# 路由規則（依優先順序評估）
+# ============================================
+
+rules:
+  # 規則 1：翻譯任務 → Gemini CLI
+  - name: "translation_tasks"
+    description: "翻譯和國際化任務"
+    condition:
+      requires_translation: true
+    assign_to: gemini-cli
+    reasoning: "Gemini 多語言支援最佳"
+
+  # 規則 2：架構設計 → Claude Opus
+  - name: "architecture_design"
+    description: "複雜架構和系統設計"
+    condition:
+      complexity: [complex, expert]
+      category: [architecture, design]
+    assign_to: claude-code
+    reasoning: "Claude Opus 深度推理能力最強"
+
+  # 規則 3：程式碼審查 → Claude
+  - name: "code_review"
+    description: "程式碼審查任務"
+    condition:
+      category: review
+    assign_to: claude-code
+    reasoning: "Claude 提供最完整的程式碼分析"
+
+  # 規則 4：複雜除錯 → Gemini Pro (Thinking)
+  - name: "complex_debugging"
+    description: "複雜的除錯任務"
+    condition:
+      category: debugging
+      complexity: [complex, expert]
+    assign_to: gemini-3-pro-thinking
+    fallback: claude-code
+    reasoning: "延伸思考模式有助於複雜除錯"
+
+  # 規則 5：批量修改 → Codex
+  - name: "batch_modifications"
+    description: "多檔案批量修改"
+    condition:
+      category: [refactor, batch_modify]
+      files_count: "> 3"
+    assign_to: openai-codex
+    reasoning: "Codex 批量修改效率高"
+
+  # 規則 6：簡單文件 → Gemini Flash
+  - name: "simple_docs"
+    description: "簡單的文件撰寫"
+    condition:
+      complexity: [trivial, simple]
+      category: docs
+    assign_to: gemini-3-flash
+    reasoning: "快速且成本低"
+
+  # 規則 7：成本敏感 → GPT-OSS
+  - name: "cost_sensitive"
+    description: "成本敏感的簡單任務"
+    condition:
+      cost_sensitive: true
+      complexity: [trivial, simple, moderate]
+    assign_to: gpt-oss-120b
+    reasoning: "免費本地模型"
+
+  # 規則 8：中等複雜度 → Claude Sonnet
+  - name: "moderate_tasks"
+    description: "中等複雜度的一般任務"
+    condition:
+      complexity: moderate
+    assign_to: claude-sonnet-ide
+    reasoning: "平衡速度與品質"
+
+  # 預設規則
+  - name: "default"
+    description: "預設分派"
+    condition: {}
+    assign_to: claude-sonnet-ide
+    reasoning: "平衡的預設選擇"
+
+# ============================================
+# 成本優化設定
+# ============================================
+
+cost_optimization:
+  enabled: true
+
+  # 預算限制
+  budget:
+    daily_limit_usd: 50.00
+    weekly_limit_usd: 200.00
+    alert_threshold: 0.8  # 80% 時警告
+
+  # 優先使用便宜模型的情況
+  prefer_cheaper_when:
+    complexity: [trivial, simple]
+    time_sensitivity: low
+
+  # 失敗後升級策略
+  escalation:
+    failures_before_upgrade: 2
+    escalation_path:
+      - free
+      - budget
+      - standard
+      - premium
+
+# ============================================
+# 品質控制
+# ============================================
+
+quality_gates:
+  # 自動檢查
+  auto_checks:
+    - name: typescript
+      command: "npm run check"
+      required: true
+      timeout: 60
+
+    - name: build_web
+      command: "npm run build:web"
+      required: true
+      timeout: 120
+
+    - name: rust_tests
+      command: "cargo test -p bankflow-core"
+      required: false
+      timeout: 180
+
+  # 人工審查需求
+  human_review:
+    always_required:
+      - architecture
+      - security
+    recommended:
+      - i18n
+      - api_changes
+    optional:
+      - bugfix
+      - docs
+
+  # Guardian Protocol
+  guardian_protocol:
+    enabled: true
+    max_consecutive_failures: 5
+    actions:
+      - stop_current_task
+      - notify_human
+      - create_debug_snapshot
+
+# ============================================
+# 任務分類定義
+# ============================================
+
+classifications:
+  complexity:
+    - trivial     # 極簡單（改錯字、調格式）
+    - simple      # 簡單（小功能、小修改）
+    - moderate    # 中等（一般功能）
+    - complex     # 複雜（跨模組、需設計）
+    - expert      # 專家級（架構、演算法）
+
+  category:
+    - feature         # 新功能
+    - bugfix          # 修復錯誤
+    - refactor        # 重構
+    - docs            # 文件
+    - i18n            # 國際化
+    - test            # 測試
+    - review          # 審查
+    - architecture    # 架構設計
+    - debugging       # 除錯
+    - batch_modify    # 批量修改
+    - security        # 安全相關
+
+  priority:
+    - critical   # 緊急
+    - high       # 高
+    - medium     # 中
+    - low        # 低

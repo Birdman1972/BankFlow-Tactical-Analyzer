@@ -1,0 +1,102 @@
+# 文件任務模板
+# 用於：翻譯、README、技術文件等
+
+id: "TASK-XXX"
+created: "YYYY-MM-DDTHH:MM:SS+08:00"
+
+# ============================================
+# 任務基本資訊
+# ============================================
+
+metadata:
+  title: "文件任務標題"
+  description: |
+    詳細描述文件需求...
+  category: docs  # docs | i18n
+  priority: medium
+  tags:
+    - documentation
+
+# ============================================
+# 任務分類（用於路由）
+# ============================================
+
+classification:
+  complexity: simple  # 文件任務通常較簡單
+  domain: docs
+  languages:
+    - markdown
+  requires_translation: false  # 設為 true 如果是翻譯任務
+  target_languages:            # 翻譯目標語言（如適用）
+    - zh-TW
+    - en
+
+# ============================================
+# 路由決策
+# ============================================
+
+routing:
+  suggested_agent: gemini-cli  # 文件/翻譯預設用 Gemini
+  reasoning: "Gemini 多語言支援佳"
+
+# ============================================
+# 輸入脈絡
+# ============================================
+
+context:
+  files:
+    - path: "docs/example.md"
+      reason: "參考或翻譯來源"
+  style_guide:
+    tone: professional  # professional | casual | technical
+    language: zh-TW     # 輸出語言
+    terminology:
+      - term: "API"
+        preferred: "API"  # 保留英文
+      - term: "user"
+        preferred: "使用者"
+
+# ============================================
+# 需求定義
+# ============================================
+
+requirements:
+  content:
+    - "包含章節 1"
+    - "包含章節 2"
+  format:
+    - "使用 Markdown 格式"
+    - "包含程式碼範例"
+  constraints:
+    - "台灣繁體中文用語"
+    - "技術術語可保留英文"
+
+# ============================================
+# 驗收標準
+# ============================================
+
+acceptance:
+  checklist:
+    - "[ ] 內容完整"
+    - "[ ] 格式正確"
+    - "[ ] 無錯字"
+  human_review:
+    required: true
+    focus:
+      - "翻譯準確度"
+      - "用語一致性"
+
+# ============================================
+# 輸出規範
+# ============================================
+
+output:
+  directory: ".ai-orchestration/outputs/TASK-XXX"
+  expected_files:
+    - "README.md"
+
+# ============================================
+# 狀態追蹤
+# ============================================
+
+status: pending
