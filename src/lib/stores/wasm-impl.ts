@@ -43,6 +43,24 @@ let lastAnalysisData: WasmAnalysisData | null = null;
 // WASM module reference (type from bankflow-core-wasm.d.ts)
 let wasmModule: typeof import('$lib/wasm/bankflow-core-wasm/bankflow_core.js') | null = null;
 
+/**
+ * Recursively convert Map objects to plain JavaScript objects
+ * Required because serde_wasm_bindgen returns Maps instead of plain objects
+ */
+function mapToObject(value: unknown): unknown {
+  if (value instanceof Map) {
+    const obj: Record<string, unknown> = {};
+    value.forEach((v, k) => {
+      obj[k] = mapToObject(v);
+    });
+    return obj;
+  }
+  if (Array.isArray(value)) {
+    return value.map(mapToObject);
+  }
+  return value;
+}
+
 // ============================================
 // WASM Platform Implementation
 // ============================================
@@ -156,12 +174,12 @@ export class WasmPlatform implements PlatformAPI {
         settings.ipCrossReference
       ) as WasmAnalysisData;
 
-      // WASM returns a JavaScript Map, convert to plain object
+      // WASM returns a JavaScript Map, convert to plain objects recursively
       const resultMap = result as unknown as Map<string, unknown>;
       const analysisData: WasmAnalysisData = {
-        transactions: (resultMap.get('transactions') || []) as unknown[],
-        income: (resultMap.get('income') || []) as unknown[],
-        expense: (resultMap.get('expense') || []) as unknown[],
+        transactions: mapToObject(resultMap.get('transactions') || []) as unknown[],
+        income: mapToObject(resultMap.get('income') || []) as unknown[],
+        expense: mapToObject(resultMap.get('expense') || []) as unknown[],
         totalRecords: (resultMap.get('totalRecords') || 0) as number,
         incomeCount: (resultMap.get('incomeCount') || 0) as number,
         expenseCount: (resultMap.get('expenseCount') || 0) as number,
