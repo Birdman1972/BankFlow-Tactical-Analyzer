@@ -107,3 +107,7 @@ Fixed Web/WASM export crashing with `RuntimeError: unreachable` by enabling the 
   - `vite preview --host 127.0.0.1 --port 4173` → `EPERM` (cannot bind port in this environment)
 - Next step for full functional web test:
   - Use Vercel preview or production deployment URL to run browser-based upload/analysis/export tests.
+
+## 7. Vercel Build Fix (2026-01-27)
+- Added missing Vercel runtime dependency to resolve build failure:
+  - `@vercel/node` in `package.json`
