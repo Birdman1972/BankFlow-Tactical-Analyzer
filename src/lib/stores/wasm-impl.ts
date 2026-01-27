@@ -156,20 +156,27 @@ export class WasmPlatform implements PlatformAPI {
         settings.ipCrossReference
       ) as WasmAnalysisData;
 
-      // Debug: log actual result structure
-      console.log('WASM analyze result:', result);
-      console.log('Result keys:', Object.keys(result || {}));
+      // WASM returns a JavaScript Map, convert to plain object
+      const resultMap = result as unknown as Map<string, unknown>;
+      const analysisData: WasmAnalysisData = {
+        transactions: (resultMap.get('transactions') || []) as unknown[],
+        income: (resultMap.get('income') || []) as unknown[],
+        expense: (resultMap.get('expense') || []) as unknown[],
+        totalRecords: (resultMap.get('totalRecords') || 0) as number,
+        incomeCount: (resultMap.get('incomeCount') || 0) as number,
+        expenseCount: (resultMap.get('expenseCount') || 0) as number,
+      };
 
       // Store for export
-      lastAnalysisData = result;
+      lastAnalysisData = analysisData;
 
       onProgress?.({ stage: 'complete', progress: 100, message: 'Analysis complete!' });
 
-      // Compute matched/multi-IP counts from transactions (with defensive checks)
-      const transactions = (result?.transactions || []) as Array<{ matched_ips?: string[] }>;
+      // Compute matched/multi-IP counts from transactions
+      const transactions = analysisData.transactions as Array<{ matched_ips?: string[] }>;
       const matchedCount = transactions.filter(t => t.matched_ips && t.matched_ips.length > 0).length;
       const multiIpCount = transactions.filter(t => t.matched_ips && t.matched_ips.length > 1).length;
-      const totalRecords = result?.totalRecords ?? transactions.length;
+      const totalRecords = analysisData.totalRecords;
 
       const analysisResult: AnalysisResult = {
         totalRecords,
