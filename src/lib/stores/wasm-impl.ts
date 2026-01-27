@@ -156,18 +156,23 @@ export class WasmPlatform implements PlatformAPI {
         settings.ipCrossReference
       ) as WasmAnalysisData;
 
+      // Debug: log actual result structure
+      console.log('WASM analyze result:', result);
+      console.log('Result keys:', Object.keys(result || {}));
+
       // Store for export
       lastAnalysisData = result;
 
       onProgress?.({ stage: 'complete', progress: 100, message: 'Analysis complete!' });
 
-      // Compute matched/multi-IP counts from transactions
-      const transactions = result.transactions as Array<{ matched_ips?: string[] }>;
+      // Compute matched/multi-IP counts from transactions (with defensive checks)
+      const transactions = (result?.transactions || []) as Array<{ matched_ips?: string[] }>;
       const matchedCount = transactions.filter(t => t.matched_ips && t.matched_ips.length > 0).length;
       const multiIpCount = transactions.filter(t => t.matched_ips && t.matched_ips.length > 1).length;
+      const totalRecords = result?.totalRecords ?? transactions.length;
 
       const analysisResult: AnalysisResult = {
-        totalRecords: result.totalRecords,
+        totalRecords,
         matchedCount,
         multiIpCount,
         whoisQueried: 0, // Not supported in web
@@ -179,7 +184,7 @@ export class WasmPlatform implements PlatformAPI {
         },
       };
 
-      addLog('success', `Analysis complete: ${matchedCount}/${result.totalRecords} records matched`);
+      addLog('success', `Analysis complete: ${matchedCount}/${totalRecords} records matched`);
 
       if (multiIpCount > 0) {
         addLog('warning', `${multiIpCount} transactions have multiple IP matches`);
