@@ -52,6 +52,10 @@
 
 ---
 
+## WASM 匯出注意事項
+
+- Web/WASM 匯出使用 `rust_xlsxwriter` 的 `wasm` feature，以避免瀏覽器環境的 `SystemTime` 不支援問題。
+
 ## 目錄結構
 
 ```

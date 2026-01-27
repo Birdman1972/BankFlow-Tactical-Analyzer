@@ -209,7 +209,7 @@ await api.exportReport();
 {
   "buildCommand": "npm run build:web",
   "outputDirectory": "dist",
-  "framework": "svelte"
+  "framework": "vite"
 }
 ```
 
@@ -217,7 +217,7 @@ await api.exportReport();
 // package.json (新增指令)
 {
   "scripts": {
-    "build:web": "vite build",
+    "build:web": "npm run build:wasm && vite build",
     "build:desktop": "tauri build"
   }
 }

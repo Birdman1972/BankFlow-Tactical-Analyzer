@@ -78,7 +78,7 @@ mindmap
         單一執行檔
       後端 Rust
         calamine 解析
-        xlsxwriter 輸出
+        rust_xlsxwriter 輸出 (wasm)
         reqwest HTTP
     功能模組
       輸入處理
@@ -310,7 +310,7 @@ sequenceDiagram
 │  │   Svelte    │   │    Tauri    │   │    Rust     │   │  Libraries  │     │
 │  │             │   │             │   │             │   │             │     │
 │  │  • UI 渲染  │   │  • 桌面整合 │   │  • 核心邏輯 │   │  • calamine │     │
-│  │  • 狀態管理 │   │  • IPC 通訊 │   │  • 高效運算 │   │  • xlsxwriter│    │
+│  │  • 狀態管理 │   │  • IPC 通訊 │   │  • 高效運算 │   │  • rust_xlsx │     │
 │  │  • 元件化   │   │  • 打包發布 │   │  • 記憶體安全│  │  • reqwest  │     │
 │  │             │   │             │   │             │   │  • chrono   │     │
 │  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘   └──────┬──────┘     │
@@ -333,7 +333,7 @@ sequenceDiagram
 | **前端** | Svelte | 編譯時優化、打包體積小、元件化架構便於擴充 |
 | **框架** | Tauri | 比 Electron 體積小 10 倍、原生效能、Rust 整合 |
 | **後端** | Rust | 記憶體安全、高效能、適合處理大量資料 |
-| **Excel** | calamine + xlsxwriter | Rust 原生、讀寫效能優異 |
+| **Excel** | calamine + rust_xlsxwriter (wasm) | Rust 原生、讀寫效能優異 |
 
 ---
 

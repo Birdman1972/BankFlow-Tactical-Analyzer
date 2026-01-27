@@ -118,6 +118,7 @@
 
 **待完成**：
 - [ ] Phase 6 (打包) - Tauri 桌面應用打包
+- [ ] WASM 匯出穩定化（rust_xlsxwriter wasm feature）
 
 ---
 
@@ -126,6 +127,7 @@
 **Web 版本 (Vercel)**：
 - 🌐 https://bankflow-tactical-analyzer.vercel.app
 - GitHub 整合：推送到 main 分支自動部署
+- Vercel buildCommand：`npm run build:web`（包含 `build:wasm`）
 
 ---
 

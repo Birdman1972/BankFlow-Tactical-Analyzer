@@ -119,6 +119,7 @@ gantt
 ### Phase 5：測試與最佳化 (03/01 - 03/05)
 
 - [ ] 產生測試用 Excel 檔案
+- [ ] WASM 匯出修正（rust_xlsxwriter wasm feature）
 - [ ] 撰寫 Rust 單元測試
 - [ ] 撰寫整合測試
 - [ ] 效能測試與最佳化
