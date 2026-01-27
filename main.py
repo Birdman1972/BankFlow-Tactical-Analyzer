@@ -120,6 +120,28 @@ def get_whois_info(ip_address):
     return "Error", "Error"
 
 
+def _pick_column(
+    df: pd.DataFrame, candidates: list[str], fallback_index: int | None = None
+):
+    """Pick a dataframe column by header candidates, with optional positional fallback."""
+
+    col_map: dict[str, object] = {}
+    for c in df.columns:
+        key = str(c).strip().lower()
+        if key and key not in col_map:
+            col_map[key] = c
+
+    for name in candidates:
+        key = str(name).strip().lower()
+        if key in col_map:
+            return col_map[key]
+
+    if fallback_index is not None and df.shape[1] > fallback_index:
+        return df.columns[fallback_index]
+
+    return None
+
+
 def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_whois):
     """執行分析主邏輯"""
     status_log = []
@@ -130,93 +152,117 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
         df_b = pd.read_excel(file_b)
         status_log.append(f"✅ 檔案載入成功: A({len(df_a)}筆), B({len(df_b)}筆)")
 
-        # Prepare Split Dataframes (Before Drop)
+        # Column mapping (prefer headers, fallback to canonical indices)
+        col_a_time = _pick_column(
+            df_a,
+            ["交易時間", "時間戳記", "時間", "timestamp", "交易日期"],
+            fallback_index=0,
+        )
+        col_a_account = _pick_column(
+            df_a, ["帳號", "account", "account_id"], fallback_index=1
+        )
+        col_a_income = _pick_column(
+            df_a, ["存入", "存入金額", "收入金額", "income"], fallback_index=9
+        )
+        col_a_expense = _pick_column(
+            df_a, ["支出", "支出金額", "expense"], fallback_index=8
+        )
+        col_a_counterparty = _pick_column(
+            df_a,
+            ["對方帳號", "counterparty", "counterparty account"],
+            fallback_index=11,
+        )
+
+        col_b_time = _pick_column(
+            df_b, ["登入時間", "時間戳記", "時間", "timestamp"], fallback_index=0
+        )
+        col_b_account = _pick_column(
+            df_b, ["帳號", "account", "account_id"], fallback_index=1
+        )
+        col_b_ip = _pick_column(
+            df_b, ["IP位址", "ip位址", "ip地址", "ip", "ip address"], fallback_index=2
+        )
+
+        # Prepare Split Dataframes (before masking)
         df_income = pd.DataFrame()
         df_expense = pd.DataFrame()
-
         if split_io:
             try:
-                # 確保欄位足夠 (至少10欄)
-                if df_a.shape[1] > 9:
-                    # Force cleanup of 'J' (index 9) and 'I' (index 8)
-                    val_inc = pd.to_numeric(df_a.iloc[:, 9], errors="coerce").fillna(0)
-                    val_exp = pd.to_numeric(df_a.iloc[:, 8], errors="coerce").fillna(0)
-
+                if col_a_income is None or col_a_expense is None:
+                    status_log.append("⚠️ 收支分流失敗: 找不到支出/存入欄位")
+                else:
+                    val_inc = pd.to_numeric(df_a[col_a_income], errors="coerce").fillna(
+                        0
+                    )
+                    val_exp = pd.to_numeric(
+                        df_a[col_a_expense], errors="coerce"
+                    ).fillna(0)
                     df_income = df_a[val_inc > 0].copy()
                     df_expense = df_a[val_exp > 0].copy()
                     status_log.append(
                         f"📊 收支分流完成: 存入 {len(df_income)} 筆, 支出 {len(df_expense)} 筆"
                     )
-                else:
-                    status_log.append("⚠️ 收支分流失敗: 欄位不足 (需 >= 10)")
             except Exception as e:
                 status_log.append(f"⚠️ 收支分流錯誤: {str(e)}")
-
-        # Drop Sensitive (Index 2, 5, 11, 12)
-        if hide_sensitive:
-            cols_to_drop = [2, 5, 11, 12]
-            valid_cols = [c for c in cols_to_drop if c < df_a.shape[1]]
-            if valid_cols:
-                col_names = df_a.columns[valid_cols]
-                # Drop inplace is safe here as income/expense are copies
-                df_a.drop(columns=col_names, inplace=True)
-                status_log.append(f"🛡️ 敏感欄位已隱藏 (Cols: {valid_cols})")
 
         # IP Matching
         if do_ip_match:
             status_log.append("🔄 正在執行 IP 交叉比對 (Window: -1s/+2s)...")
-
-            # Pre-process File B for speed
-            # Assume Col 0=Time, Col 1=Account, Col 2=IP
-            # Safe check
-            if df_b.shape[1] < 3:
-                status_log.append("❌ IP比對失敗: 檔案 B 欄位不足 (需 >= 3)")
+            if col_b_time is None or col_b_account is None or col_b_ip is None:
+                status_log.append(
+                    "❌ IP比對失敗: 檔案 B 欄位不足 (需: 登入時間/帳號/IP位址)"
+                )
+            elif col_a_time is None or col_a_account is None:
+                status_log.append("❌ IP比對失敗: 檔案 A 欄位不足 (需: 交易時間/帳號)")
             else:
-                df_b_proc = df_b.iloc[:, [0, 1, 2]].copy()
+                df_b_proc = df_b[[col_b_time, col_b_account, col_b_ip]].copy()
                 df_b_proc.columns = ["Time", "Account", "IP"]
                 df_b_proc["Time"] = pd.to_datetime(df_b_proc["Time"], errors="coerce")
                 df_b_proc.dropna(subset=["Time"], inplace=True)
+                df_b_proc["Account"] = (
+                    df_b_proc["Account"]
+                    .astype(str)
+                    .str.strip()
+                    .str.replace(r"\.0$", "", regex=True)
+                )
 
-                # File A columns (Index 0, 1 assumed safely exist even after drop)
-                # Note: df_a might have dropped cols, but typically 0,1 are not dropped (2,5,11,12)
-                times_a = pd.to_datetime(df_a.iloc[:, 0], errors="coerce")
-                accs_a = df_a.iloc[:, 1]
+                times_a = pd.to_datetime(df_a[col_a_time], errors="coerce")
+                accs_a = (
+                    df_a[col_a_account]
+                    .astype(str)
+                    .str.strip()
+                    .str.replace(r"\.0$", "", regex=True)
+                )
 
                 results = []
-
-                # Note: Using Streamlit progress bar in main loop
                 progress_bar = st.progress(0)
                 total_rows = len(df_a)
 
                 for idx in range(total_rows):
-                    # Update progress every 10%
                     if idx % (max(1, total_rows // 10)) == 0:
                         progress_bar.progress(int((idx / total_rows) * 100))
 
                     t = times_a.iloc[idx]
                     acc = accs_a.iloc[idx]
 
-                    if pd.isna(t) or pd.isna(acc):
+                    if pd.isna(t) or not acc or acc.lower() == "nan":
                         results.append("Invalid Data")
                         continue
 
-                    # Window
                     t_start = t - datetime.timedelta(seconds=1)
                     t_end = t + datetime.timedelta(seconds=2)
 
-                    # Filter (Simple boolean mask)
                     mask = (
                         (df_b_proc["Account"] == acc)
                         & (df_b_proc["Time"] >= t_start)
                         & (df_b_proc["Time"] <= t_end)
                     )
-
                     matches = df_b_proc[mask]
 
                     if matches.empty:
                         results.append("N/A")
                     else:
-                        ips = matches["IP"].unique()
+                        ips = matches["IP"].astype(str).unique()
                         if len(ips) == 1:
                             results.append(str(ips[0]))
                         else:
@@ -229,7 +275,16 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
 
                 progress_bar.progress(100)
                 df_a["Matched_IP"] = results
-                status_log.append(f"✅ IP 比對完成")
+                if split_io:
+                    if not df_income.empty:
+                        df_income["Matched_IP"] = df_a.loc[
+                            df_income.index, "Matched_IP"
+                        ].values
+                    if not df_expense.empty:
+                        df_expense["Matched_IP"] = df_a.loc[
+                            df_expense.index, "Matched_IP"
+                        ].values
+                status_log.append("✅ IP 比對完成")
 
         # Whois
         if do_whois and "Matched_IP" in df_a.columns:
@@ -253,7 +308,78 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
             wb_bar.progress(100)
             df_a["IP_Country"] = countries
             df_a["IP_ISP"] = isps
+            if split_io:
+                if not df_income.empty:
+                    df_income["IP_Country"] = df_a.loc[
+                        df_income.index, "IP_Country"
+                    ].values
+                    df_income["IP_ISP"] = df_a.loc[df_income.index, "IP_ISP"].values
+                if not df_expense.empty:
+                    df_expense["IP_Country"] = df_a.loc[
+                        df_expense.index, "IP_Country"
+                    ].values
+                    df_expense["IP_ISP"] = df_a.loc[df_expense.index, "IP_ISP"].values
             status_log.append("✅ Whois 查詢完成")
+
+        # Counterparty list (only export when not hiding sensitive columns)
+        df_counterparty = None
+        if split_io:
+            if hide_sensitive:
+                status_log.append("ℹ️ 已啟用敏感欄位隱藏，略過輸出對方帳號清單")
+            elif col_a_counterparty is None:
+                status_log.append("⚠️ 找不到對方帳號欄位，略過輸出對方帳號清單")
+            else:
+
+                def _unique_nonempty(series: pd.Series) -> list[str]:
+                    vals = series.astype(str).str.strip()
+                    vals = vals[
+                        vals.notna() & (vals != "") & (vals.str.lower() != "nan")
+                    ]
+                    return sorted(vals.unique().tolist())
+
+                income_list = (
+                    _unique_nonempty(df_income[col_a_counterparty])
+                    if not df_income.empty
+                    else []
+                )
+                expense_list = (
+                    _unique_nonempty(df_expense[col_a_counterparty])
+                    if not df_expense.empty
+                    else []
+                )
+                df_counterparty = pd.DataFrame(
+                    {
+                        "Income_對方帳號": pd.Series(income_list),
+                        "Expense_對方帳號": pd.Series(expense_list),
+                    }
+                )
+                status_log.append(
+                    f"🧾 對方帳號清單完成: 存入 unique={len(income_list)}, 支出 unique={len(expense_list)}"
+                )
+
+        # Drop Sensitive (C/F/L/M) across all output sheets
+        if hide_sensitive:
+            sensitive_headers = {
+                "身分證字號",
+                "身分證/統編",
+                "交易序號",
+                "對方帳號",
+                "對方戶名",
+            }
+            drop_cols = [c for c in df_a.columns if str(c).strip() in sensitive_headers]
+            if not drop_cols:
+                cols_to_drop = [2, 5, 11, 12]
+                valid_cols = [c for c in cols_to_drop if c < df_a.shape[1]]
+                drop_cols = df_a.columns[valid_cols].tolist() if valid_cols else []
+
+            if drop_cols:
+                df_a.drop(columns=drop_cols, inplace=True, errors="ignore")
+                if split_io:
+                    df_income.drop(columns=drop_cols, inplace=True, errors="ignore")
+                    df_expense.drop(columns=drop_cols, inplace=True, errors="ignore")
+                status_log.append(
+                    f"🛡️ 敏感欄位已隱藏 ({', '.join(map(str, drop_cols))})"
+                )
 
         # Generate Output
         output = io.BytesIO()
@@ -262,8 +388,16 @@ def process_analysis(file_a, file_b, hide_sensitive, split_io, do_ip_match, do_w
             if split_io:
                 df_income.to_excel(writer, sheet_name="Sheet2_Income", index=False)
                 df_expense.to_excel(writer, sheet_name="Sheet3_Expense", index=False)
+            if df_counterparty is not None:
+                df_counterparty.to_excel(
+                    writer, sheet_name="Sheet4_Counterparty", index=False
+                )
 
         output.seek(0)
+
+        # Explicit cleanup
+        del df_b
+        gc.collect()
         return output, df_a, status_log
 
     except Exception as e:

@@ -5,6 +5,7 @@
 use crate::error::CoreError;
 use crate::models::Transaction;
 use rust_xlsxwriter::{Color, Format, FormatBorder, Workbook, Worksheet};
+use std::collections::HashSet;
 
 const BASE_HEADERS: &[&str] = &[
     "Timestamp",
@@ -15,6 +16,8 @@ const BASE_HEADERS: &[&str] = &[
     "IP Country",
     "IP ISP",
 ];
+
+const COUNTERPARTY_RAW_INDEX: usize = 11; // canonical File A col L
 
 pub struct Exporter;
 
@@ -47,31 +50,87 @@ impl Exporter {
         // Summary sheet
         {
             let ws = workbook.add_worksheet();
-            ws.set_name("Summary").map_err(|e| CoreError::ExportError(e.to_string()))?;
+            ws.set_name("Summary")
+                .map_err(|e| CoreError::ExportError(e.to_string()))?;
             let raw_count = max_raw_columns(summary);
             write_headers(ws, &header_format, raw_count)?;
-            write_transactions(ws, summary, &data_format, &money_format, &ip_format, &multi_ip_format)?;
+            write_transactions(
+                ws,
+                summary,
+                &data_format,
+                &money_format,
+                &ip_format,
+                &multi_ip_format,
+            )?;
             set_column_widths(ws, raw_count)?;
         }
 
         // Income sheet
         {
             let ws = workbook.add_worksheet();
-            ws.set_name("Income").map_err(|e| CoreError::ExportError(e.to_string()))?;
+            ws.set_name("Income")
+                .map_err(|e| CoreError::ExportError(e.to_string()))?;
             let raw_count = max_raw_columns(income);
             write_headers(ws, &header_format, raw_count)?;
-            write_transactions(ws, income, &data_format, &money_format, &ip_format, &multi_ip_format)?;
+            write_transactions(
+                ws,
+                income,
+                &data_format,
+                &money_format,
+                &ip_format,
+                &multi_ip_format,
+            )?;
             set_column_widths(ws, raw_count)?;
         }
 
         // Expense sheet
         {
             let ws = workbook.add_worksheet();
-            ws.set_name("Expense").map_err(|e| CoreError::ExportError(e.to_string()))?;
+            ws.set_name("Expense")
+                .map_err(|e| CoreError::ExportError(e.to_string()))?;
             let raw_count = max_raw_columns(expense);
             write_headers(ws, &header_format, raw_count)?;
-            write_transactions(ws, expense, &data_format, &money_format, &ip_format, &multi_ip_format)?;
+            write_transactions(
+                ws,
+                expense,
+                &data_format,
+                &money_format,
+                &ip_format,
+                &multi_ip_format,
+            )?;
             set_column_widths(ws, raw_count)?;
+        }
+
+        // Counterparty sheet (unique accounts from income/expense)
+        {
+            let ws = workbook.add_worksheet();
+            ws.set_name("Counterparty")
+                .map_err(|e| CoreError::ExportError(e.to_string()))?;
+
+            let income_list = unique_counterparty_accounts(income);
+            let expense_list = unique_counterparty_accounts(expense);
+
+            ws.write_string_with_format(0, 0, "Income Counterparty Account", &header_format)
+                .map_err(|e| CoreError::ExportError(e.to_string()))?;
+            ws.write_string_with_format(0, 1, "Expense Counterparty Account", &header_format)
+                .map_err(|e| CoreError::ExportError(e.to_string()))?;
+
+            let max_len = income_list.len().max(expense_list.len());
+            for i in 0..max_len {
+                let row = i as u32 + 1;
+                if let Some(v) = income_list.get(i) {
+                    ws.write_string_with_format(row, 0, v, &data_format)
+                        .map_err(|e| CoreError::ExportError(e.to_string()))?;
+                }
+                if let Some(v) = expense_list.get(i) {
+                    ws.write_string_with_format(row, 1, v, &data_format)
+                        .map_err(|e| CoreError::ExportError(e.to_string()))?;
+                }
+            }
+            ws.set_column_width(0, 28.0)
+                .map_err(|e| CoreError::ExportError(e.to_string()))?;
+            ws.set_column_width(1, 28.0)
+                .map_err(|e| CoreError::ExportError(e.to_string()))?;
         }
 
         let buffer = workbook
@@ -121,7 +180,11 @@ fn write_transactions(
         }
 
         let ip_str = tx.matched_ip.as_deref().unwrap_or("N/A");
-        let fmt = if ip_str.contains(" | ") { multi_ip_fmt } else { ip_fmt };
+        let fmt = if ip_str.contains(" | ") {
+            multi_ip_fmt
+        } else {
+            ip_fmt
+        };
         ws.write_string_with_format(row, 4, ip_str, fmt)
             .map_err(|e| CoreError::ExportError(e.to_string()))?;
 
@@ -159,6 +222,21 @@ fn max_raw_columns(transactions: &[Transaction]) -> usize {
         .unwrap_or(0)
 }
 
+fn unique_counterparty_accounts(transactions: &[Transaction]) -> Vec<String> {
+    let mut set: HashSet<String> = HashSet::new();
+    for tx in transactions {
+        if let Some(value) = tx.raw_columns.get(COUNTERPARTY_RAW_INDEX) {
+            let v = value.trim();
+            if !v.is_empty() {
+                set.insert(v.to_string());
+            }
+        }
+    }
+    let mut items: Vec<String> = set.into_iter().collect();
+    items.sort();
+    items
+}
+
 // Native-only functions
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
@@ -175,9 +253,8 @@ mod native {
             expense: &[Transaction],
         ) -> Result<(), CoreError> {
             let bytes = Exporter::export_to_bytes(summary, income, expense)?;
-            fs::write(path, bytes).map_err(|e| {
-                CoreError::ExportError(format!("Failed to write file: {}", e))
-            })?;
+            fs::write(path, bytes)
+                .map_err(|e| CoreError::ExportError(format!("Failed to write file: {}", e)))?;
             Ok(())
         }
     }

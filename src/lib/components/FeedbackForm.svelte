@@ -2,7 +2,6 @@
   import { t } from '$lib/i18n';
   import { get } from 'svelte/store';
   import { currentPlatform } from '../stores/platform';
-  // @ts-ignore - Importing package.json is enabled in tsconfig
   import pkg from '../../../package.json';
 
   type FeedbackType = 'feature' | 'bug' | 'ux';

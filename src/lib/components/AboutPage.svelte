@@ -1,7 +1,6 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import { onMount } from 'svelte';
-  // @ts-ignore - Importing package.json is enabled in tsconfig
   import pkg from '../../../package.json';
 
   interface ChangelogItem {

@@ -1,7 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { currentPlatform } from '../stores/platform';
 import { get } from 'svelte/store';
-// @ts-ignore - Importing package.json is enabled in tsconfig
 import pkg from '../../../package.json';
 
 // Types matches Rust struct and JSON
@@ -23,6 +22,23 @@ const STORAGE_KEY = 'bankflow_last_update_check';
 const SKIPPED_VERSION_KEY = 'bankflow_skipped_version';
 
 export const currentVersion = pkg.version;
+
+async function getLocalVersion(platform: string): Promise<string> {
+  if (platform === 'tauri') {
+    try {
+      const { getVersion } = await import('@tauri-apps/api/app');
+      return await getVersion();
+    } catch {
+      // Fallback to bundled web UI version
+    }
+  }
+  return pkg.version;
+}
+
+export async function getInstalledVersion(): Promise<string> {
+  const platform = get(currentPlatform);
+  return getLocalVersion(platform);
+}
 
 /**
  * Compare two semver strings
@@ -91,8 +107,8 @@ export async function checkForUpdates(force: boolean = false): Promise<VersionIn
     // Update last check time
     localStorage.setItem(STORAGE_KEY, Date.now().toString());
 
-    const myVersion = currentVersion;
-    console.log(`Current: ${myVersion}, Remote: ${remoteInfo.version}`);
+     const myVersion = await getLocalVersion(platform);
+     console.log(`Current: ${myVersion}, Remote: ${remoteInfo.version}`);
 
     if (compareVersions(remoteInfo.version, myVersion) > 0) {
       // Check if version is skipped

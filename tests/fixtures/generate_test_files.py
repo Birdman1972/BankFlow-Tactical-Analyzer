@@ -182,6 +182,9 @@ def generate_ip_records(transactions: list, match_rate: float = 0.7) -> list:
 def create_excel_files(output_dir: Path, transaction_count: int = 1000):
     """建立測試用 Excel 檔案"""
 
+    # Ensure reproducible fixtures
+    random.seed(0)
+
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # 產生固定的測試帳號 (10 個)
@@ -197,6 +200,7 @@ def create_excel_files(output_dir: Path, transaction_count: int = 1000):
     print("建立檔案 A: 存款明細...")
     wb_a = Workbook()
     ws_a = wb_a.active
+    assert ws_a is not None
     ws_a.title = "存款明細"
 
     # 表頭
@@ -229,6 +233,7 @@ def create_excel_files(output_dir: Path, transaction_count: int = 1000):
     print("建立檔案 B: IP 紀錄...")
     wb_b = Workbook()
     ws_b = wb_b.active
+    assert ws_b is not None
     ws_b.title = "IP紀錄"
 
     # 表頭

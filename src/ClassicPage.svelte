@@ -7,6 +7,7 @@
   import ResultSummary from './lib/components/ResultSummary.svelte';
   import WarningBanner from './lib/components/WarningBanner.svelte';
   import UpdateDialog from './lib/components/UpdateDialog.svelte';
+  import DownloadsDialog from '$lib/components/DownloadsDialog.svelte';
   import ToastContainer from './lib/components/ToastContainer.svelte';
   import {
     fileA,
@@ -25,13 +26,16 @@
     checkForUpdates,
     skipVersion,
     currentVersion,
+    getInstalledVersion,
     type VersionInfo
   } from '$lib/services/versionService';
 
-  const appVersion = currentVersion;
+  let appVersion = currentVersion;
   let updateInfo: VersionInfo | null = null;
+  let showDownloads = false;
 
   onMount(async () => {
+    appVersion = await getInstalledVersion();
     // Check for updates on startup
     const info = await checkForUpdates();
     if (info) {
@@ -43,7 +47,7 @@
     // Open download page
     // Using window.open requires tauri.conf.json allowlist or shell plugin
     // Assuming basic external link capability or will silently fail if restricted
-    window.open('https://github.com/project-bob/bankflow-tactical-analyzer/releases', '_blank');
+      window.open('https://github.com/Birdman1972/BankFlow-Tactical-Analyzer/releases', '_blank');
     updateInfo = null;
   }
 
@@ -134,6 +138,14 @@
           </button>
         </div>
 
+        <button
+          class="text-xs text-gray-500 hover:text-neon-blue transition-colors"
+          on:click={() => (showDownloads = true)}
+          disabled={$isAnalyzing}
+        >
+          {$t('downloadsDialog.open')}
+        </button>
+
         {#if $fileA || $fileB}
           <button
             class="text-xs text-gray-500 hover:text-neon-pink transition-colors"
@@ -158,6 +170,10 @@
       onRemindLater={handleRemindLater}
       onSkip={handleSkip}
     />
+  {/if}
+
+  {#if showDownloads}
+    <DownloadsDialog onClose={() => (showDownloads = false)} />
   {/if}
 
   <!-- Main Content Grid -->

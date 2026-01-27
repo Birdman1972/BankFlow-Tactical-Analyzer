@@ -7,29 +7,25 @@ from datetime import datetime, timedelta
 from openpyxl import Workbook
 
 FILE_A_HEADERS = [
-    "交易序號",
-    "帳號",
-    "客戶姓名",
     "交易時間",
-    "交易類型",
-    "身分證/統編",
-    "交易摘要",
-    "交易後餘額",
-    "支出金額",
-    "存入金額",
+    "帳號",
+    "身分證字號",
+    "戶名",
     "幣別",
-    "聯絡電話",
-    "通訊地址",
+    "交易序號",
+    "摘要",
     "備註",
+    "支出",
+    "存入",
+    "餘額",
+    "對方帳號",
+    "對方戶名",
 ]
 
 FILE_B_HEADERS = [
-    "登入序號",
-    "帳號",
     "登入時間",
+    "帳號",
     "IP位址",
-    "裝置資訊",
-    "登入地區",
 ]
 
 PUBLIC_IPS = [
@@ -55,34 +51,33 @@ def build_file_a(row_count: int) -> bytes:
     balance = 100000.0
 
     for i in range(row_count):
-        account = f"ACC{i % 100000:05d}"
-        timestamp = (base_time + timedelta(seconds=i)).strftime("%Y-%m-%d %H:%M:%S")
+        account = f"{i % 1000:010d}"
+        timestamp = (base_time + timedelta(seconds=i)).strftime("%Y/%m/%d %H:%M:%S")
         income = 0.0
         expense = 0.0
         if i % 2 == 0:
             income = float((i % 50 + 1) * 100)
             balance += income
-            tx_type = "入帳"
+            summary = "存入"
         else:
             expense = float((i % 40 + 1) * 80)
             balance -= expense
-            tx_type = "出帳"
+            summary = "支出"
 
         row = [
-            i + 1,
-            account,
-            f"客戶{i % 500:03d}",
             timestamp,
-            tx_type,
+            account,
             f"A{i % 999999999:09d}",
-            "轉帳",
-            round(balance, 2),
-            expense,
-            income,
+            f"測試用戶{i % 500:03d}",
             "TWD",
-            f"09{i % 100000000:08d}",
-            f"台北市中正區{i % 100}號",
-            "測試資料",
+            f"TX{i % 99999999:08d}",
+            summary,
+            "測試資料" if i % 10 == 0 else "",
+            expense if expense > 0 else "",
+            income if income > 0 else "",
+            round(balance, 2),
+            f"{(i * 7) % 1000:010d}" if i % 3 != 0 else "",
+            f"對方戶名{i % 500:03d}" if i % 4 == 0 else "",
         ]
         ws.append(row)
 
@@ -98,28 +93,22 @@ def build_file_b(row_count: int) -> bytes:
 
     base_time = datetime(2024, 1, 15, 10, 30, 1)
     for i in range(row_count):
-        account = f"ACC{i % 100000:05d}"
-        timestamp = (base_time + timedelta(seconds=i)).strftime("%Y-%m-%d %H:%M:%S")
+        account = f"{i % 1000:010d}"
+        timestamp = (base_time + timedelta(seconds=i)).strftime("%Y/%m/%d %H:%M:%S")
         ip = PUBLIC_IPS[i % len(PUBLIC_IPS)]
         row = [
-            i + 1,
-            account,
             timestamp,
+            account,
             ip,
-            "Chrome",
-            "台灣",
         ]
         ws.append(row)
 
         if i % 500 == 0:
             multi_ip = PRIVATE_IPS[(i // 500) % len(PRIVATE_IPS)]
             row2 = [
-                f"{i + 1}-2",
+                (base_time + timedelta(seconds=i + 1)).strftime("%Y/%m/%d %H:%M:%S"),
                 account,
-                (base_time + timedelta(seconds=i + 1)).strftime("%Y-%m-%d %H:%M:%S"),
                 multi_ip,
-                "Firefox",
-                "台灣",
             ]
             ws.append(row2)
 
@@ -151,8 +140,12 @@ def generate(target_mb: int, out_a: str, out_b: str) -> None:
     write_file(out_a, data_a)
     write_file(out_b, data_b)
 
-    print(f"Generated {out_a}: {os.path.getsize(out_a) / (1024*1024):.2f} MB, rows={rows_a}")
-    print(f"Generated {out_b}: {os.path.getsize(out_b) / (1024*1024):.2f} MB, rows={rows_b}")
+    print(
+        f"Generated {out_a}: {os.path.getsize(out_a) / (1024 * 1024):.2f} MB, rows={rows_a}"
+    )
+    print(
+        f"Generated {out_b}: {os.path.getsize(out_b) / (1024 * 1024):.2f} MB, rows={rows_b}"
+    )
 
 
 def main() -> None:

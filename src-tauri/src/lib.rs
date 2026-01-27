@@ -8,6 +8,8 @@ pub mod models;
 pub mod state;
 
 use state::AppState;
+
+#[cfg(debug_assertions)]
 use tauri::Manager;
 
 /// Initialize and run the Tauri application
@@ -17,10 +19,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .manage(AppState::new())
-        .setup(|app| {
+        .setup(|_app| {
             #[cfg(debug_assertions)]
             {
-                let window = app.get_webview_window("main").unwrap();
+                let window = _app.get_webview_window("main").unwrap();
                 window.open_devtools();
             }
             Ok(())

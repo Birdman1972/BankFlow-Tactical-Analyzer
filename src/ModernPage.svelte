@@ -3,6 +3,7 @@
   import { t, locale, setLocale } from '$lib/i18n';
   import WarningBanner from './lib/components/WarningBanner.svelte';
   import UpdateDialog from './lib/components/UpdateDialog.svelte';
+  import DownloadsDialog from '$lib/components/DownloadsDialog.svelte';
   import ToastContainer from './lib/components/ToastContainer.svelte';
 
   import { fileA, fileB, isAnalyzing, analysisResult } from '$lib/stores/app';
@@ -20,19 +21,22 @@
     checkForUpdates,
     skipVersion,
     currentVersion,
+    getInstalledVersion,
     type VersionInfo,
   } from '$lib/services/versionService';
 
-  const appVersion = currentVersion;
+  let appVersion = currentVersion;
   let updateInfo: VersionInfo | null = null;
+  let showDownloads = false;
 
   onMount(async () => {
+    appVersion = await getInstalledVersion();
     const info = await checkForUpdates();
     if (info) updateInfo = info;
   });
 
   function handleUpdate() {
-    window.open('https://github.com/project-bob/bankflow-tactical-analyzer/releases', '_blank');
+      window.open('https://github.com/Birdman1972/BankFlow-Tactical-Analyzer/releases', '_blank');
     updateInfo = null;
   }
 
@@ -127,6 +131,14 @@
             </button>
           </div>
 
+          <button
+            type="button"
+            class={['inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium transition-colors', isDark ? 'border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'].join(' ')}
+            on:click={() => (showDownloads = true)}
+          >
+            {$t('downloadsDialog.open')}
+          </button>
+
           <ThemeToggle />
         </div>
       </div>
@@ -144,6 +156,10 @@
         onRemindLater={handleRemindLater}
         onSkip={handleSkip}
       />
+    {/if}
+
+    {#if showDownloads}
+      <DownloadsDialog onClose={() => (showDownloads = false)} />
     {/if}
 
     <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">

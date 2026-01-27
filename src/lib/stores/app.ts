@@ -5,6 +5,7 @@
  */
 
 import { writable, derived } from 'svelte/store';
+import pkg from '../../../package.json';
 
 // ============================================
 // Types
@@ -71,7 +72,7 @@ export const logs = writable<LogEntry[]>([
   {
     timestamp: new Date(),
     level: 'system',
-    message: 'BankFlow 金流分析器 v2.0.0',
+    message: `BankFlow 金流分析器 v${pkg.version}`,
   },
   {
     timestamp: new Date(),

@@ -105,7 +105,7 @@ dependencies = [
 
 [[package]]
 name = "bankflow-tactical-analyzer"
-version = "2.0.0"
+version = "2.1.0"
 dependencies = [
  "bankflow-core",
  "calamine",
@@ -2919,6 +2919,8 @@ version = "0.79.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c743cb9f2a4524676020e26ee5f298445a82d882b09956811b1e78ca7e42b440"
 dependencies = [
+ "js-sys",
+ "wasm-bindgen",
  "zip",
 ]
 

@@ -95,6 +95,21 @@ export interface Translations {
     skipVersion: string;
   };
 
+  // DownloadsDialog component
+  downloadsDialog: {
+    open: string;
+    title: string;
+    latestVersion: string;
+    loading: string;
+    loadError: string;
+    openReleases: string;
+    downloadWindowsMsi: string;
+    downloadPortableZip: string;
+    macosNote: string;
+    releaseNotes: string;
+    close: string;
+  };
+
   // FeedbackForm component
   feedbackForm: {
     title: string;
