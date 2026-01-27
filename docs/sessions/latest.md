@@ -1,7 +1,7 @@
 # BankFlow Tactical Analyzer - 工作摘要
 
 **日期**: 2026-01-27  
-**Commit**: `1626aaa` (latest)  
+**Commit**: `28bab15` (CI fix)  
 **Release**: `v0.3.4`  
 
 ---
@@ -23,24 +23,17 @@
 - ✅ **Version Alignment**: 統一 Web 與 Desktop 版本號為 `v0.3.4`。
 - ✅ **GitHub Release**: 建立 `v0.3.4` Release 頁面。
 - ✅ **macOS Build**: 成功編譯並上傳 `BankFlow-Tactical-Analyzer_0.3.4_aarch64.dmg`。
-- ✅ **Vercel Deployment**: 程式碼已推送，Vercel 自動部署新版本。
+- ✅ **Windows Build (CI)**: 修復 GitHub Actions Workflow (`release.yml`)，自動安裝 `wasm-pack` 並使用 bash 執行建置。目前 CI 正在自動打包 Windows MSI。
+- ✅ **Vercel Deployment**: 驗證線上版 `version.json` 已更新至 `v0.3.4`，功能正常。
 
 ---
 
 ## ⏭️ 明日接續工作 (Next Steps)
 
-### 1. Windows 版本打包
-- **現狀**: 缺 `Windows MSI` 安裝檔 (因開發環境為 macOS)。
-- **行動**: 
-  - 需在 Windows 環境執行 `npm run tauri build`。
-  - 或設定 GitHub Actions Workflow 進行自動化打包。
+### 1. 監控 CI 結果
+- 檢查 Windows MSI 是否成功上傳至 Release 頁面。
 
-### 2. 線上驗證
-- 檢查 Vercel 部署是否完成。
-- 測試 Web 版的下載按鈕是否正確導向 GitHub Releases。
-- 測試 Classic -> Modern UI 切換功能。
-
-### 3. 功能規劃 (Backlog)
+### 2. 功能規劃 (Backlog)
 - 視覺化圖表整合 (Counterparty flow)。
 - 批次檔案處理優化。
 - macOS Code Signing 評估 (解決 Gatekeeper 警告)。
@@ -48,9 +41,9 @@
 ---
 
 ## 📂 關鍵檔案路徑
-- **工作摘要**: `docs/WORK_SUMMARY_2026-01-27.md`
+- **工作摘要**: `docs/sessions/latest.md`
 - **版本資訊**: `public/version.json`
 - **Release 頁面**: [GitHub v0.3.4](https://github.com/Birdman1972/BankFlow-Tactical-Analyzer/releases/tag/v0.3.4)
-- **下載對話框**: `src/lib/components/DownloadsDialog.svelte`
+- **CI 狀態**: [GitHub Actions](https://github.com/Birdman1972/BankFlow-Tactical-Analyzer/actions)
 
-*See you tomorrow!*
+*Ready for next tasks.*
