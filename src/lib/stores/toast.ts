@@ -1,7 +1,9 @@
 /**
  * Toast Notification Store
- * Uses Svelte 5 Runes for state management
+ * Uses Svelte writable store for state management
  */
+
+import { writable } from 'svelte/store';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -12,14 +14,12 @@ export interface Toast {
   duration: number;
 }
 
-// Global state using Svelte 5 runes
-let toasts = $state<Toast[]>([]);
+// Global state using Svelte store
+const toasts = writable<Toast[]>([]);
 
 export const toastStore = {
-  // Getter for the list of toasts
-  get all() {
-    return toasts;
-  },
+  // Subscribe to the store (for use in components)
+  subscribe: toasts.subscribe,
 
   /**
    * Show a notification
@@ -27,20 +27,21 @@ export const toastStore = {
   show(type: ToastType, message: string, duration: number = 5000) {
     const id = Math.random().toString(36).substring(2, 9);
     const newToast: Toast = { id, type, message, duration };
-    
-    // Limit to 5 toasts
-    if (toasts.length >= 5) {
-      toasts = [...toasts.slice(1), newToast];
-    } else {
-      toasts = [...toasts, newToast];
-    }
+
+    toasts.update(current => {
+      // Limit to 5 toasts
+      if (current.length >= 5) {
+        return [...current.slice(1), newToast];
+      }
+      return [...current, newToast];
+    });
 
     if (duration > 0) {
       setTimeout(() => {
         this.dismiss(id);
       }, duration);
     }
-    
+
     return id;
   },
 
@@ -65,13 +66,13 @@ export const toastStore = {
    * Dismiss a specific toast
    */
   dismiss(id: string) {
-    toasts = toasts.filter(t => t.id !== id);
+    toasts.update(current => current.filter(t => t.id !== id));
   },
 
   /**
    * Dismiss all toasts
    */
   dismissAll() {
-    toasts = [];
+    toasts.set([]);
   }
 };
