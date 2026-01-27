@@ -29,6 +29,17 @@ interface LoadedFile {
 let fileAData: LoadedFile | null = null;
 let fileBData: LoadedFile | null = null;
 
+// Store last analysis result for export
+interface WasmAnalysisData {
+  transactions: unknown[];
+  income: unknown[];
+  expense: unknown[];
+  totalRecords: number;
+  incomeCount: number;
+  expenseCount: number;
+}
+let lastAnalysisData: WasmAnalysisData | null = null;
+
 // WASM module reference (type from bankflow-core-wasm.d.ts)
 let wasmModule: typeof import('$lib/wasm/bankflow-core-wasm/bankflow_core.js') | null = null;
 
@@ -104,6 +115,7 @@ export class WasmPlatform implements PlatformAPI {
   async clearAllFiles(): Promise<void> {
     fileAData = null;
     fileBData = null;
+    lastAnalysisData = null;
     addLog('info', 'All files cleared');
   }
 
@@ -129,32 +141,35 @@ export class WasmPlatform implements PlatformAPI {
     onProgress?.({ stage: 'analyzing', progress: 0, message: 'Processing files...' });
 
     try {
-      // Call WASM analyze function
-      const settingsJson = JSON.stringify({
-        hide_sensitive: settings.hideSensitive,
-        split_income_expense: settings.splitIncomeExpense,
-        ip_cross_reference: settings.ipCrossReference,
-        whois_lookup: false, // Whois not supported in web
-      });
-
       onProgress?.({ stage: 'matching', progress: 50, message: 'Matching IP addresses...' });
 
-      const resultJson = wasmModule.analyze(
+      // Call WASM analyze function with correct parameters
+      // Signature: analyze(file_a_bytes, file_a_name, file_b_bytes, file_b_name, hide_sensitive, ip_cross_reference)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const analyzeFn = wasmModule.analyze as any;
+      const result = analyzeFn(
         fileAData.bytes,
         fileAData.name,
         fileBData.bytes,
         fileBData.name,
-        settingsJson
-      );
+        settings.hideSensitive,
+        settings.ipCrossReference
+      ) as WasmAnalysisData;
 
-      const result = JSON.parse(resultJson);
+      // Store for export
+      lastAnalysisData = result;
 
       onProgress?.({ stage: 'complete', progress: 100, message: 'Analysis complete!' });
 
+      // Compute matched/multi-IP counts from transactions
+      const transactions = result.transactions as Array<{ matched_ips?: string[] }>;
+      const matchedCount = transactions.filter(t => t.matched_ips && t.matched_ips.length > 0).length;
+      const multiIpCount = transactions.filter(t => t.matched_ips && t.matched_ips.length > 1).length;
+
       const analysisResult: AnalysisResult = {
-        totalRecords: result.total_records,
-        matchedCount: result.matched_count,
-        multiIpCount: result.multi_ip_count,
+        totalRecords: result.totalRecords,
+        matchedCount,
+        multiIpCount,
         whoisQueried: 0, // Not supported in web
         settings: {
           hideSensitive: settings.hideSensitive,
@@ -164,10 +179,10 @@ export class WasmPlatform implements PlatformAPI {
         },
       };
 
-      addLog('success', `Analysis complete: ${analysisResult.matchedCount}/${analysisResult.totalRecords} records matched`);
+      addLog('success', `Analysis complete: ${matchedCount}/${result.totalRecords} records matched`);
 
-      if (analysisResult.multiIpCount > 0) {
-        addLog('warning', `${analysisResult.multiIpCount} transactions have multiple IP matches`);
+      if (multiIpCount > 0) {
+        addLog('warning', `${multiIpCount} transactions have multiple IP matches`);
       }
 
       return analysisResult;
@@ -182,8 +197,8 @@ export class WasmPlatform implements PlatformAPI {
   // ----------------------------------------
 
   async exportReport(): Promise<string> {
-    if (!fileAData || !fileBData) {
-      throw new Error('Both files must be loaded before export');
+    if (!lastAnalysisData) {
+      throw new Error('Please run analysis first before exporting');
     }
 
     if (!wasmModule) {
@@ -193,20 +208,16 @@ export class WasmPlatform implements PlatformAPI {
     addLog('info', 'Generating Excel report...');
 
     try {
-      const settingsJson = JSON.stringify({
-        hide_sensitive: false,
-        split_income_expense: true,
-        ip_cross_reference: true,
-        whois_lookup: false,
+      // export_excel expects JSON string with { transactions, income, expense }
+      const exportData = JSON.stringify({
+        transactions: lastAnalysisData.transactions,
+        income: lastAnalysisData.income,
+        expense: lastAnalysisData.expense,
       });
 
-      const excelBytes = wasmModule.export_excel(
-        fileAData.bytes,
-        fileAData.name,
-        fileBData.bytes,
-        fileBData.name,
-        settingsJson
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const exportFn = wasmModule.export_excel as any;
+      const excelBytes = exportFn(exportData) as Uint8Array;
 
       // Trigger download
       const filename = `bankflow_report_${new Date().toISOString().split('T')[0]}.xlsx`;
