@@ -1,13 +1,25 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
-  import { settings, canAnalyze, canExport, isAnalyzing, progress } from '../stores/app';
-  import { runAnalysis, exportReport } from '../stores/tauri';
+  import { settings, canAnalyze, canExport, isAnalyzing, progress, analysisResult } from '../stores/app';
+  import { runAnalysis, exportReport } from '../stores/platform';
+  import { get } from 'svelte/store';
 
   async function handleAnalyze() {
     try {
-      await runAnalysis();
+      isAnalyzing.set(true);
+      progress.set({ stage: 'starting', progress: 0, message: 'Initializing analysis...' });
+
+      const currentSettings = get(settings);
+      const result = await runAnalysis(currentSettings, (p) => {
+        progress.set(p);
+      });
+
+      analysisResult.set(result);
     } catch (error) {
       console.error('Analysis failed:', error);
+    } finally {
+      isAnalyzing.set(false);
+      progress.set(null);
     }
   }
 

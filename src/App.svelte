@@ -17,10 +17,10 @@
   import {
     selectAndLoadFileA,
     selectAndLoadFileB,
-    loadFileA,
-    loadFileB,
     clearAllFiles,
-  } from './lib/stores/tauri';
+    currentPlatform,
+  } from './lib/stores/platform';
+  import { fileA as fileAStore, fileB as fileBStore } from './lib/stores/app';
   import { 
     checkForUpdates, 
     skipVersion, 
@@ -59,23 +59,46 @@
   }
 
   async function handleFileAClick() {
-    await selectAndLoadFileA();
+    try {
+      const fileInfo = await selectAndLoadFileA();
+      fileAStore.set(fileInfo);
+    } catch (error) {
+      // User cancelled or error - handled in platform layer
+      console.log('File A selection:', error);
+    }
   }
 
   async function handleFileBClick() {
-    await selectAndLoadFileB();
+    try {
+      const fileInfo = await selectAndLoadFileB();
+      fileBStore.set(fileInfo);
+    } catch (error) {
+      // User cancelled or error - handled in platform layer
+      console.log('File B selection:', error);
+    }
   }
-  
+
+  // File drop handlers - only work on Tauri platform
   async function handleFileADrop(e: CustomEvent<string>) {
-    await loadFileA(e.detail);
+    if ($currentPlatform === 'tauri') {
+      // Dynamic import for Tauri-specific functionality
+      const { loadFileA } = await import('./lib/stores/tauri');
+      await loadFileA(e.detail);
+    }
   }
 
   async function handleFileBDrop(e: CustomEvent<string>) {
-    await loadFileB(e.detail);
+    if ($currentPlatform === 'tauri') {
+      const { loadFileB } = await import('./lib/stores/tauri');
+      await loadFileB(e.detail);
+    }
   }
 
   async function handleClear() {
     await clearAllFiles();
+    fileAStore.set(null);
+    fileBStore.set(null);
+    analysisResult.set(null);
   }
 </script>
 
