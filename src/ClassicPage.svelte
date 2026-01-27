@@ -123,6 +123,13 @@
 
         <!-- Language Switcher -->
         <div class="flex items-center gap-1 text-xs">
+          <a
+            class="px-2 py-1 rounded text-gray-500 hover:text-white transition-colors border border-transparent hover:border-gray-700"
+            href="?ui=modern"
+          >
+            Modern UI
+          </a>
+          <span class="text-gray-600">|</span>
           <button
             class="px-2 py-1 rounded transition-colors {$locale === 'zh-TW' ? 'bg-neon-green text-black font-medium' : 'text-gray-500 hover:text-white'}"
             on:click={() => setLocale('zh-TW')}
