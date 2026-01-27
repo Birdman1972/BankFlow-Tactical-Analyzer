@@ -93,3 +93,17 @@ Fixed Web/WASM export crashing with `RuntimeError: unreachable` by enabling the 
 - `docs/ARCHITECTURE.md`
 - `docs/plans/ROADMAP.md`
 - `docs/plans/DUAL_PLATFORM.md`
+
+## 6. Build & Test Artifacts (2026-01-27)
+- Generated WASM build via `npm run build:web` (includes `build:wasm`).
+- Updated lockfile and WASM outputs:
+  - `crates/bankflow-core/Cargo.lock`
+  - `src/lib/wasm/bankflow-core-wasm/bankflow_core.js`
+  - `src/lib/wasm/bankflow-core-wasm/bankflow_core_bg.wasm`
+- Generated local large test fixtures (~20MB each) for web testing:
+  - `tmp_test_FileA_20mb.xlsx`
+  - `tmp_test_FileB_20mb.xlsx`
+- Local preview test attempted but blocked by sandbox:
+  - `vite preview --host 127.0.0.1 --port 4173` → `EPERM` (cannot bind port in this environment)
+- Next step for full functional web test:
+  - Use Vercel preview or production deployment URL to run browser-based upload/analysis/export tests.
