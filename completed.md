@@ -111,3 +111,7 @@ Fixed Web/WASM export crashing with `RuntimeError: unreachable` by enabling the 
 ## 7. Vercel Build Fix (2026-01-27)
 - Added missing Vercel runtime dependency to resolve build failure:
   - `@vercel/node` in `package.json`
+
+## 8. Vercel Build: WASM Pack Dependency Avoidance (2026-01-27)
+- Vercel build failed due to missing `wasm-pack`.
+- Updated `build:web` to skip `build:wasm` when running on Vercel (env `VERCEL=1`) and use prebuilt WASM assets checked into repo.

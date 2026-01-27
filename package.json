@@ -9,7 +9,7 @@
     "build": "vite build",
     "build:tauri": "tauri build",
     "build:wasm": "./scripts/build-wasm.sh",
-    "build:web": "npm run build:wasm && vite build",
+    "build:web": "if [ \"$VERCEL\" = \"1\" ]; then vite build; else npm run build:wasm && vite build; fi",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "tauri": "tauri"
