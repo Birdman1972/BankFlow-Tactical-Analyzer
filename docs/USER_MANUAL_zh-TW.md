@@ -1,4 +1,4 @@
-# BankFlow Tactical Analyzer 使用手冊
+# BankFlow 金流分析器 使用手冊
 
 **版本**：2.0.0
 **最後更新**：2026-01-23
@@ -21,9 +21,9 @@
 
 ## 簡介
 
-### 什麼是 BankFlow Tactical Analyzer？
+### 什麼是 BankFlow 金流分析器？
 
-BankFlow Tactical Analyzer 是一款專為數位鑑識設計的戰術分析工具，主要用於：
+BankFlow 金流分析器 是一款專為數位鑑識設計的金流分析工具，主要用於：
 
 - **銀行交易紀錄分析**：解析 Excel 格式的銀行交易明細
 - **IP 登入日誌比對**：將交易時間與 IP 登入紀錄進行時間窗口匹配

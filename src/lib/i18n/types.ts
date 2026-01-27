@@ -1,7 +1,7 @@
 /**
  * i18n Type Definitions
  *
- * Defines the structure for all translatable strings in BankFlow Tactical Analyzer
+ * Defines the structure for all translatable strings in BankFlow 金流分析器
  */
 
 // Supported locales
@@ -15,6 +15,16 @@ export interface Translations {
     subtitle: string;
     clearAll: string;
     footer: string;
+  };
+
+  // Modern UI shell
+  modern: {
+    title: string;
+    backToClassic: string;
+    themeLight: string;
+    themeDark: string;
+    uiModeClassic: string;
+    uiModeModern: string;
   };
 
   // DropZone component

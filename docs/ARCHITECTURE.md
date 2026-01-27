@@ -512,6 +512,6 @@ flowchart TB
 
 <div align="center">
 
-*本文件為 BankFlow Tactical Analyzer 技術架構說明*
+*本文件為 BankFlow 金流分析器 技術架構說明*
 
 </div>

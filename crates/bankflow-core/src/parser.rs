@@ -22,6 +22,63 @@ mod file_b_columns {
     pub const IP_ADDRESS: usize = 2;
 }
 
+/// Header-based column mapping helpers
+pub mod header_map {
+    #[derive(Debug, Clone, Copy)]
+    pub struct FileAColumns {
+        pub timestamp: usize,
+        pub account: usize,
+        pub expense: usize,
+        pub income: usize,
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    pub struct FileBColumns {
+        pub timestamp: usize,
+        pub account: usize,
+        pub ip_address: usize,
+    }
+
+    fn normalize_header(value: &str) -> String {
+        value.trim().to_lowercase()
+    }
+
+    fn find_index(headers: &[String], candidates: &[&str]) -> Option<usize> {
+        for (idx, header) in headers.iter().enumerate() {
+            let normalized = normalize_header(header);
+            if candidates.iter().any(|c| normalized == normalize_header(c)) {
+                return Some(idx);
+            }
+        }
+        None
+    }
+
+    pub fn map_file_a_columns(raw_headers: &[&str]) -> FileAColumns {
+        let headers: Vec<String> = raw_headers.iter().map(|h| h.to_string()).collect();
+        map_file_a_columns_from_strings(&headers)
+    }
+
+    pub fn map_file_a_columns_from_strings(headers: &[String]) -> FileAColumns {
+        let timestamp = find_index(headers, &["交易時間", "時間", "timestamp", "交易日期"]).unwrap_or(super::file_a_columns::TIMESTAMP);
+        let account = find_index(headers, &["帳號", "account", "account_id"]).unwrap_or(super::file_a_columns::ACCOUNT);
+        let expense = find_index(headers, &["支出金額", "expense", "支出"]).unwrap_or(super::file_a_columns::EXPENSE);
+        let income = find_index(headers, &["存入金額", "收入金額", "income", "存入"]).unwrap_or(super::file_a_columns::INCOME);
+        FileAColumns { timestamp, account, expense, income }
+    }
+
+    pub fn map_file_b_columns(raw_headers: &[&str]) -> FileBColumns {
+        let headers: Vec<String> = raw_headers.iter().map(|h| h.to_string()).collect();
+        map_file_b_columns_from_strings(&headers)
+    }
+
+    pub fn map_file_b_columns_from_strings(headers: &[String]) -> FileBColumns {
+        let timestamp = find_index(headers, &["登入時間", "時間", "timestamp"]).unwrap_or(super::file_b_columns::TIMESTAMP);
+        let account = find_index(headers, &["帳號", "account", "account_id"]).unwrap_or(super::file_b_columns::ACCOUNT);
+        let ip_address = find_index(headers, &["ip位址", "ip地址", "ip", "ip address"]).unwrap_or(super::file_b_columns::IP_ADDRESS);
+        FileBColumns { timestamp, account, ip_address }
+    }
+}
+
 /// Excel parser that works with both native and WASM
 pub struct Parser;
 
@@ -50,21 +107,27 @@ impl Parser {
         let col_count = range.width();
 
         let mut transactions = Vec::new();
+        let headers: Vec<String> = range
+            .rows()
+            .next()
+            .map(|row| row.iter().map(cell_to_string).collect())
+            .unwrap_or_default();
+        let columns = header_map::map_file_a_columns_from_strings(&headers);
 
         for (row_idx, row) in range.rows().enumerate().skip(1) {
             if row.is_empty() || row.iter().all(|c| c.is_empty()) {
                 continue;
             }
 
-            let timestamp = extract_cell_as_string(row.get(file_a_columns::TIMESTAMP));
-            let account = extract_cell_as_string(row.get(file_a_columns::ACCOUNT));
+            let timestamp = extract_cell_as_string(row.get(columns.timestamp));
+            let account = extract_cell_as_string(row.get(columns.account));
 
             if timestamp.is_empty() || account.is_empty() {
                 continue;
             }
 
-            let expense = extract_cell_as_f64(row.get(file_a_columns::EXPENSE));
-            let income = extract_cell_as_f64(row.get(file_a_columns::INCOME));
+            let expense = extract_cell_as_f64(row.get(columns.expense));
+            let income = extract_cell_as_f64(row.get(columns.income));
             let raw_columns: Vec<String> = row.iter().map(cell_to_string).collect();
 
             let transaction = Transaction::new(
@@ -114,15 +177,21 @@ impl Parser {
         let col_count = range.width();
 
         let mut records = Vec::new();
+        let headers: Vec<String> = range
+            .rows()
+            .next()
+            .map(|row| row.iter().map(cell_to_string).collect())
+            .unwrap_or_default();
+        let columns = header_map::map_file_b_columns_from_strings(&headers);
 
         for (row_idx, row) in range.rows().enumerate().skip(1) {
             if row.is_empty() || row.iter().all(|c| c.is_empty()) {
                 continue;
             }
 
-            let timestamp = extract_cell_as_string(row.get(file_b_columns::TIMESTAMP));
-            let account = extract_cell_as_string(row.get(file_b_columns::ACCOUNT));
-            let ip_address = extract_cell_as_string(row.get(file_b_columns::IP_ADDRESS));
+            let timestamp = extract_cell_as_string(row.get(columns.timestamp));
+            let account = extract_cell_as_string(row.get(columns.account));
+            let ip_address = extract_cell_as_string(row.get(columns.ip_address));
 
             if timestamp.is_empty() || account.is_empty() || ip_address.is_empty() {
                 continue;

@@ -6,8 +6,14 @@ use crate::error::CoreError;
 use crate::models::Transaction;
 use rust_xlsxwriter::{Color, Format, FormatBorder, Workbook, Worksheet};
 
-const HEADERS: &[&str] = &[
-    "Row", "Timestamp", "Account", "Expense", "Income", "Matched IP", "Country", "ISP",
+const BASE_HEADERS: &[&str] = &[
+    "Timestamp",
+    "Account",
+    "Income",
+    "Expense",
+    "Matched IP",
+    "IP Country",
+    "IP ISP",
 ];
 
 pub struct Exporter;
@@ -42,27 +48,30 @@ impl Exporter {
         {
             let ws = workbook.add_worksheet();
             ws.set_name("Summary").map_err(|e| CoreError::ExportError(e.to_string()))?;
-            write_headers(ws, &header_format)?;
+            let raw_count = max_raw_columns(summary);
+            write_headers(ws, &header_format, raw_count)?;
             write_transactions(ws, summary, &data_format, &money_format, &ip_format, &multi_ip_format)?;
-            set_column_widths(ws)?;
+            set_column_widths(ws, raw_count)?;
         }
 
         // Income sheet
         {
             let ws = workbook.add_worksheet();
             ws.set_name("Income").map_err(|e| CoreError::ExportError(e.to_string()))?;
-            write_headers(ws, &header_format)?;
+            let raw_count = max_raw_columns(income);
+            write_headers(ws, &header_format, raw_count)?;
             write_transactions(ws, income, &data_format, &money_format, &ip_format, &multi_ip_format)?;
-            set_column_widths(ws)?;
+            set_column_widths(ws, raw_count)?;
         }
 
         // Expense sheet
         {
             let ws = workbook.add_worksheet();
             ws.set_name("Expense").map_err(|e| CoreError::ExportError(e.to_string()))?;
-            write_headers(ws, &header_format)?;
+            let raw_count = max_raw_columns(expense);
+            write_headers(ws, &header_format, raw_count)?;
             write_transactions(ws, expense, &data_format, &money_format, &ip_format, &multi_ip_format)?;
-            set_column_widths(ws)?;
+            set_column_widths(ws, raw_count)?;
         }
 
         let buffer = workbook
@@ -73,9 +82,14 @@ impl Exporter {
     }
 }
 
-fn write_headers(ws: &mut Worksheet, fmt: &Format) -> Result<(), CoreError> {
-    for (col, header) in HEADERS.iter().enumerate() {
+fn write_headers(ws: &mut Worksheet, fmt: &Format, raw_count: usize) -> Result<(), CoreError> {
+    for (col, header) in BASE_HEADERS.iter().enumerate() {
         ws.write_string_with_format(0, col as u16, *header, fmt)
+            .map_err(|e| CoreError::ExportError(e.to_string()))?;
+    }
+    for idx in 0..raw_count {
+        let header = format!("Raw Column {}", idx + 1);
+        ws.write_string_with_format(0, (BASE_HEADERS.len() + idx) as u16, &header, fmt)
             .map_err(|e| CoreError::ExportError(e.to_string()))?;
     }
     Ok(())
@@ -92,42 +106,57 @@ fn write_transactions(
     for (row_idx, tx) in transactions.iter().enumerate() {
         let row = row_idx as u32 + 1;
 
-        ws.write_number_with_format(row, 0, tx.row_index as f64, data_fmt)
+        ws.write_string_with_format(row, 0, &tx.timestamp, data_fmt)
             .map_err(|e| CoreError::ExportError(e.to_string()))?;
-        ws.write_string_with_format(row, 1, &tx.timestamp, data_fmt)
-            .map_err(|e| CoreError::ExportError(e.to_string()))?;
-        ws.write_string_with_format(row, 2, &tx.account, data_fmt)
+        ws.write_string_with_format(row, 1, &tx.account, data_fmt)
             .map_err(|e| CoreError::ExportError(e.to_string()))?;
 
-        if let Some(expense) = tx.expense {
-            ws.write_number_with_format(row, 3, expense, money_fmt)
+        if let Some(income) = tx.income {
+            ws.write_number_with_format(row, 2, income, money_fmt)
                 .map_err(|e| CoreError::ExportError(e.to_string()))?;
         }
-        if let Some(income) = tx.income {
-            ws.write_number_with_format(row, 4, income, money_fmt)
+        if let Some(expense) = tx.expense {
+            ws.write_number_with_format(row, 3, expense, money_fmt)
                 .map_err(|e| CoreError::ExportError(e.to_string()))?;
         }
 
         let ip_str = tx.matched_ip.as_deref().unwrap_or("N/A");
         let fmt = if ip_str.contains(" | ") { multi_ip_fmt } else { ip_fmt };
-        ws.write_string_with_format(row, 5, ip_str, fmt)
+        ws.write_string_with_format(row, 4, ip_str, fmt)
             .map_err(|e| CoreError::ExportError(e.to_string()))?;
 
-        ws.write_string_with_format(row, 6, tx.ip_country.as_deref().unwrap_or(""), data_fmt)
+        ws.write_string_with_format(row, 5, tx.ip_country.as_deref().unwrap_or(""), data_fmt)
             .map_err(|e| CoreError::ExportError(e.to_string()))?;
-        ws.write_string_with_format(row, 7, tx.ip_isp.as_deref().unwrap_or(""), data_fmt)
+        ws.write_string_with_format(row, 6, tx.ip_isp.as_deref().unwrap_or(""), data_fmt)
+            .map_err(|e| CoreError::ExportError(e.to_string()))?;
+
+        for (idx, value) in tx.raw_columns.iter().enumerate() {
+            ws.write_string_with_format(row, (BASE_HEADERS.len() + idx) as u16, value, data_fmt)
+                .map_err(|e| CoreError::ExportError(e.to_string()))?;
+        }
+    }
+    Ok(())
+}
+
+fn set_column_widths(ws: &mut Worksheet, raw_count: usize) -> Result<(), CoreError> {
+    let widths = [20, 15, 12, 12, 40, 10, 20];
+    for (col, width) in widths.iter().enumerate() {
+        ws.set_column_width(col as u16, *width)
+            .map_err(|e| CoreError::ExportError(e.to_string()))?;
+    }
+    for idx in 0..raw_count {
+        ws.set_column_width((BASE_HEADERS.len() + idx) as u16, 20.0)
             .map_err(|e| CoreError::ExportError(e.to_string()))?;
     }
     Ok(())
 }
 
-fn set_column_widths(ws: &mut Worksheet) -> Result<(), CoreError> {
-    let widths = [8, 20, 15, 12, 12, 40, 10, 20];
-    for (col, width) in widths.iter().enumerate() {
-        ws.set_column_width(col as u16, *width)
-            .map_err(|e| CoreError::ExportError(e.to_string()))?;
-    }
-    Ok(())
+fn max_raw_columns(transactions: &[Transaction]) -> usize {
+    transactions
+        .iter()
+        .map(|tx| tx.raw_columns.len())
+        .max()
+        .unwrap_or(0)
 }
 
 // Native-only functions

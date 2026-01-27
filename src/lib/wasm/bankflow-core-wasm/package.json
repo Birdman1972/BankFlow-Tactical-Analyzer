@@ -1,7 +1,7 @@
 {
   "name": "bankflow-core",
   "type": "module",
-  "description": "Core analysis engine for BankFlow Tactical Analyzer",
+  "description": "Core analysis engine for BankFlow Fund Flow Analyzer",
   "version": "0.1.0",
   "license": "MIT",
   "files": [

@@ -2,7 +2,7 @@
 name = "bankflow-core"
 version = "0.1.0"
 edition = "2021"
-description = "Core analysis engine for BankFlow Tactical Analyzer"
+description = "Core analysis engine for BankFlow Fund Flow Analyzer"
 license = "MIT"
 
 [lib]

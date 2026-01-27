@@ -1,7 +1,7 @@
 /**
  * Application State Stores
  *
- * Manages global state for BankFlow Tactical Analyzer
+ * Manages global state for BankFlow Fund Flow Analyzer
  */
 
 import { writable, derived } from 'svelte/store';
@@ -71,7 +71,7 @@ export const logs = writable<LogEntry[]>([
   {
     timestamp: new Date(),
     level: 'system',
-    message: 'BankFlow Tactical Analyzer v2.0.0',
+    message: 'BankFlow 金流分析器 v2.0.0',
   },
   {
     timestamp: new Date(),

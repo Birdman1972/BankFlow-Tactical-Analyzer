@@ -1,4 +1,4 @@
-# BankFlow Tactical Analyzer - Claude 指引
+# BankFlow 金流分析器 - Claude 指引
 
 ---
 

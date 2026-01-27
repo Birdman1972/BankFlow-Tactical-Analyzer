@@ -7,10 +7,18 @@ import type { Translations } from '../types';
 
 const en: Translations = {
   app: {
-    title: 'BankFlow Tactical Analyzer',
+    title: 'BankFlow Fund Flow Analyzer',
     subtitle: 'Digital Forensics Tool',
     clearAll: 'Clear All',
     footer: 'Built with Tauri + Svelte + Rust | Offline-First Design',
+  },
+  modern: {
+    title: 'Modern UI',
+    backToClassic: 'Back to Classic',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    uiModeClassic: 'Classic',
+    uiModeModern: 'Modern',
   },
   dropZone: {
     transactionFile: 'Drop Transaction File',
@@ -53,7 +61,7 @@ const en: Translations = {
     clear: 'Clear',
   },
   system: {
-    appVersion: 'BankFlow Tactical Analyzer v{version}',
+    appVersion: 'BankFlow Fund Flow Analyzer v{version}',
     awaitingInput: 'Awaiting file input...',
     stateReset: 'State reset',
     logCleared: 'Log cleared',
@@ -108,7 +116,7 @@ const en: Translations = {
     note: 'Shortcuts are disabled while typing in input fields (except Escape).',
   },
   about: {
-    title: 'About BankFlow Tactical Analyzer',
+    title: 'About BankFlow Fund Flow Analyzer',
     subtitle: 'Offline digital forensics analysis tool',
     currentVersion: 'Current Version',
     versionInfo: 'Version Information',

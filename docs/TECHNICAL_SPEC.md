@@ -722,6 +722,6 @@ pub fn generate_test_ip_records(count: usize) -> Vec<IpRecord> {
 
 <div align="center">
 
-*BankFlow Tactical Analyzer 技術規格文件 v2.0.0*
+*BankFlow 金流分析器 技術規格文件 v2.0.0*
 
 </div>

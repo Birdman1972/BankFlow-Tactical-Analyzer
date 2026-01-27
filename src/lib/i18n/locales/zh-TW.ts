@@ -7,10 +7,18 @@ import type { Translations } from '../types';
 
 const zhTW: Translations = {
   app: {
-    title: 'BankFlow 戰術分析器',
+    title: 'BankFlow 金流分析器',
     subtitle: '數位鑑識工具',
     clearAll: '全部清除',
     footer: '以 Tauri + Svelte + Rust 打造 | 離線優先設計',
+  },
+  modern: {
+    title: 'Modern 介面',
+    backToClassic: '回到 Classic',
+    themeLight: '亮色',
+    themeDark: '暗色',
+    uiModeClassic: 'Classic',
+    uiModeModern: 'Modern',
   },
   dropZone: {
     transactionFile: '拖放交易檔案',
@@ -53,7 +61,7 @@ const zhTW: Translations = {
     clear: '清除',
   },
   system: {
-    appVersion: 'BankFlow 戰術分析器 v{version}',
+    appVersion: 'BankFlow 金流分析器 v{version}',
     awaitingInput: '等待檔案輸入...',
     stateReset: '狀態已重設',
     logCleared: '日誌已清除',
@@ -108,7 +116,7 @@ const zhTW: Translations = {
     note: '輸入文字時快捷鍵將停用（Esc 除外）。',
   },
   about: {
-    title: '關於 BankFlow 戰術分析器',
+    title: '關於 BankFlow 金流分析器',
     subtitle: '離線數位鑑識分析工具',
     currentVersion: '目前版本',
     versionInfo: '版本資訊',

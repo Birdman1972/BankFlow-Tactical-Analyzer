@@ -1,7 +1,7 @@
 /**
  * Store exports
  *
- * Platform-agnostic API for BankFlow Tactical Analyzer
+ * Platform-agnostic API for BankFlow 金流分析器
  */
 
 // Application state

@@ -1,7 +1,7 @@
 /**
  * i18n Core Module
  *
- * Provides internationalization support for BankFlow Tactical Analyzer
+ * Provides internationalization support for BankFlow 金流分析器
  * - Locale store with localStorage persistence
  * - Browser language detection
  * - Reactive translation function

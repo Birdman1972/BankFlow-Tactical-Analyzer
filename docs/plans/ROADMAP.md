@@ -1,4 +1,4 @@
-# BankFlow Tactical Analyzer - 開發時程
+# BankFlow 金流分析器 - 開發時程
 
 **建立日期**：2026-01-21
 **預計完成**：2026-03-07
@@ -10,7 +10,7 @@
 
 ```mermaid
 gantt
-    title BankFlow Tactical Analyzer 開發時程
+    title BankFlow 金流分析器 開發時程
     dateFormat  YYYY-MM-DD
 
     section Phase 1 專案初始化

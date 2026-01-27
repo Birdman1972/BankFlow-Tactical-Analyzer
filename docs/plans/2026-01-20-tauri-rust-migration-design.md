@@ -8,7 +8,7 @@
 
 ## 目標
 
-將 BankFlow Tactical Analyzer 從 Python/Streamlit Web 版本遷移至 Tauri + Rust + Svelte 桌面應用程式，以實現：
+將 BankFlow 金流分析器 從 Python/Streamlit Web 版本遷移至 Tauri + Rust + Svelte 桌面應用程式，以實現：
 
 1. **更高效能**：Rust 原生運算，處理大量資料
 2. **更好的部署體驗**：單一 .exe 檔案，免安裝 Python 環境
