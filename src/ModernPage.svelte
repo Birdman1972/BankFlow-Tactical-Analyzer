@@ -82,49 +82,49 @@
 
   $: isDark = $theme === 'dark';
   $: rootClass = isDark
-    ? 'min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-slate-100'
-    : 'min-h-screen bg-gradient-to-br from-slate-50 to-white text-slate-900';
-  $: cardSurface = isDark ? 'bg-slate-950/30 border-slate-800' : 'bg-white/70 border-slate-200';
+    ? 'min-h-screen bg-slate-950 text-slate-100 font-sansSelection'
+    : 'min-h-screen bg-modern-bg text-slate-900 font-sansSelection';
+  $: cardSurface = isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-modern-border';
 </script>
 
 <main class={rootClass} data-bf-ui="modern" data-bf-theme={$theme}>
   <div class="mx-auto max-w-6xl p-4 md:p-6">
-    <header class={['rounded-2xl border p-4', cardSurface].join(' ')}>
-      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-2xl bg-sky-600 text-white flex items-center justify-center font-semibold">
+    <header class={['rounded-2xl border p-5 shadow-sm transition-all duration-300', cardSurface].join(' ')}>
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-center gap-4">
+          <div class="h-12 w-12 rounded-xl bg-modern-primary text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-modern-primary/20">
             BF
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <h1 class="text-lg font-semibold truncate">{$t('app.title')}</h1>
-              <span class={['rounded-full border px-2 py-0.5 text-[11px]', isDark ? 'border-slate-800 text-slate-300 bg-slate-900' : 'border-slate-200 text-slate-600 bg-white'].join(' ')}>
-                {$t('modern.title')} v{appVersion}
+              <h1 class="text-xl font-bold tracking-tight">{$t('app.title')}</h1>
+              <span class={['rounded-full border px-2.5 py-0.5 text-[11px] font-medium shadow-sm', isDark ? 'border-slate-700 text-slate-300 bg-slate-800' : 'border-modern-border text-slate-600 bg-modern-bg'].join(' ')}>
+                v{appVersion}
               </span>
             </div>
-            <div class={['text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{$t('app.subtitle')}</div>
+            <div class={['text-sm font-medium', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{$t('app.subtitle')}</div>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-3">
           <a
-            class={['inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium transition-colors', isDark ? 'border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'].join(' ')}
+            class={['inline-flex items-center rounded-xl border px-4 py-2 text-xs font-semibold shadow-sm transition-all hover:translate-y-[-1px] active:translate-y-0', isDark ? 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700' : 'border-modern-border bg-white text-slate-700 hover:bg-slate-50'].join(' ')}
             href="/"
           >
             {$t('modern.backToClassic')}
           </a>
 
-          <div class={['inline-flex items-center overflow-hidden rounded-full border', isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'].join(' ')}>
+          <div class={['inline-flex items-center overflow-hidden rounded-xl border shadow-sm', isDark ? 'border-slate-700 bg-slate-800' : 'border-modern-border bg-white'].join(' ')}>
             <button
               type="button"
-              class={['px-3 py-1.5 text-xs font-medium transition-colors', $locale === 'zh-TW' ? 'bg-sky-600 text-white' : (isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-50')].join(' ')}
+              class={['px-4 py-2 text-xs font-bold transition-all', $locale === 'zh-TW' ? 'bg-modern-primary text-white' : (isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-700 hover:bg-slate-50')].join(' ')}
               on:click={() => setLocale('zh-TW')}
             >
               繁中
             </button>
             <button
               type="button"
-              class={['px-3 py-1.5 text-xs font-medium transition-colors', $locale === 'en' ? 'bg-sky-600 text-white' : (isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-50')].join(' ')}
+              class={['px-4 py-2 text-xs font-bold transition-all', $locale === 'en' ? 'bg-modern-primary text-white' : (isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-700 hover:bg-slate-50')].join(' ')}
               on:click={() => setLocale('en')}
             >
               EN
@@ -133,7 +133,7 @@
 
           <button
             type="button"
-            class={['inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium transition-colors', isDark ? 'border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'].join(' ')}
+            class={['inline-flex items-center rounded-xl border px-4 py-2 text-xs font-semibold shadow-sm transition-all hover:translate-y-[-1px] active:translate-y-0', isDark ? 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700' : 'border-modern-border bg-white text-slate-700 hover:bg-slate-50'].join(' ')}
             on:click={() => (showDownloads = true)}
           >
             {$t('downloadsDialog.open')}
@@ -164,15 +164,18 @@
 
     <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2 space-y-6">
-        <section class={['rounded-2xl border p-4', cardSurface].join(' ')}>
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="text-sm font-semibold">Inputs</h2>
-            <span class={['text-[11px]', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-              Platform: {$currentPlatform}
-            </span>
+        <section class={['rounded-2xl border p-6 shadow-sm', cardSurface].join(' ')}>
+          <div class="flex items-center justify-between gap-4 mb-6">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500">Data Sources</h2>
+            <div class="flex items-center gap-2">
+              <div class="h-2 w-2 rounded-full bg-modern-success animate-pulse"></div>
+              <span class={['text-[11px] font-bold', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                {$currentPlatform.toUpperCase()}
+              </span>
+            </div>
           </div>
 
-          <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
             <FileCard
               label="A"
               title={$t('dropZone.transactionFile')}
