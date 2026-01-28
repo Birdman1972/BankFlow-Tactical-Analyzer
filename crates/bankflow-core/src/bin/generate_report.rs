@@ -59,6 +59,11 @@ fn run() -> Result<(), String> {
         let mut lookup_count = 0;
         for tx in transactions.iter_mut() {
             if let Some(ip_str) = &tx.matched_ip {
+                // Skip Whois for "N/A" (No Match)
+                if ip_str == "N/A" || ip_str.starts_with("N/A") {
+                    continue;
+                }
+
                 lookup_count += 1;
                 // Basic mock logic for verification
                 let (country, isp) = if ip_str.contains("192.168.") || ip_str.contains("10.") || ip_str.contains("172.") {
