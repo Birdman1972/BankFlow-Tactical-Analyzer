@@ -84,3 +84,35 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Rename release assets for clarity
+        if: ${{ success() }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          release_id=$(gh api repos/${{ github.repository }}/releases/tags/$TAG_NAME --jq '.id')
+
+          rename_asset() {
+            suffix="$1"
+            new_name="$2"
+            asset_id=$(gh api repos/${{ github.repository }}/releases/$release_id/assets \
+              --jq ".[] | select(.name | endswith(\"$suffix\")) | .id" | head -n 1)
+            if [[ -n "$asset_id" ]]; then
+              gh api repos/${{ github.repository }}/releases/assets/$asset_id -X PATCH -F name="$new_name"
+              echo "Renamed *$suffix asset -> $new_name"
+            else
+              echo "No asset ending with $suffix found; skipping rename"
+            fi
+          }
+
+          if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
+            rename_asset ".dmg" "BankFlow_Tactical_Analyzer_macOS_${TAG_NAME}.dmg"
+          elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+            rename_asset ".msi" "BankFlow_Tactical_Analyzer_Windows_${TAG_NAME}.msi"
+          elif [[ "${{ matrix.platform }}" == "ubuntu-22.04" ]]; then
+            rename_asset ".AppImage" "BankFlow_Tactical_Analyzer_Linux_AppImage_${TAG_NAME}.AppImage"
+            rename_asset ".deb" "BankFlow_Tactical_Analyzer_Linux_${TAG_NAME}.deb"
+          fi
