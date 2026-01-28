@@ -67,7 +67,15 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: choco install wixtoolset -y
 
-      - name: Build WASM (All platforms)
+      - name: Build WASM (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          npm ci
+          bash ./scripts/build-wasm.sh
+
+      - name: Build WASM (Unix)
+        if: matrix.platform != 'windows-latest'
         shell: bash
         run: |
           npm ci
