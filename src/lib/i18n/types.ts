@@ -107,6 +107,15 @@ export interface Translations {
     downloadPortableZip: string;
     macosNote: string;
     releaseNotes: string;
+    usageTitle: string;
+    usageStep1: string;
+    usageStep2: string;
+    usageStep3: string;
+    usageStep4: string;
+    featureTitle: string;
+    feature1: string;
+    feature2: string;
+    feature3: string;
     close: string;
   };
 

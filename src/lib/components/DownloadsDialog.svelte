@@ -152,21 +152,66 @@
       </div>
     </div>
 
-    {#if latest?.changelog?.length}
-      <div class="space-y-2">
-        <div class="text-sm font-semibold text-gray-300">{$t('downloadsDialog.releaseNotes')}</div>
-        <div class="max-h-40 overflow-y-auto pr-2 custom-scrollbar bg-black/40 rounded p-3 border border-gray-800">
-          <ul class="space-y-2">
-            {#each latest.changelog[0]?.changes ?? [] as item}
-              <li class="text-sm text-gray-400 flex gap-2">
-                <span class="text-neon-green">•</span>
-                <span>{item}</span>
-              </li>
-            {/each}
-          </ul>
-        </div>
+    <div class="max-h-[24rem] overflow-y-auto pr-2 custom-scrollbar space-y-6">
+      <div class="pt-2">
+        <h3 class="text-base font-bold text-neon-green mb-3">{$t('downloadsDialog.usageTitle')}</h3>
+        <ul class="space-y-2 text-sm text-gray-300">
+          <li class="flex items-start gap-2">
+            <span class="text-neon-blue font-mono mt-0.5 text-xs">01</span>
+            <span>{$t('downloadsDialog.usageStep1')}</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-neon-blue font-mono mt-0.5 text-xs">02</span>
+            <span>{$t('downloadsDialog.usageStep2')}</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-neon-blue font-mono mt-0.5 text-xs">03</span>
+            <span>{$t('downloadsDialog.usageStep3')}</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-neon-blue font-mono mt-0.5 text-xs">04</span>
+            <span>{$t('downloadsDialog.usageStep4')}</span>
+          </li>
+        </ul>
       </div>
-    {/if}
+
+      <div class="bg-cyber-card/20 rounded-lg p-4 border border-white/5">
+        <h3 class="text-sm font-bold text-gray-200 mb-3">{$t('downloadsDialog.featureTitle')}</h3>
+        <ul class="space-y-2 text-xs text-gray-400">
+          <li class="flex gap-2">
+            <span class="text-neon-green">⚡</span>
+            <span>{$t('downloadsDialog.feature1')}</span>
+          </li>
+          <li class="flex gap-2">
+            <span class="text-neon-green">⚡</span>
+            <span>{$t('downloadsDialog.feature2')}</span>
+          </li>
+          <li class="flex gap-2">
+            <span class="text-neon-green">⚡</span>
+            <span>{$t('downloadsDialog.feature3')}</span>
+          </li>
+        </ul>
+      </div>
+
+      {#if latest?.changelog?.length}
+        <div class="space-y-3">
+          <div class="text-sm font-semibold text-gray-300 flex items-center gap-2">
+            <span class="w-1.5 h-4 bg-neon-blue inline-block"></span>
+            {$t('downloadsDialog.releaseNotes')}
+          </div>
+          <div class="bg-black/40 rounded p-3 border border-gray-800">
+            <ul class="space-y-2">
+              {#each latest.changelog[0]?.changes ?? [] as item}
+                <li class="text-sm text-gray-400 flex gap-2">
+                  <span class="text-neon-green/60">•</span>
+                  <span>{item}</span>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        </div>
+      {/if}
+    </div>
 
     <div class="pt-2">
       <button
