@@ -1,7 +1,15 @@
 {
-  "version": "0.3.6",
+  "version": "0.3.7",
   "releaseDate": "2026-01-28",
   "changelog": [
+    {
+      "version": "0.3.7",
+      "date": "2026-01-28",
+      "changes": [
+        "CI: 移除 src-tauri/build.rs 內的手動資源編譯，修復 Windows CVT1100 資源衝突錯誤",
+        "CI: 確保 Windows build 使用正確的 MSVC 連結器"
+      ]
+    },
     {
       "version": "0.3.6",
       "date": "2026-01-28",
