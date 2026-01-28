@@ -50,27 +50,27 @@
   }
 
   $: containerClass = [
-    'group w-full rounded-2xl border p-4 text-left transition-colors',
-    disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
-    isDark ? 'border-slate-800 bg-slate-950/30' : 'border-slate-200 bg-white',
+    'group w-full rounded-2xl border p-5 text-left transition-all duration-300 shadow-sm hover:shadow-md',
+    disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:translate-y-[-2px]',
+    isDark ? 'border-slate-800 bg-slate-900' : 'border-modern-border bg-white',
     file
       ? isDark
-        ? 'ring-1 ring-emerald-500/20'
-        : 'border-emerald-300/60 bg-emerald-50/40'
+        ? 'ring-2 ring-modern-success/20 border-modern-success/40'
+        : 'ring-2 ring-modern-success/10 border-modern-success/30 bg-modern-success/[0.02]'
       : '',
-    isDragging ? (isDark ? 'border-sky-500 bg-sky-500/10' : 'border-sky-400 bg-sky-50') : '',
+    isDragging ? (isDark ? 'border-modern-primary bg-modern-primary/10' : 'border-modern-primary bg-modern-primary/[0.05]') : '',
   ].filter(Boolean).join(' ');
 
   $: titleClass = isDark ? 'text-slate-100' : 'text-slate-900';
   $: subTitleClass = isDark ? 'text-slate-400' : 'text-slate-500';
   $: pillClass = isDark
-    ? 'inline-flex items-center rounded-full border border-slate-800 bg-slate-900 px-2 py-1 text-[11px] text-slate-300 group-hover:bg-slate-800'
-    : 'inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-600 group-hover:border-slate-300';
+    ? 'inline-flex items-center rounded-lg bg-slate-800 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-slate-200 transition-colors'
+    : 'inline-flex items-center rounded-lg bg-modern-bg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-modern-primary transition-colors';
   $: fileCardClass = isDark
-    ? 'mt-3 rounded-xl border border-slate-800 bg-slate-900/40 p-3'
-    : 'mt-3 rounded-xl border border-slate-200 bg-white/70 p-3';
+    ? 'mt-4 rounded-xl bg-slate-950/50 p-4 border border-slate-800'
+    : 'mt-4 rounded-xl bg-modern-bg p-4 border border-modern-border/50';
   $: fileNameClass = isDark ? 'text-slate-100' : 'text-slate-900';
-  $: fileMetaClass = isDark ? 'text-slate-300' : 'text-slate-600';
+  $: fileMetaClass = isDark ? 'text-slate-400 font-mono' : 'text-slate-500 font-mono';
 </script>
 
 <button
@@ -83,40 +83,40 @@
   on:drop={handleDrop}
 >
   <div class="flex items-start justify-between gap-4">
-    <div class="min-w-0">
-      <div class="flex items-center gap-2">
-        <span class="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-slate-900 text-white text-xs font-semibold">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-3">
+        <div class={['flex h-10 w-10 items-center justify-center rounded-xl font-bold text-sm shadow-inner transition-colors', file ? 'bg-modern-success text-white' : 'bg-modern-primary text-white'].join(' ')}>
           {label}
-        </span>
+        </div>
         <div class="min-w-0">
-          <div class={['text-sm font-semibold truncate', titleClass].join(' ')}>{title}</div>
-          <div class={['text-xs', subTitleClass].join(' ')}>{subtitle}</div>
+          <div class={['text-sm font-bold truncate', titleClass].join(' ')}>{title}</div>
+          <div class={['text-[11px] font-medium opacity-70', subTitleClass].join(' ')}>{subtitle}</div>
         </div>
       </div>
 
       {#if file}
         <div class={fileCardClass}>
-          <div class={['text-sm font-medium truncate', fileNameClass].join(' ')}>{file.filename}</div>
-          <div class={['mt-1 text-xs', fileMetaClass].join(' ')}>{file.rowCount.toLocaleString()} rows</div>
+          <div class="flex items-center gap-2 mb-1">
+            <svg class="w-3.5 h-3.5 text-modern-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class={['text-sm font-bold truncate', fileNameClass].join(' ')}>{file.filename}</div>
+          </div>
+          <div class={['text-[11px] ml-5', fileMetaClass].join(' ')}>{file.rowCount.toLocaleString()} records</div>
         </div>
       {:else}
-        <div class={['mt-3 text-xs', subTitleClass].join(' ')}>
+        <div class={['mt-4 text-xs italic opacity-60 flex items-center gap-2', subTitleClass].join(' ')}>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           {#if enableDrop}
-            Drag & drop (Tauri) or click to select
+            Drop Excel or click to browse
           {:else}
-            Click to select
+            Click to browse
           {/if}
         </div>
       {/if}
     </div>
 
-    <div class="shrink-0">
+    <div class="shrink-0 pt-1">
       <span class={pillClass}>
-        {#if file}
-          Loaded
-        {:else}
-          Select
-        {/if}
+        {file ? 'Active' : 'Missing'}
       </span>
     </div>
   </div>

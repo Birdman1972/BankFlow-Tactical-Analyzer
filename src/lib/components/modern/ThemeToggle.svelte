@@ -5,12 +5,12 @@
   const toggle = () => toggleTheme();
   $: isDark = $theme === 'dark';
   $: buttonClass = isDark
-    ? 'inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/40 hover:bg-slate-800'
-    : 'inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/40 hover:bg-slate-50';
+    ? 'inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-bold text-slate-100 transition-all focus:outline-none focus:ring-2 focus:ring-modern-primary/40 hover:bg-slate-700 shadow-sm'
+    : 'inline-flex items-center gap-2 rounded-xl border border-modern-border bg-white px-4 py-2 text-xs font-bold text-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-modern-primary/40 hover:bg-slate-50 shadow-sm';
 
   $: iconClass = isDark
-    ? 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/20 text-sky-200'
-    : 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-100 text-sky-700';
+    ? 'inline-flex h-5 w-5 items-center justify-center rounded-lg bg-modern-primary/20 text-modern-primary'
+    : 'inline-flex h-5 w-5 items-center justify-center rounded-lg bg-modern-bg text-modern-primary';
 </script>
 
 <button
