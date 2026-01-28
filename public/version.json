@@ -1,7 +1,17 @@
 {
-  "version": "0.3.4",
-  "releaseDate": "2026-01-27",
+  "version": "0.3.5",
+  "releaseDate": "2026-01-28",
   "changelog": [
+    {
+      "version": "0.3.5",
+      "date": "2026-01-28",
+      "changes": [
+        "CI: 修復 Linux/Windows 打包所需依賴，Release workflow 產物不再缺席",
+        "Desktop: Windows 產品名稱正規化，避免 RC.EXE/ WiX 編譯錯誤",
+        "UI: 下載對話框改為直接讀 GitHub Releases assets，按鈕連結不再指向無效草稿",
+        "版本管理: Web/桌面顯示改為對齊同一版本號"
+      ]
+    },
     {
       "version": "0.3.4",
       "date": "2026-01-27",
