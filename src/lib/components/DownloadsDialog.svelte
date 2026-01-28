@@ -9,26 +9,76 @@
     changelog: { version: string; date: string; changes: string[] }[];
   }
 
+  interface GitHubReleaseAsset {
+    name: string;
+    browser_download_url: string;
+  }
+
+  interface GitHubRelease {
+    tag_name: string;
+    html_url: string;
+    draft: boolean;
+    prerelease: boolean;
+    assets: GitHubReleaseAsset[];
+  }
+
   export let onClose: () => void;
 
   const releasesUrl = 'https://github.com/Birdman1972/BankFlow-Tactical-Analyzer/releases';
+  const releasesApiBase = 'https://api.github.com/repos/Birdman1972/BankFlow-Tactical-Analyzer/releases';
 
   let latest: VersionInfo | null = null;
   let loadError = false;
 
-  $: latestVersion = latest?.version ?? '';
-  $: windowsMsiUrl = latestVersion
-    ? `${releasesUrl}/latest/download/BankFlow-Tactical-Analyzer_${latestVersion}_x64.msi`
-    : `${releasesUrl}/latest`;
-  $: portableZipUrl = latestVersion
-    ? `${releasesUrl}/latest/download/BankFlow-Tactical-Analyzer_${latestVersion}_portable.zip`
-    : `${releasesUrl}/latest`;
+  let releasePageUrl = `${releasesUrl}/latest`;
+  let windowsMsiUrl = `${releasesUrl}/latest`;
+  let portableZipUrl = `${releasesUrl}/latest`;
+
+  function normalizeTag(version: string): string {
+    return version.startsWith('v') ? version : `v${version}`;
+  }
+
+  function pickAssetUrl(assets: GitHubReleaseAsset[], predicate: (a: GitHubReleaseAsset) => boolean): string | null {
+    const hit = assets.find(predicate);
+    return hit ? hit.browser_download_url : null;
+  }
+
+  async function loadReleaseAssets(version: string) {
+    const tag = normalizeTag(version);
+    releasePageUrl = `${releasesUrl}/tag/${tag}`;
+    windowsMsiUrl = releasePageUrl;
+    portableZipUrl = releasePageUrl;
+
+    try {
+      const res = await fetch(`${releasesApiBase}/tags/${tag}`);
+      if (!res.ok) return;
+      const release = (await res.json()) as GitHubRelease;
+      if (!release || release.draft) return;
+
+      releasePageUrl = release.html_url || releasePageUrl;
+
+      const msi = pickAssetUrl(
+        release.assets ?? [],
+        (a) => a.name.toLowerCase().endsWith('.msi')
+      );
+      const portable = pickAssetUrl(
+        release.assets ?? [],
+        (a) => a.name.toLowerCase().endsWith('.zip') && a.name.toLowerCase().includes('portable')
+      );
+
+      if (msi) windowsMsiUrl = msi;
+      if (portable) portableZipUrl = portable;
+    } catch (e) {
+      console.warn('Failed to load GitHub release assets', e);
+    }
+  }
 
   async function loadVersionInfo() {
     try {
       const res = await fetch('/version.json');
       if (!res.ok) throw new Error('version.json not found');
       latest = (await res.json()) as VersionInfo;
+      if (latest?.version) await loadReleaseAssets(latest.version);
       loadError = false;
     } catch (e) {
       console.warn('Failed to load version.json', e);
@@ -75,7 +125,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <a
         class="w-full py-2.5 text-center bg-neon-blue hover:bg-neon-blue/80 text-black font-bold rounded transition-all"
-        href={releasesUrl}
+        href={releasePageUrl}
         target="_blank"
         rel="noreferrer"
       >
