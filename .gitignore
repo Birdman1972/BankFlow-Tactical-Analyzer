@@ -15,6 +15,9 @@ __pycache__/
 # Worktrees
 .worktrees
 
+# Local agent session snapshots
+.sisyphus/
+
 # Node.js
 node_modules/
 dist/
