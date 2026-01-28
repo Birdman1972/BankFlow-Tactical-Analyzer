@@ -85,9 +85,26 @@ Accepted: `.xlsx` / `.xls`
 | `tmp_test_FileA_20mb.xlsx` + `tmp_test_FileB_20mb.xlsx` | Performance / stress | load, analyze, export completes without crash |
 | `tmp_test_FileA_50mb.xlsx` + `tmp_test_FileB_50mb.xlsx` | Performance / stress | same as above at larger size |
 
+### Generating fresh fixtures
+
+Use the helper script to regenerate canonical XLSX pairs that reflect the latest business logic:
+
+```bash
+python3 scripts/generate-sample-fixtures.py \
+  --rows-a 1000 \
+  --rows-b 1000 \
+  --out-a tests/fixtures/test_transactions_latest.xlsx \
+  --out-b tests/fixtures/test_ip_records_latest.xlsx
+```
+
+- The script reuses `scripts/generate-fixtures.py` builders and automatically runs `cargo run --bin verify_fixtures` (pass `--skip-verify` if you only need the files).
+- Resulting files live under `tests/fixtures/` so they are versioned despite the global `*.xlsx` ignore rule.
+
 ## Local verification entrypoint
 
 Preferred (no Python deps):
 
 - From repo root:
   - `cargo run --manifest-path crates/bankflow-core/Cargo.toml --bin verify_fixtures`
+  - or specify custom paths:
+    - `cargo run --manifest-path crates/bankflow-core/Cargo.toml --bin verify_fixtures -- --file-a tests/fixtures/test_transactions_latest.xlsx --file-b tests/fixtures/test_ip_records_latest.xlsx`

@@ -5,6 +5,7 @@ __pycache__/
 # Data files (user data)
 *.xlsx
 *.xls
+!tests/fixtures/*.xlsx
 
 # macOS
 .DS_Store
