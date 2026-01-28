@@ -1,7 +1,16 @@
 {
-  "version": "0.3.5",
+  "version": "0.3.6",
   "releaseDate": "2026-01-28",
   "changelog": [
+    {
+      "version": "0.3.6",
+      "date": "2026-01-28",
+      "changes": [
+        "CI: Windows WASM build now runs under PowerShell + bash to avoid GNU link.exe conflicts",
+        "CI: Release workflow automatically renames platform assets for clarity",
+        "Desktop: Windows MSI/portable assets restored (v0.3.6)"
+      ]
+    },
     {
       "version": "0.3.5",
       "date": "2026-01-28",
