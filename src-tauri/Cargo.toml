@@ -1,6 +1,6 @@
 [package]
 name = "bankflow-tactical-analyzer"
-version = "0.3.7"
+version = "0.3.8"
 description = "Digital forensics tactical analysis tool"
 authors = ["BankFlow Team"]
 edition = "2021"

@@ -1,7 +1,14 @@
 {
-  "version": "0.3.7",
+  "version": "0.3.8",
   "releaseDate": "2026-01-28",
   "changelog": [
+    {
+      "version": "0.3.8",
+      "date": "2026-01-28",
+      "changes": [
+        "CI: 使用 libwebkit2gtk-4.1-dev 以符合 Tauri v2 的 Ubuntu 建置需求"
+      ]
+    },
     {
       "version": "0.3.7",
       "date": "2026-01-28",
