@@ -82,139 +82,147 @@
 
   $: isDark = $theme === 'dark';
   $: rootClass = isDark
-    ? 'min-h-screen bg-slate-950 text-slate-100 font-sansSelection'
-    : 'min-h-screen bg-modern-bg text-slate-900 font-sansSelection';
+    ? 'min-h-screen bg-slate-950 text-slate-100 font-sans'
+    : 'min-h-screen bg-modern-bg text-slate-900 font-sans';
   $: cardSurface = isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-modern-border';
+  $: sidebarClass = isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-modern-border shadow-sm';
 </script>
 
 <main class={rootClass} data-bf-ui="modern" data-bf-theme={$theme}>
-  <div class="mx-auto max-w-6xl p-4 md:p-6">
-    <header class={['rounded-2xl border p-5 shadow-sm transition-all duration-300', cardSurface].join(' ')}>
-      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div class="flex items-center gap-4">
-          <div class="h-12 w-12 rounded-xl bg-modern-primary text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-modern-primary/20">
+  <div class="flex h-screen overflow-hidden">
+    <aside class={['w-64 flex-shrink-0 border-r transition-all duration-300 z-20 flex flex-col', sidebarClass].join(' ')}>
+      <div class="p-6 border-b border-inherit">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-modern-primary text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-modern-primary/20">
             BF
           </div>
           <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <h1 class="text-xl font-bold tracking-tight">{$t('app.title')}</h1>
-              <span class={['rounded-full border px-2.5 py-0.5 text-[11px] font-medium shadow-sm', isDark ? 'border-slate-700 text-slate-300 bg-slate-800' : 'border-modern-border text-slate-600 bg-modern-bg'].join(' ')}>
-                v{appVersion}
-              </span>
-            </div>
-            <div class={['text-sm font-medium', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{$t('app.subtitle')}</div>
+            <h1 class="text-base font-bold tracking-tight truncate">{$t('app.title')}</h1>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">v{appVersion}</div>
           </div>
         </div>
+      </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <a
-            class={['inline-flex items-center rounded-xl border px-4 py-2 text-xs font-semibold shadow-sm transition-all hover:translate-y-[-1px] active:translate-y-0', isDark ? 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700' : 'border-modern-border bg-white text-slate-700 hover:bg-slate-50'].join(' ')}
-            href="/"
-          >
-            {$t('modern.backToClassic')}
-          </a>
+      <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">Main Menu</div>
+        <a 
+          href="/" 
+          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-modern-primary hover:bg-modern-primary/5 transition-all"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          {$t('modern.backToClassic')}
+        </a>
+        
+        <button 
+          on:click={() => (showDownloads = true)}
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-modern-primary hover:bg-modern-primary/5 transition-all text-left"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          {$t('downloadsDialog.open')}
+        </button>
 
-          <div class={['inline-flex items-center overflow-hidden rounded-xl border shadow-sm', isDark ? 'border-slate-700 bg-slate-800' : 'border-modern-border bg-white'].join(' ')}>
+        <div class="pt-4 mt-4 border-t border-inherit">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">Localization</div>
+          <div class="flex p-1 rounded-lg bg-slate-100 dark:bg-slate-800">
             <button
-              type="button"
-              class={['px-4 py-2 text-xs font-bold transition-all', $locale === 'zh-TW' ? 'bg-modern-primary text-white' : (isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-700 hover:bg-slate-50')].join(' ')}
+              class={['flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all', $locale === 'zh-TW' ? 'bg-white dark:bg-slate-700 shadow-sm text-modern-primary' : 'text-slate-500'].join(' ')}
               on:click={() => setLocale('zh-TW')}
             >
               繁中
             </button>
             <button
-              type="button"
-              class={['px-4 py-2 text-xs font-bold transition-all', $locale === 'en' ? 'bg-modern-primary text-white' : (isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-700 hover:bg-slate-50')].join(' ')}
+              class={['flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all', $locale === 'en' ? 'bg-white dark:bg-slate-700 shadow-sm text-modern-primary' : 'text-slate-500'].join(' ')}
               on:click={() => setLocale('en')}
             >
               EN
             </button>
           </div>
-
-          <button
-            type="button"
-            class={['inline-flex items-center rounded-xl border px-4 py-2 text-xs font-semibold shadow-sm transition-all hover:translate-y-[-1px] active:translate-y-0', isDark ? 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700' : 'border-modern-border bg-white text-slate-700 hover:bg-slate-50'].join(' ')}
-            on:click={() => (showDownloads = true)}
-          >
-            {$t('downloadsDialog.open')}
-          </button>
-
-          <ThemeToggle />
         </div>
+      </nav>
+
+      <div class="p-4 border-t border-inherit">
+        <ThemeToggle />
       </div>
-    </header>
+    </aside>
 
-    <div class="mt-4">
-      <WarningBanner show={false} />
-    </div>
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <header class="h-16 border-b border-inherit bg-inherit flex-shrink-0 flex items-center justify-between px-6">
+        <div class="flex items-center gap-2">
+          <div class="h-2 w-2 rounded-full bg-modern-success animate-pulse"></div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">System Active</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-xs font-medium text-slate-500">{$currentPlatform.toUpperCase()} Mode</span>
+          <div class="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold">K</div>
+        </div>
+      </header>
 
-    {#if updateInfo}
-      <UpdateDialog
-        version={updateInfo.version}
-        changelog={updateInfo.changelog.flatMap((c) => c.changes)}
-        onUpdate={handleUpdate}
-        onRemindLater={handleRemindLater}
-        onSkip={handleSkip}
-      />
-    {/if}
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <WarningBanner show={false} />
 
-    {#if showDownloads}
-      <DownloadsDialog onClose={() => (showDownloads = false)} />
-    {/if}
-
-    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div class="lg:col-span-2 space-y-6">
-        <section class={['rounded-2xl border p-6 shadow-sm', cardSurface].join(' ')}>
-          <div class="flex items-center justify-between gap-4 mb-6">
-            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500">Data Sources</h2>
-            <div class="flex items-center gap-2">
-              <div class="h-2 w-2 rounded-full bg-modern-success animate-pulse"></div>
-              <span class={['text-[11px] font-bold', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                {$currentPlatform.toUpperCase()}
-              </span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <FileCard
-              label="A"
-              title={$t('dropZone.transactionFile')}
-              subtitle={$t('dropZone.fileFormat')}
-              file={$fileA}
-              disabled={$isAnalyzing}
-              enableDrop={$currentPlatform === 'tauri'}
-              on:click={handleFileAClick}
-              on:drop={handleFileADrop}
-            />
-            <FileCard
-              label="B"
-              title={$t('dropZone.ipLogFile')}
-              subtitle={$t('dropZone.fileFormat')}
-              file={$fileB}
-              disabled={$isAnalyzing}
-              enableDrop={$currentPlatform === 'tauri'}
-              on:click={handleFileBClick}
-              on:drop={handleFileBDrop}
-            />
-          </div>
-        </section>
-
-        <SettingsPanel />
-        <ActionsBar />
-
-        {#if $analysisResult}
-          <ResultDashboard />
+        {#if updateInfo}
+          <UpdateDialog
+            version={updateInfo.version}
+            changelog={updateInfo.changelog.flatMap((c) => c.changes)}
+            onUpdate={handleUpdate}
+            onRemindLater={handleRemindLater}
+            onSkip={handleSkip}
+          />
         {/if}
-      </div>
 
-      <div class="h-[520px]">
-        <LogPanel />
+        {#if showDownloads}
+          <DownloadsDialog onClose={() => (showDownloads = false)} />
+        {/if}
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
+          <div class="lg:col-span-2 space-y-6">
+            <section class={['rounded-2xl border p-6 shadow-sm', cardSurface].join(' ')}>
+              <div class="flex items-center justify-between gap-4 mb-6">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Data Sources</h2>
+              </div>
+
+              <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <FileCard
+                  label="A"
+                  title={$t('dropZone.transactionFile')}
+                  subtitle={$t('dropZone.fileFormat')}
+                  file={$fileA}
+                  disabled={$isAnalyzing}
+                  enableDrop={$currentPlatform === 'tauri'}
+                  on:click={handleFileAClick}
+                  on:drop={handleFileADrop}
+                />
+                <FileCard
+                  label="B"
+                  title={$t('dropZone.ipLogFile')}
+                  subtitle={$t('dropZone.fileFormat')}
+                  file={$fileB}
+                  disabled={$isAnalyzing}
+                  enableDrop={$currentPlatform === 'tauri'}
+                  on:click={handleFileBClick}
+                  on:drop={handleFileBDrop}
+                />
+              </div>
+            </section>
+
+            <SettingsPanel />
+            <ActionsBar />
+
+            {#if $analysisResult}
+              <ResultDashboard />
+            {/if}
+          </div>
+
+          <div class="h-full min-h-[500px] lg:sticky lg:top-0">
+            <LogPanel />
+          </div>
+        </div>
+
+        <footer class="pt-10 pb-6 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+          {$t('app.footer')}
+        </footer>
       </div>
     </div>
-
-    <footer class={['mt-8 text-center text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-      {$t('app.footer')}
-    </footer>
   </div>
 
   <ToastContainer />

@@ -81,18 +81,34 @@ def build_file_a(row_count: int, seed: int = 42) -> bytes:
     ws = wb.create_sheet()
     ws.append(FILE_A_HEADERS)
 
+def generate_shared_data(row_count: int, seed: int = 42) -> List[dict]:
+    """Pre-calculate the core matching data (time, account) to ensure 100% parity."""
+    random.seed(seed)
     base_time = datetime(2025, 4, 1, 9, 0, 0)
-    balance = 500000.0
-
-    # We will recycle a small set of accounts to ensure matches
-    accounts = [f"{i:012d}" for i in range(min(100, row_count))] 
-
+    accounts = [f"{i:012d}" for i in range(min(100, row_count))]
+    
+    data = []
     for i in range(row_count):
-        account = accounts[i % len(accounts)]
-        
-        # Add some time jitter
-        time_offset = i * 60 + random.randint(0, 50) 
-        timestamp = (base_time + timedelta(seconds=time_offset)).strftime("%Y/%m/%d %H:%M:%S")
+        # We use a NEW random instance here specifically for the time offset 
+        # so it doesn't get rattled by a/b specific random calls
+        offset = i * 60 + (i * 7) % 50 # Deterministic jitter without using global random
+        data.append({
+            "time": base_time + timedelta(seconds=offset),
+            "account": accounts[i % len(accounts)]
+        })
+    return data
+
+def build_file_a(row_count: int, shared_data: List[dict], seed: int = 42) -> bytes:
+    random.seed(seed + 1) # Different seed for content
+    wb = Workbook(write_only=True)
+    ws = wb.create_sheet()
+    ws.append(FILE_A_HEADERS)
+
+    balance = 500000.0
+    for i in range(row_count):
+        sd = shared_data[i]
+        timestamp = sd["time"].strftime("%Y/%m/%d %H:%M:%S")
+        account = sd["account"]
 
         is_income = random.choice([True, False])
         income = 0.0
@@ -103,35 +119,18 @@ def build_file_a(row_count: int, seed: int = 42) -> bytes:
         if is_income:
             income = float(random.randint(1, 500) * 100)
             balance += income
-            if "扣" in summary or "費" in summary: # Fix semantic mismatch if any
-                summary = "現金存入"
+            if "扣" in summary or "費" in summary: summary = "現金存入"
         else:
             expense = float(random.randint(1, 200) * 100)
             balance -= expense
-            if "存" in summary or "薪" in summary:
-                summary = "一般消費"
-
-        # Generate Counterparty
-        cp_account = ""
-        cp_name = ""
-        if summary in ["轉帳", "跨行提款", "薪資轉帳"]:
-            cp_account = f"{random.randint(0, 999999):012d}"
-            cp_name = random_name()
+            if "存" in summary or "薪" in summary: summary = "一般消費"
 
         row = [
-            timestamp,          # 0 交易時間
-            account,            # 1 帳號
-            random_id(i),       # 2 身分證字號
-            random_name(),      # 3 戶名 (Usually owner name, but let's vary it for test context)
-            "TWD",              # 4 幣別
-            f"TXN{i:08d}",      # 5 交易序號
-            summary,            # 6 摘要
-            remark,             # 7 備註
-            expense if expense > 0 else "", # 8 支出
-            income if income > 0 else "",   # 9 存入
-            round(balance, 2),  # 10 餘額
-            cp_account,         # 11 對方帳號
-            cp_name             # 12 對方戶名
+            timestamp, account, random_id(i), random_name(), "TWD",
+            f"TXN{i:08d}", summary, remark, 
+            expense if expense > 0 else "", 
+            income if income > 0 else "",
+            round(balance, 2), "", ""
         ]
         ws.append(row)
 
@@ -139,69 +138,41 @@ def build_file_a(row_count: int, seed: int = 42) -> bytes:
     wb.save(buf)
     return buf.getvalue()
 
-def build_file_b(row_count: int, file_a_rows: int, seed: int = 42) -> bytes:
-    random.seed(seed)
+def build_file_b(row_count: int, shared_data: List[dict], seed: int = 42) -> bytes:
+    random.seed(seed + 2)
     wb = Workbook(write_only=True)
     ws = wb.create_sheet()
     ws.append(FILE_B_HEADERS)
 
-    # Reconstruct the same time/accounts to ensure matches
-    base_time = datetime(2025, 4, 1, 9, 0, 0)
-    accounts = [f"{i:012d}" for i in range(min(100, file_a_rows))]
+    # 1. Ensure 1:1 Match for EVERY transaction
+    for sd in shared_data:
+        ws.append([
+            sd["time"].strftime("%Y/%m/%d %H:%M:%S"),
+            sd["account"],
+            random.choice(PUBLIC_IPS)
+        ])
 
-    # We want to generate login records. 
-    # Some should match exactly (approx time), some shouldn't.
-    
-    current_row = 0
-    while current_row < row_count:
-        # Pick an account
-        idx = current_row % len(accounts)
-        account = accounts[idx]
-        
-        # Corresponds roughly to the i-th transaction time for this account if we matched 1-to-1 linearly,
-        # but let's just create a stream of logins relative to base time.
-        
-        # Create a "Match" opportunity every 3rd record
-        if current_row < file_a_rows and current_row % 3 == 0:
-            # Re-calculate File A time for this row index to create a match
-            time_offset_a = current_row * 60 + random.randint(0, 50)
-            tx_time = base_time + timedelta(seconds=time_offset_a)
-            
-            # Login time = Tx Time +/- deviation
-            # Window is -1s to +2s. 
-            # Let's hit it: Tx Time - 0s
-            login_time = tx_time - timedelta(seconds=0)
-            
-            ip = random.choice(PUBLIC_IPS)
-            
-            ws.append([
-                login_time.strftime("%Y/%m/%d %H:%M:%S"),
-                account,
-                ip
-            ])
-            current_row += 1
-            
-            # Occasional Multiple Match (2 logins in window)
-            if random.random() < 0.1 and current_row < row_count:
-                login_time_2 = tx_time + timedelta(seconds=1)
+    # 2. Add Multi-IP and Noise
+    remaining = row_count - len(shared_data)
+    if remaining > 0:
+        for j in range(remaining):
+            # 50% chance of being a multi-ip match for an existing tx
+            if random.random() < 0.5:
+                sd = random.choice(shared_data)
+                # within +2s window
+                match_time = sd["time"] + timedelta(seconds=1)
                 ws.append([
-                    login_time_2.strftime("%Y/%m/%d %H:%M:%S"),
-                    account,
-                    random.choice(PRIVATE_IPS) # Multi-IP scenario
+                    match_time.strftime("%Y/%m/%d %H:%M:%S"),
+                    sd["account"],
+                    random.choice(PRIVATE_IPS)
                 ])
-                current_row += 1
-
-        else:
-            # Random noise login
-            # Time moves forward
-            global_offset = current_row * 50
-            login_time = base_time + timedelta(seconds=global_offset)
-            ws.append([
-                login_time.strftime("%Y/%m/%d %H:%M:%S"),
-                account,
-                random.choice(PUBLIC_IPS + PRIVATE_IPS)
-            ])
-            current_row += 1
+            else:
+                # Random noise
+                ws.append([
+                    (datetime(2025, 4, 1, 9, 0, 0) + timedelta(seconds=random.randint(0, 86400))).strftime("%Y/%m/%d %H:%M:%S"),
+                    random.choice([sd["account"] for sd in shared_data]),
+                    random.choice(PUBLIC_IPS)
+                ])
 
     buf = io.BytesIO()
     wb.save(buf)
@@ -209,36 +180,26 @@ def build_file_b(row_count: int, file_a_rows: int, seed: int = 42) -> bytes:
 
 def write_file(path: str, data: bytes) -> None:
     path_obj = os.path.dirname(path)
-    if path_obj:
-        os.makedirs(path_obj, exist_ok=True)
-    with open(path, "wb") as f:
-        f.write(data)
+    if path_obj: os.makedirs(path_obj, exist_ok=True)
+    with open(path, "wb") as f: f.write(data)
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate Traditional Chinese BankFlow Fixtures")
-    parser.add_argument("--size", choices=["small", "large"], required=True, help="Dataset size")
-    parser.add_argument("--out-prefix", required=True, help="Output file prefix (e.g. tests/fixtures/tc_small)")
-    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--size", choices=["small", "large"], required=True)
+    parser.add_argument("--out-prefix", required=True)
     args = parser.parse_args()
     
-    if args.size == "small":
-        rows_a = 200
-        rows_b = 300
-    else:
-        rows_a = 5000
-        rows_b = 8000
+    rows_a, rows_b = (200, 300) if args.size == "small" else (5000, 8000)
+    print(f"Generating {args.size} fixtures...")
     
-    print(f"Generating {args.size} fixtures: A={rows_a}, B={rows_b} rows...")
+    shared = generate_shared_data(rows_a)
     
-    data_a = build_file_a(rows_a)
-    out_a = f"{args.out_prefix}_A.xlsx"
-    write_file(out_a, data_a)
-    print(f"Created {out_a}")
+    write_file(f"{args.out_prefix}_A.xlsx", build_file_a(rows_a, shared))
+    write_file(f"{args.out_prefix}_B.xlsx", build_file_b(rows_b, shared))
+    print("Done.")
 
-    data_b = build_file_b(rows_b, rows_a)
-    out_b = f"{args.out_prefix}_B.xlsx"
-    write_file(out_b, data_b)
-    print(f"Created {out_b}")
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
