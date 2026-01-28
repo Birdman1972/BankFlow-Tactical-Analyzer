@@ -4,7 +4,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Cyberpunk theme colors
+        modern: {
+          primary: "#2563eb",
+          secondary: "#64748b",
+          accent: "#f59e0b",
+          success: "#10b981",
+          warning: "#f59e0b",
+          danger: "#dc2626",
+          bg: "#f8fafc",
+          surface: "#ffffff",
+          border: "#e2e8f0",
+        },
         cyber: {
           bg: "#0a0a0f",
           panel: "#111827",
