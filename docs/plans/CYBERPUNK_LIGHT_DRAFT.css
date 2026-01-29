@@ -1,0 +1,30 @@
+/* Cyberpunk Light Theme (High-Tech Lab Style) */
+/* Inspiration: Mirror's Edge, Kamino Cloning Facility, Aperture Science */
+
+:root[data-theme="cyber-light"] {
+  /* Background: Pure clinical white to slight off-white */
+  --color-bg-base: #f8fafc; /* 接近純白，帶一點點冷灰 */
+  --color-bg-panel: #ffffff; /* 純白面板 */
+  --color-bg-card: #f1f5f9; /* 淺灰卡片 */
+
+  /* Text: High contrast technical grey */
+  --color-text-base: #0f172a; /* 深藍黑，比純黑更有質感 */
+  --color-text-muted: #475569;
+
+  /* Accents: 保留 Cyberpunk 的高飽和螢光色，但在白底上要稍微調深一點點以確保可讀性 */
+  --color-neon-green: #059669; /* 把原本的 #00ff9d 調深為寶石綠，保留科技感但刺眼度降低 */
+  --color-neon-blue: #0284c7; /* 電路藍 */
+  --color-neon-pink: #db2777; /* 雷射粉紅 */
+
+  /* Effects: 既然是 Light Mode，Glow (發光) 改為 Shadow (陰影) + Border */
+  /* 在白底上，發光效果不明顯，改用銳利的彩色投影 */
+  --shadow-neon-green:
+    0 4px 6px -1px rgba(5, 150, 105, 0.2), 0 0 0 1px rgba(5, 150, 105, 0.3);
+}
+
+/* 用法範例 */
+.cyber-light-card {
+  background-color: var(--color-bg-panel);
+  border: 1px solid var(--color-neon-blue); /* 銳利的藍色邊框 */
+  box-shadow: 4px 4px 0px rgba(2, 132, 199, 0.1); /* 硬邊陰影，強調結構感 */
+}

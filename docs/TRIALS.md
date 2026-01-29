@@ -46,6 +46,21 @@
 - **Why it failed**: 沒有做環境判斷 (Tauri Guard)。
 - **Solution**: 實作 `handleTauriError` wrapper，在非 Tauri 環境自動切換為 Mock 行為。
 
+### [2026-01-29] Fixture Filenames
+
+- **Context**: Using `generate_tc_fixtures.py`.
+- **Error**: `os error 2` due to guessing filenames like `_FileA_small.xlsx`.
+- **Fact**: The script outputs `[prefix]_A.xlsx` and `[prefix]_B.xlsx`. It does NOT include `_small` or `_File` in the filename.
+- **Solution**: Always check `ls` or script output before running dependent commands.
+
+### [2026-01-29] Cargo Run in Monorepo & CWD
+
+- **Context**: Running internal tools (`generate_report`) from root.
+- **Attempt**: `cargo run --manifest-path ... --bin generate_report -- --file-a ../../test.xlsx`
+- **Error**: `os error 2` (File not found).
+- **Why it failed**: using `--manifest-path` does NOT change the Current Working Directory (CWD). It remains at the root where `cargo` was invoked.
+- **Solution**: Use paths relative to the _invocation directory_ (e.g., just `test.xlsx`), not relative to the crate directory.
+
 ---
 
 ## 📝 Pending Hypotheses (待驗證假說)

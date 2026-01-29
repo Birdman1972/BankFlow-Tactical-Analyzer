@@ -4,13 +4,27 @@
 
 /* Cyberpunk Base Styles */
 :root {
+  /* Default Theme (Cyberpunk Dark) */
+  --color-bg-base: #0a0a0f;
+  --color-bg-panel: #111827;
+  --color-bg-card: #1f2937;
+  --color-text-base: #e5e7eb;
+  --color-text-muted: #9ca3af;
+  --color-border: #374151;
+
+  --color-neon-green: #00ff9d;
+  --color-neon-blue: #00d2ff;
+  --color-neon-pink: #ff0055;
+  --color-neon-yellow: #ffee00;
+
+  /* Typography */
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 14px;
   line-height: 1.6;
   font-weight: 400;
 
-  color: #e5e7eb;
-  background-color: #0a0a0f;
+  color: var(--color-text-base);
+  background-color: var(--color-bg-base);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -18,10 +32,35 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Cyberpunk Light Theme (High-Tech Lab) */
+:root[data-theme="light"] {
+  --color-bg-base: #f8fafc;
+  --color-bg-panel: #ffffff;
+  --color-bg-card: #f1f5f9;
+  --color-text-base: #0f172a;
+  --color-text-muted: #475569;
+  --color-border: #cbd5e1;
+
+  /* Darker neons for contrast against white */
+  --color-neon-green: #059669;
+  --color-neon-blue: #0284c7;
+  --color-neon-pink: #db2777;
+  --color-neon-yellow: #d97706;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a0a0f 0%, #111827 100%);
+  /* Dynamic gradient based on theme variables */
+  background: linear-gradient(
+    135deg,
+    var(--color-bg-base) 0%,
+    var(--color-bg-panel) 100%
+  );
+  color: var(--color-text-base);
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 /* Scrollbar Styling */
@@ -66,7 +105,8 @@ body {
 
   .neon-border {
     @apply border-neon-green;
-    box-shadow: 0 0 5px theme("colors.neon.green"),
+    box-shadow:
+      0 0 5px theme("colors.neon.green"),
       inset 0 0 5px theme("colors.neon.green");
   }
 

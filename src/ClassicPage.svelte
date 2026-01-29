@@ -9,6 +9,7 @@
   import UpdateDialog from './lib/components/UpdateDialog.svelte';
   import DownloadsDialog from '$lib/components/DownloadsDialog.svelte';
   import ToastContainer from './lib/components/ToastContainer.svelte';
+  import ThemeToggle from '$lib/components/modern/ThemeToggle.svelte';
   import {
     fileA,
     fileB,
@@ -123,6 +124,8 @@
 
         <!-- Language Switcher -->
         <div class="flex items-center gap-1 text-xs">
+          <ThemeToggle />
+          <span class="text-gray-600">|</span>
           <a
             class="px-2 py-1 rounded text-gray-500 hover:text-white transition-colors border border-transparent hover:border-gray-700"
             href="?ui=modern"
