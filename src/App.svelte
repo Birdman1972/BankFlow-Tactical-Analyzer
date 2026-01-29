@@ -1,14 +1,15 @@
 
-
-<svelte:head>
-  <html data-theme={$theme} lang="zh-TW"></html>
-</svelte:head>
-
 <script lang="ts">
   import { onMount } from 'svelte';
   import { theme } from '$lib/stores/theme';
   import ClassicPage from './ClassicPage.svelte';
   import ModernPage from './ModernPage.svelte';
+
+  // Apply theme to document root
+  $: if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', $theme);
+    document.documentElement.setAttribute('lang', 'zh-TW');
+  }
 
   type UiMode = 'classic' | 'modern';
 

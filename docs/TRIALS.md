@@ -53,6 +53,14 @@
 - **Fact**: The script outputs `[prefix]_A.xlsx` and `[prefix]_B.xlsx`. It does NOT include `_small` or `_File` in the filename.
 - **Solution**: Always check `ls` or script output before running dependent commands.
 
+### [2026-01-29] Vercel Runtime Error (null is not an object)
+
+- **Context**: Cyberpunk Light theme implementation.
+- **Attempt**: Used `<svelte:head><html ... /></svelte:head>` in `App.svelte` to set data-theme.
+- **Error**: Runtime crash: `null is not an object (evaluating 's.cloneNode')`.
+- **Why it failed**: Svelte template engine cannot safely clone/hydrate the root `<html>` tag if injected via component template.
+- **Solution**: Use reactive script logic: `$: document.documentElement.setAttribute(...)`.
+
 ### [2026-01-29] Cargo Run in Monorepo & CWD
 
 - **Context**: Running internal tools (`generate_report`) from root.
