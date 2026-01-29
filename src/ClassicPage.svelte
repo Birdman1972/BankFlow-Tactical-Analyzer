@@ -26,8 +26,10 @@
     currentPlatform,
     scanFolder,
     type BatchScanResult,
+    loadFileA,
+    loadFileB,
   } from './lib/stores/platform';
-  import { fileA as fileAStore, fileB as fileBStore } from './lib/stores/app';
+  import { fileA as fileAStore, fileB as fileBStore, addLog } from './lib/stores/app';
   import {
     checkForUpdates,
     skipVersion,
@@ -92,31 +94,38 @@
 
   // File drop handlers - only work on Tauri platform
   async function handleFileADrop(e: CustomEvent<string>) {
-    if ($currentPlatform === 'tauri') {
-      // Dynamic import for Tauri-specific functionality
-      const { loadFileA } = await import('./lib/stores/tauri');
-      await loadFileA(e.detail);
+    try {
+      const info = await loadFileA(e.detail);
+      fileAStore.set(info);
+    } catch (error) {
+      addLog('error', `Drop A failed: ${error}`);
     }
   }
 
   async function handleFileBDrop(e: CustomEvent<string>) {
-    if ($currentPlatform === 'tauri') {
-      const { loadFileB } = await import('./lib/stores/tauri');
-      await loadFileB(e.detail);
+    try {
+      const info = await loadFileB(e.detail);
+      fileBStore.set(info);
+    } catch (error) {
+      addLog('error', `Drop B failed: ${error}`);
     }
   }
 
   async function handleFileARepair(e: CustomEvent<{ path: string; mapping: Record<string, string> }>) {
-    if ($currentPlatform === 'tauri') {
-      const { loadFileA } = await import('./lib/stores/tauri');
-      await loadFileA(e.detail.path, e.detail.mapping);
+    try {
+      const info = await loadFileA(e.detail.path, e.detail.mapping);
+      fileAStore.set(info);
+    } catch (error) {
+      addLog('error', `Repair A failed: ${error}`);
     }
   }
 
   async function handleFileBRepair(e: CustomEvent<{ path: string; mapping: Record<string, string> }>) {
-    if ($currentPlatform === 'tauri') {
-      const { loadFileB } = await import('./lib/stores/tauri');
-      await loadFileB(e.detail.path, e.detail.mapping);
+    try {
+      const info = await loadFileB(e.detail.path, e.detail.mapping);
+      fileBStore.set(info);
+    } catch (error) {
+      addLog('error', `Repair B failed: ${error}`);
     }
   }
 
@@ -131,9 +140,14 @@
   let isBatchScanning = false;
 
   async function handleBatchClick() {
-    if ($currentPlatform !== 'tauri') return;
+    addLog('system', `Batch Click Triggered. Platform: ${$currentPlatform}`);
+    if ($currentPlatform !== 'tauri') {
+      addLog('warning', 'Batch folder scanning is only available in the Desktop version.');
+      return;
+    }
     
     try {
+      addLog('info', 'Opening folder selection dialog...');
       const selected = await open({
         directory: true,
         multiple: false,
@@ -141,10 +155,15 @@
       });
 
       if (selected && typeof selected === 'string') {
+        addLog('info', `Selected folder: ${selected}`);
         isBatchScanning = true;
         batchResult = await scanFolder(selected);
+        addLog('success', `Scan complete. Found ${batchResult.pairs.length} pairs.`);
+      } else {
+        addLog('info', 'Folder selection cancelled.');
       }
     } catch (error) {
+      addLog('error', `Batch scan error: ${error}`);
       console.error('Batch scan error:', error);
     } finally {
       isBatchScanning = false;
