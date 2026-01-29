@@ -8,6 +8,7 @@ pub mod exporter;
 pub mod matcher;
 pub mod models;
 pub mod parser;
+pub mod batch;
 pub mod processor;
 
 #[cfg(feature = "wasm")]

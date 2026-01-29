@@ -45,7 +45,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "bankflow-core"
-version = "0.1.0"
+version = "0.3.9"
 dependencies = [
  "calamine",
  "chrono",
@@ -57,6 +57,7 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "thiserror 1.0.69",
+ "walkdir",
  "wasm-bindgen",
  "wasm-bindgen-test",
  "web-sys",

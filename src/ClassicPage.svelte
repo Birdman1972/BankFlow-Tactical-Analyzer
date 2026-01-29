@@ -11,6 +11,9 @@
   import ToastContainer from './lib/components/ToastContainer.svelte';
   import ThemeToggle from '$lib/components/modern/ThemeToggle.svelte';
   import FeedbackForm from '$lib/components/FeedbackForm.svelte';
+  import BatchQueue from './lib/components/BatchQueue.svelte';
+  import { open } from '@tauri-apps/plugin-dialog';
+  import { scanFolder, type BatchScanResult } from './lib/stores/tauri';
   import {
     fileA,
     fileB,
@@ -102,15 +105,60 @@
     }
   }
 
+  async function handleFileARepair(e: CustomEvent<{ path: string; mapping: Record<string, string> }>) {
+    if ($currentPlatform === 'tauri') {
+      const { loadFileA } = await import('./lib/stores/tauri');
+      await loadFileA(e.detail.path, e.detail.mapping);
+    }
+  }
+
+  async function handleFileBRepair(e: CustomEvent<{ path: string; mapping: Record<string, string> }>) {
+    if ($currentPlatform === 'tauri') {
+      const { loadFileB } = await import('./lib/stores/tauri');
+      await loadFileB(e.detail.path, e.detail.mapping);
+    }
+  }
+
   async function handleClear() {
     await clearAllFiles();
     fileAStore.set(null);
     fileBStore.set(null);
     analysisResult.set(null);
   }
+
+  let batchResult: BatchScanResult | null = null;
+  let isBatchScanning = false;
+
+  async function handleBatchClick() {
+    if ($currentPlatform !== 'tauri') return;
+    
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: 'Select Folder for Batch Analysis'
+      });
+
+      if (selected && typeof selected === 'string') {
+        isBatchScanning = true;
+        batchResult = await scanFolder(selected);
+      }
+    } catch (error) {
+      console.error('Batch scan error:', error);
+    } finally {
+      isBatchScanning = false;
+    }
+  }
 </script>
 
 <main class="min-h-screen p-6">
+  {#if batchResult}
+    <BatchQueue 
+        result={batchResult} 
+        on:close={() => batchResult = null} 
+    />
+  {/if}
+
   <!-- Header -->
   <header class="cyber-panel p-4 mb-6">
     <div class="flex items-center justify-between">
@@ -176,6 +224,15 @@
             {$t('app.clearAll')}
           </button>
         {/if}
+
+        <button
+          class="text-xs text-gray-500 hover:text-neon-blue transition-colors flex items-center gap-1 border border-gray-800 px-2 py-1 rounded hover:border-neon-blue/40"
+          on:click={handleBatchClick}
+          disabled={$isAnalyzing || isBatchScanning}
+        >
+          <span class={isBatchScanning ? 'animate-pulse' : ''}>📂</span>
+          Batch Folder
+        </button>
       </div>
     </div>
   </header>
@@ -216,6 +273,7 @@
             disabled={$isAnalyzing}
             on:click={handleFileAClick}
             on:drop={handleFileADrop}
+            on:repair={handleFileARepair}
           />
 
           <DropZone
@@ -226,6 +284,7 @@
             disabled={$isAnalyzing}
             on:click={handleFileBClick}
             on:drop={handleFileBDrop}
+            on:repair={handleFileBRepair}
           />
         </div>
 

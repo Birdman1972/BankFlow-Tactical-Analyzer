@@ -52,6 +52,23 @@ interface TauriWhoisResult {
 }
 
 // ============================================
+// Batch Processing Types
+// ============================================
+
+export interface BatchPair {
+  folder_name: string;
+  path_a: string;
+  path_b: string;
+  status: string;
+}
+
+export interface BatchScanResult {
+  total_folders_scanned: number;
+  pairs: BatchPair[];
+  incomplete_folders: string[];
+}
+
+// ============================================
 // Utility & Environment
 // ============================================
 
@@ -114,25 +131,25 @@ function handleTauriError<T>(
 // File Operations
 // ============================================
 
-export async function loadFileA(path: string): Promise<void> {
+export async function loadFileA(
+  path: string,
+  mapping?: Record<string, string>,
+): Promise<void> {
   try {
     addLog("info", `Loading File A: ${path.split(/[/\\]/).pop()}`);
 
-    // Default mock for error handling
-    const mockData = {
-      ...MOCK_FILE_METADATA,
-      filename: path.split(/[/\\]/).pop() || "mock.xlsx",
-    };
-
-    const result = await invoke<TauriFileMetadata>("load_file", { path }).catch(
-      (err) => {
-        // If it's a validation error, we re-throw to be caught by the outer catch
-        if (String(err).includes("Missing required columns")) {
-          throw err;
-        }
-        return handleTauriError(err, "load_file", mockData);
-      },
-    );
+    const result = await invoke<TauriFileMetadata>("load_file", {
+      path,
+      mapping,
+    }).catch((err) => {
+      if (String(err).includes("Missing required columns")) {
+        throw err;
+      }
+      return handleTauriError(err, "load_file", {
+        ...MOCK_FILE_METADATA,
+        filename: path.split(/[/\\]/).pop() || "mock.xlsx",
+      });
+    });
 
     fileA.set({
       path: result.path,
@@ -162,7 +179,7 @@ export async function loadFileA(path: string): Promise<void> {
       });
       addLog("error", `Validation Error (File A): ${msg}`);
     } else {
-      fileA.set(null); // Clear state on critical error
+      fileA.set(null);
       addLog("error", `Failed to load File A: ${error}`);
     }
   }
@@ -184,24 +201,25 @@ export async function selectAndLoadFileA(): Promise<void> {
   }
 }
 
-export async function loadFileB(path: string): Promise<void> {
+export async function loadFileB(
+  path: string,
+  mapping?: Record<string, string>,
+): Promise<void> {
   try {
     addLog("info", `Loading File B: ${path.split(/[/\\]/).pop()}`);
 
-    // Default mock for error handling
-    const mockData = {
-      ...MOCK_FILE_METADATA,
-      filename: path.split(/[/\\]/).pop() || "mock_ip.xlsx",
-      row_count: 500,
-    };
-
     const result = await invoke<TauriFileMetadata>("load_ip_file", {
       path,
+      mapping,
     }).catch((err) => {
       if (String(err).includes("Missing required columns")) {
         throw err;
       }
-      return handleTauriError(err, "load_ip_file", mockData);
+      return handleTauriError(err, "load_ip_file", {
+        ...MOCK_FILE_METADATA,
+        filename: path.split(/[/\\]/).pop() || "mock_ip.xlsx",
+        row_count: 500,
+      });
     });
 
     fileB.set({
@@ -260,7 +278,7 @@ export async function selectAndLoadFileB(): Promise<void> {
 
 let progressUnlisten: UnlistenFn | null = null;
 
-export async function runAnalysis(): Promise<void> {
+export async function runAnalysis(): Promise<TauriAnalysisResult | null> {
   const currentSettings = get(settings);
 
   try {
@@ -282,10 +300,7 @@ export async function runAnalysis(): Promise<void> {
         },
       );
     } catch (err) {
-      console.warn(
-        "Failed to setup progress listener (likely non-Tauri env)",
-        err,
-      );
+      console.warn("Progress listener failed", err);
     }
 
     // Run analysis
@@ -316,14 +331,10 @@ export async function runAnalysis(): Promise<void> {
       `Analysis complete: ${result.matched_count}/${result.total_records} records matched`,
     );
 
-    if (result.multi_ip_count > 0) {
-      addLog(
-        "warning",
-        `${result.multi_ip_count} transactions have multiple IP matches`,
-      );
-    }
+    return result;
   } catch (error) {
     addLog("error", `Analysis failed: ${error}`);
+    return null;
   } finally {
     isAnalyzing.set(false);
     progress.set(null);
@@ -357,12 +368,6 @@ export async function exportReport(): Promise<void> {
         (err) => handleTauriError(err, "export_excel", mockExportResult),
       );
       addLog("success", result);
-    } else {
-      // Browser mock mode - simulate export
-      addLog(
-        "warning",
-        "[Browser Mode] Export simulated - in real app, file would be saved",
-      );
     }
   } catch (error) {
     addLog("error", `Export failed: ${error}`);
@@ -370,7 +375,7 @@ export async function exportReport(): Promise<void> {
 }
 
 // ============================================
-// Whois (Standalone)
+// Whois
 // ============================================
 
 export interface WhoisResult {
@@ -382,11 +387,10 @@ export interface WhoisResult {
 
 export async function queryWhois(ip: string): Promise<WhoisResult> {
   try {
-    // Mock whois data for browser mode
     const mockWhoisResult: TauriWhoisResult = {
       ip,
       country: "Taiwan",
-      isp: "Mock ISP Provider",
+      isp: "Mock ISP",
       query_success: true,
     };
 
@@ -401,8 +405,6 @@ export async function queryWhois(ip: string): Promise<WhoisResult> {
       querySuccess: result.query_success,
     };
   } catch (error) {
-    addLog("error", `Whois query failed for ${ip}: ${error}`);
-    // Return dummy data instead of crashing
     return { ip, country: "Error", isp: String(error), querySuccess: false };
   }
 }
@@ -413,17 +415,49 @@ export async function queryWhois(ip: string): Promise<WhoisResult> {
 
 export async function clearAllFiles(): Promise<void> {
   try {
-    // Try to clear backend first
-    await invoke("clear_files").catch((err) => {
-      // If backend fails (e.g. browser), we still clear frontend
-      console.warn("Backend clear failed, proceeding with frontend clear", err);
-    });
-
+    await invoke("clear_files").catch(() => {});
     fileA.set(null);
     fileB.set(null);
     analysisResult.set(null);
     addLog("info", "All files cleared");
   } catch (error) {
     addLog("error", `Failed to clear files: ${error}`);
+  }
+}
+
+export async function getHeaders(path: string): Promise<string[]> {
+  try {
+    return await invoke<string[]>("get_file_headers", { path }).catch((err) =>
+      handleTauriError(err, "get_file_headers", ["Time", "Account", "IP"]),
+    );
+  } catch (error) {
+    return [];
+  }
+}
+
+export async function scanFolder(
+  path: string,
+  maxDepth: number = 3,
+): Promise<BatchScanResult> {
+  try {
+    addLog("info", `Scanning folder: ${path.split(/[/\\]/).pop()}`);
+    const result = await invoke<BatchScanResult>("scan_folder", {
+      path,
+      maxDepth,
+    }).catch((err) =>
+      handleTauriError(err, "scan_folder", {
+        total_folders_scanned: 1,
+        pairs: [],
+        incomplete_folders: [],
+      }),
+    );
+    addLog(
+      "success",
+      `Scan complete: Found ${result.pairs.length} analysis pairs.`,
+    );
+    return result;
+  } catch (error) {
+    addLog("error", `Scan failed: ${error}`);
+    throw error;
   }
 }

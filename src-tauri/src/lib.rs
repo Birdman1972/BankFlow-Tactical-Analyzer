@@ -34,6 +34,8 @@ pub fn run() {
             commands::file_ops::clear_files,
             commands::analysis::run_analysis,
             commands::file_ops::export_excel,
+            commands::file_ops::get_file_headers,
+            commands::file_ops::scan_folder,
             commands::whois::query_whois,
             commands::whois::query_whois_batch,
             commands::system::check_update,

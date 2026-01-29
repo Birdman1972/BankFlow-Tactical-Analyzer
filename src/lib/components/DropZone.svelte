@@ -2,6 +2,7 @@
   import { t } from '$lib/i18n';
   import { createEventDispatcher } from 'svelte';
   import type { FileInfo } from '../stores/app';
+  import ColumnMapper from './ColumnMapper.svelte';
 
   export let label: string = 'A';
   export let title: string = 'Drop File Here';
@@ -9,9 +10,10 @@
   export let file: FileInfo | null = null;
   export let disabled: boolean = false;
 
-  const dispatch = createEventDispatcher<{ click: void; drop: string }>();
+  const dispatch = createEventDispatcher<{ click: void; drop: string; repair: { path: string; mapping: Record<string, string> } }>();
 
   let isDragging = false;
+  let showMapper = false;
 
   function handleDragEnter(e: DragEvent) {
     e.preventDefault();
@@ -36,12 +38,8 @@
     const files = e.dataTransfer?.files;
     if (files && files.length > 0) {
       console.log('Dropped files:', files);
-      // In Tauri, files should have a path property if configured correctly
-      // We cast to any to access the path property safely
       const file = files[0] as any;
-      const filePath = file.path || file.name; // Fallback to name if path is missing
-      
-      console.log('Detected file path:', filePath);
+      const filePath = file.path || file.name;
       
       if (!file.path) {
         console.warn('File path is missing. Drag & Drop might not work fully in browser mode.');
@@ -57,6 +55,27 @@
     }
   }
 
+  function handleRepairClick(e: Event) {
+    e.stopPropagation();
+    showMapper = true;
+  }
+
+  function handleMapperApply(e: CustomEvent) {
+    showMapper = false;
+    if (file) {
+        dispatch('repair', { path: file.path, mapping: e.detail });
+    }
+  }
+
+  function getRequiredColumns(lbl: string): string[] {
+    // Basic heuristic based on label context
+    if (lbl.includes('A') || lbl.includes('交易')) {
+        return ["交易時間", "帳號", "支出金額", "存入金額"];
+    } else {
+        return ["登入時間", "帳號", "IP位址"];
+    }
+  }
+
   $: dropZoneClasses = [
     'bg-cyber-card border border-cyber-border rounded-md p-4',
     'border-dashed border-2',
@@ -67,6 +86,15 @@
     'flex flex-col items-center justify-center gap-2',
   ].filter(Boolean).join(' ');
 </script>
+
+{#if showMapper && file}
+    <ColumnMapper 
+        file={file} 
+        requiredColumns={getRequiredColumns(label)} 
+        on:apply={handleMapperApply}
+        on:cancel={() => showMapper = false}
+    />
+{/if}
 
 <div
   role="button"
@@ -84,12 +112,21 @@
       <!-- Error State -->
       <div class="flex flex-col items-center gap-2 p-4 text-center animate-in fade-in zoom-in duration-300">
         <span class="text-3xl">⚠️</span>
-        <div class="flex flex-col">
+        <div class="flex flex-col items-center">
           <span class="text-sm font-bold text-red-400">{$t('dropZone.fileFormatError')}</span>
-          <span class="text-xs text-red-300 max-w-[200px] break-words">{file.validationError}</span>
+          <span class="text-xs text-red-300 max-w-[200px] break-words mb-2">{file.validationError}</span>
+          
+          {#if file.validationError.includes("Missing required columns")}
+             <button 
+                class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded shadow-lg animate-pulse"
+                on:click={handleRepairClick}
+             >
+                🔧 Repair File
+             </button>
+          {/if}
         </div>
         <button 
-            class="mt-1 text-[10px] text-red-400 underline hover:text-red-300"
+            class="mt-2 text-[10px] text-red-400 underline hover:text-red-300"
             on:click|stopPropagation={() => handleClick()}
         >
             {$t('dropZone.reselectFile')}

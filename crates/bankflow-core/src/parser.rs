@@ -5,6 +5,7 @@
 use crate::error::CoreError;
 use crate::models::{excel_date_to_datetime, FileMetadata, IpRecord, Transaction};
 use calamine::{open_workbook_auto_from_rs, Data, DataType, Reader, Sheets};
+use std::collections::HashMap;
 use std::io::Cursor;
 
 /// Column indices for File A (Transaction file)
@@ -25,6 +26,8 @@ mod file_b_columns {
 /// Header-based column mapping helpers
 /// Header-based column mapping helpers
 pub mod header_map {
+    use std::collections::HashMap;
+
     #[derive(Debug, Clone, Copy)]
     pub struct FileAColumns {
         pub timestamp: usize,
@@ -44,7 +47,20 @@ pub mod header_map {
         value.trim().to_lowercase()
     }
 
-    fn find_index(headers: &[String], candidates: &[&str]) -> Option<usize> {
+    fn find_index(headers: &[String], candidates: &[&str], mapping: Option<&HashMap<String, String>>, map_key: &str) -> Option<usize> {
+        // 1. Check Custom Mapping
+        if let Some(map) = mapping {
+            if let Some(target_header) = map.get(map_key) {
+                let norm_target = normalize_header(target_header);
+                for (idx, header) in headers.iter().enumerate() {
+                    if normalize_header(header) == norm_target {
+                        return Some(idx);
+                    }
+                }
+            }
+        }
+
+        // 2. Fallback to Default Candidates
         for (idx, header) in headers.iter().enumerate() {
             let normalized = normalize_header(header);
             if candidates.iter().any(|c| normalized == normalize_header(c)) {
@@ -54,19 +70,19 @@ pub mod header_map {
         None
     }
 
-    pub fn validate_file_a_headers(headers: &[String]) -> Result<FileAColumns, Vec<String>> {
+    pub fn validate_file_a_headers(headers: &[String], mapping: Option<&HashMap<String, String>>) -> Result<FileAColumns, Vec<String>> {
         let mut missing = Vec::new();
 
-        let timestamp = find_index(headers, &["交易時間", "時間", "timestamp", "交易日期"]);
+        let timestamp = find_index(headers, &["交易時間", "時間", "timestamp", "交易日期"], mapping, "timestamp");
         if timestamp.is_none() { missing.push("交易時間/timestamp".to_string()); }
 
-        let account = find_index(headers, &["帳號", "account", "account_id"]);
+        let account = find_index(headers, &["帳號", "account", "account_id"], mapping, "account");
         if account.is_none() { missing.push("帳號/account".to_string()); }
 
-        let expense = find_index(headers, &["支出金額", "expense", "支出"]);
+        let expense = find_index(headers, &["支出金額", "expense", "支出"], mapping, "expense");
         if expense.is_none() { missing.push("支出金額/expense".to_string()); }
 
-        let income = find_index(headers, &["存入金額", "收入金額", "income", "存入"]);
+        let income = find_index(headers, &["存入金額", "收入金額", "income", "存入"], mapping, "income");
         if income.is_none() { missing.push("存入金額/income".to_string()); }
 
         if !missing.is_empty() {
@@ -81,16 +97,16 @@ pub mod header_map {
         })
     }
 
-    pub fn validate_file_b_headers(headers: &[String]) -> Result<FileBColumns, Vec<String>> {
+    pub fn validate_file_b_headers(headers: &[String], mapping: Option<&HashMap<String, String>>) -> Result<FileBColumns, Vec<String>> {
         let mut missing = Vec::new();
 
-        let timestamp = find_index(headers, &["登入時間", "時間", "timestamp"]);
+        let timestamp = find_index(headers, &["登入時間", "時間", "timestamp"], mapping, "timestamp");
         if timestamp.is_none() { missing.push("登入時間/timestamp".to_string()); }
 
-        let account = find_index(headers, &["帳號", "account", "account_id"]);
+        let account = find_index(headers, &["帳號", "account", "account_id"], mapping, "account");
         if account.is_none() { missing.push("帳號/account".to_string()); }
 
-        let ip_address = find_index(headers, &["ip位址", "ip地址", "ip", "ip address"]);
+        let ip_address = find_index(headers, &["ip位址", "ip地址", "ip", "ip address"], mapping, "ip_address");
         if ip_address.is_none() { missing.push("IP位址/address".to_string()); }
 
         if !missing.is_empty() {
@@ -113,6 +129,7 @@ impl Parser {
     pub fn parse_transactions_from_bytes(
         data: &[u8],
         filename: &str,
+        mapping: Option<&HashMap<String, String>>,
     ) -> Result<(Vec<Transaction>, FileMetadata), CoreError> {
         let cursor = Cursor::new(data);
         let mut workbook: Sheets<_> = open_workbook_auto_from_rs(cursor).map_err(|e| {
@@ -139,7 +156,7 @@ impl Parser {
             .map(|row| row.iter().map(cell_to_string).collect())
             .unwrap_or_default();
         
-        let columns = match header_map::validate_file_a_headers(&headers) {
+        let columns = match header_map::validate_file_a_headers(&headers, mapping) {
             Ok(cols) => cols,
             Err(missing) => return Err(CoreError::ExcelParseError(format!("Missing required columns: {}", missing.join(", ")))),
         };
@@ -187,6 +204,7 @@ impl Parser {
     pub fn parse_ip_records_from_bytes(
         data: &[u8],
         filename: &str,
+        mapping: Option<&HashMap<String, String>>,
     ) -> Result<(Vec<IpRecord>, FileMetadata), CoreError> {
         let cursor = Cursor::new(data);
         let mut workbook: Sheets<_> = open_workbook_auto_from_rs(cursor).map_err(|e| {
@@ -213,7 +231,7 @@ impl Parser {
             .map(|row| row.iter().map(cell_to_string).collect())
             .unwrap_or_default();
         
-        let columns = match header_map::validate_file_b_headers(&headers) {
+        let columns = match header_map::validate_file_b_headers(&headers, mapping) {
             Ok(cols) => cols,
             Err(missing) => return Err(CoreError::ExcelParseError(format!("Missing required columns: {}", missing.join(", ")))),
         };
@@ -269,6 +287,31 @@ impl Parser {
             column_count: range.width(),
             file_type: "xlsx".to_string(),
         })
+    }
+
+    /// Get raw headers from bytes
+    pub fn get_headers_from_bytes(data: &[u8], _filename: &str) -> Result<Vec<String>, CoreError> {
+        let cursor = Cursor::new(data);
+        let mut workbook: Sheets<_> = open_workbook_auto_from_rs(cursor)
+            .map_err(|e| CoreError::ExcelParseError(format!("Failed to open file: {}", e)))?;
+
+        let sheet_name = workbook
+            .sheet_names()
+            .first()
+            .cloned()
+            .ok_or_else(|| CoreError::ExcelParseError("No sheets found".to_string()))?;
+
+        let range = workbook
+            .worksheet_range(&sheet_name)
+            .map_err(|e| CoreError::ExcelParseError(format!("Failed to read sheet: {}", e)))?;
+
+        let headers: Vec<String> = range
+            .rows()
+            .next()
+            .map(|row| row.iter().map(cell_to_string).collect())
+            .unwrap_or_default();
+            
+        Ok(headers)
     }
 }
 
@@ -336,26 +379,26 @@ mod native {
 
     impl Parser {
         /// Parse transactions from file path (native only)
-        pub fn parse_transactions(path: &Path) -> Result<Vec<Transaction>, CoreError> {
+        pub fn parse_transactions(path: &Path, mapping: Option<&std::collections::HashMap<String, String>>) -> Result<Vec<Transaction>, CoreError> {
             let data = fs::read(path).map_err(|e| {
                 CoreError::ExcelParseError(format!("Failed to read file: {}", e))
             })?;
             let filename = path.file_name()
                 .map(|n| n.to_string_lossy().to_string())
                 .unwrap_or_default();
-            let (transactions, _) = Parser::parse_transactions_from_bytes(&data, &filename)?;
+            let (transactions, _) = Parser::parse_transactions_from_bytes(&data, &filename, mapping)?;
             Ok(transactions)
         }
 
         /// Parse IP records from file path (native only)
-        pub fn parse_ip_records(path: &Path) -> Result<Vec<IpRecord>, CoreError> {
+        pub fn parse_ip_records(path: &Path, mapping: Option<&std::collections::HashMap<String, String>>) -> Result<Vec<IpRecord>, CoreError> {
             let data = fs::read(path).map_err(|e| {
                 CoreError::ExcelParseError(format!("Failed to read file: {}", e))
             })?;
             let filename = path.file_name()
                 .map(|n| n.to_string_lossy().to_string())
                 .unwrap_or_default();
-            let (records, _) = Parser::parse_ip_records_from_bytes(&data, &filename)?;
+            let (records, _) = Parser::parse_ip_records_from_bytes(&data, &filename, mapping)?;
             Ok(records)
         }
 
@@ -369,6 +412,17 @@ mod native {
                 .unwrap_or_default();
             let metadata = Parser::get_metadata_from_bytes(&data, &filename)?;
             Ok((metadata.row_count, metadata.column_count))
+        }
+
+        /// Get headers from file path (native only)
+        pub fn get_file_headers(path: &Path) -> Result<Vec<String>, CoreError> {
+            let data = fs::read(path).map_err(|e| {
+                CoreError::ExcelParseError(format!("Failed to read file: {}", e))
+            })?;
+            let filename = path.file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
+            Parser::get_headers_from_bytes(&data, &filename)
         }
     }
 }
