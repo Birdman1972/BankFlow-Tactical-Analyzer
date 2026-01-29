@@ -138,8 +138,6 @@ impl Parser {
             .next()
             .map(|row| row.iter().map(cell_to_string).collect())
             .unwrap_or_default();
-            .map(|row| row.iter().map(cell_to_string).collect())
-            .unwrap_or_default();
         
         let columns = match header_map::validate_file_a_headers(&headers) {
             Ok(cols) => cols,
@@ -212,8 +210,6 @@ impl Parser {
         let headers: Vec<String> = range
             .rows()
             .next()
-            .map(|row| row.iter().map(cell_to_string).collect())
-            .unwrap_or_default();
             .map(|row| row.iter().map(cell_to_string).collect())
             .unwrap_or_default();
         
