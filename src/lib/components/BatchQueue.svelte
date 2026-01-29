@@ -1,9 +1,14 @@
-<script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import { get } from 'svelte/store';
   import { t } from '../i18n';
-  import type { BatchScanResult, BatchPair } from '../stores/tauri';
-  import { loadFileA, loadFileB, runAnalysis } from '../stores/tauri';
-  import { addLog } from '../stores/app';
+  import { 
+    loadFileA, 
+    loadFileB, 
+    runAnalysis, 
+    type BatchScanResult, 
+    type BatchPair 
+  } from '../stores/platform';
+  import { addLog, settings } from '../stores/app';
 
   export let result: BatchScanResult;
   export let isProcessing = false;
@@ -34,7 +39,7 @@
             await loadFileB(item.path_b);
             
             // 2. Run Analysis
-            const analysisResult = await runAnalysis();
+            const analysisResult = await runAnalysis(get(settings));
             
             if (analysisResult) {
                 item.processStatus = 'done';

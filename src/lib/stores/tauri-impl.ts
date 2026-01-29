@@ -7,7 +7,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import type { PlatformAPI, WhoisResult } from "./platform";
+import type { PlatformAPI, WhoisResult, BatchScanResult } from "./platform";
 import type {
   FileInfo,
   AnalysisSettings,
@@ -95,6 +95,26 @@ export class TauriPlatform implements PlatformAPI {
     return fileInfo;
   }
 
+  async loadFileA(
+    path: string,
+    mapping?: Record<string, string>,
+  ): Promise<FileInfo> {
+    addLog("info", `Loading File A: ${path.split(/[/\\]/).pop()}`);
+    const result = await invoke<TauriFileMetadata>("load_file", {
+      path,
+      mapping,
+    });
+
+    return {
+      path: result.path ?? path,
+      filename: result.filename,
+      rowCount: result.row_count,
+      columnCount: result.column_count,
+      fileType: result.file_type,
+      isValid: true,
+    };
+  }
+
   async selectAndLoadFileB(): Promise<FileInfo> {
     const selected = await open({
       multiple: false,
@@ -106,25 +126,27 @@ export class TauriPlatform implements PlatformAPI {
       throw new Error("No file selected");
     }
 
-    addLog("info", `Loading File B: ${selected.split("/").pop()}`);
+    return this.loadFileB(selected);
+  }
+
+  async loadFileB(
+    path: string,
+    mapping?: Record<string, string>,
+  ): Promise<FileInfo> {
+    addLog("info", `Loading File B: ${path.split(/[/\\]/).pop()}`);
     const result = await invoke<TauriFileMetadata>("load_ip_file", {
-      path: selected,
+      path,
+      mapping,
     });
 
-    const fileInfo: FileInfo = {
-      path: result.path ?? selected,
+    return {
+      path: result.path ?? path,
       filename: result.filename,
       rowCount: result.row_count,
       columnCount: result.column_count,
       fileType: result.file_type,
       isValid: true,
     };
-
-    addLog(
-      "success",
-      `File B loaded: ${fileInfo.filename} (${fileInfo.rowCount} rows)`,
-    );
-    return fileInfo;
   }
 
   async clearAllFiles(): Promise<void> {
@@ -233,6 +255,31 @@ export class TauriPlatform implements PlatformAPI {
       };
     } catch (error) {
       addLog("error", `Whois query failed for ${ip}: ${error}`);
+      throw error;
+    }
+  }
+
+  // ----------------------------------------
+  // Batch Scan
+  // ----------------------------------------
+
+  async scanFolder(
+    path: string,
+    maxDepth: number = 3,
+  ): Promise<BatchScanResult> {
+    try {
+      addLog("info", `Scanning folder: ${path.split(/[/\\]/).pop()}`);
+      const result = await invoke<BatchScanResult>("scan_folder", {
+        path,
+        max_depth: maxDepth,
+      });
+      addLog(
+        "success",
+        `Scan complete: Found ${result.pairs.length} analysis pairs.`,
+      );
+      return result;
+    } catch (error) {
+      addLog("error", `Scan failed: ${error}`);
       throw error;
     }
   }

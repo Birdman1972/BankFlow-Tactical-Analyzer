@@ -5,7 +5,7 @@
  * Uses browser File API and WASM-compiled bankflow-core.
  */
 
-import type { PlatformAPI } from "./platform";
+import type { PlatformAPI, BatchScanResult } from "./platform";
 import type {
   FileInfo,
   AnalysisSettings,
@@ -134,6 +134,15 @@ export class WasmPlatform implements PlatformAPI {
     return info;
   }
 
+  async loadFileA(
+    _path: string,
+    _mapping?: Record<string, string>,
+  ): Promise<FileInfo> {
+    throw new Error(
+      "Direct file loading by path is not supported in Web environment.",
+    );
+  }
+
   async selectAndLoadFileB(): Promise<FileInfo> {
     const file = await this.selectFile("Select IP Log File (File B)");
     const bytes = await this.readFileAsBytes(file);
@@ -147,6 +156,15 @@ export class WasmPlatform implements PlatformAPI {
     );
 
     return info;
+  }
+
+  async loadFileB(
+    _path: string,
+    _mapping?: Record<string, string>,
+  ): Promise<FileInfo> {
+    throw new Error(
+      "Direct file loading by path is not supported in Web environment.",
+    );
   }
 
   async clearAllFiles(): Promise<void> {
@@ -398,5 +416,20 @@ export class WasmPlatform implements PlatformAPI {
 
     // Cleanup
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async scanFolder(
+    _path: string,
+    _maxDepth: number = 3,
+  ): Promise<BatchScanResult> {
+    addLog(
+      "warning",
+      "Batch folder scanning is only available in the Desktop version.",
+    );
+    return {
+      total_folders_scanned: 0,
+      pairs: [],
+      incomplete_folders: [],
+    };
   }
 }

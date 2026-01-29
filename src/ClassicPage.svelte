@@ -13,7 +13,6 @@
   import FeedbackForm from '$lib/components/FeedbackForm.svelte';
   import BatchQueue from './lib/components/BatchQueue.svelte';
   import { open } from '@tauri-apps/plugin-dialog';
-  import { scanFolder, type BatchScanResult } from './lib/stores/tauri';
   import {
     fileA,
     fileB,
@@ -25,6 +24,8 @@
     selectAndLoadFileB,
     clearAllFiles,
     currentPlatform,
+    scanFolder,
+    type BatchScanResult,
   } from './lib/stores/platform';
   import { fileA as fileAStore, fileB as fileBStore } from './lib/stores/app';
   import {
