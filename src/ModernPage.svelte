@@ -9,7 +9,14 @@
 
   import { fileA, fileB, isAnalyzing, analysisResult } from '$lib/stores/app';
   import { fileA as fileAStore, fileB as fileBStore } from '$lib/stores/app';
-  import { selectAndLoadFileA, selectAndLoadFileB, currentPlatform } from '$lib/stores/platform';
+  import { 
+    selectAndLoadFileA, 
+    selectAndLoadFileB, 
+    currentPlatform,
+    loadFileA,
+    loadFileB 
+  } from '$lib/stores/platform';
+  import { addLog } from '$lib/stores/app';
   import ThemeToggle from '$lib/components/modern/ThemeToggle.svelte';
   import FileCard from '$lib/components/modern/FileCard.svelte';
   import SettingsPanel from '$lib/components/modern/SettingsPanel.svelte';
@@ -71,15 +78,21 @@
   }
 
   async function handleFileADrop(e: CustomEvent<string>) {
-    if ($currentPlatform !== 'tauri') return;
-    const { loadFileA } = await import('./lib/stores/tauri');
-    await loadFileA(e.detail);
+    try {
+      const info = await loadFileA(e.detail);
+      fileAStore.set(info);
+    } catch (error) {
+      addLog('error', `Drop A failed: ${error}`);
+    }
   }
 
   async function handleFileBDrop(e: CustomEvent<string>) {
-    if ($currentPlatform !== 'tauri') return;
-    const { loadFileB } = await import('./lib/stores/tauri');
-    await loadFileB(e.detail);
+    try {
+      const info = await loadFileB(e.detail);
+      fileBStore.set(info);
+    } catch (error) {
+      addLog('error', `Drop B failed: ${error}`);
+    }
   }
 
   $: isDark = $theme === 'dark';
