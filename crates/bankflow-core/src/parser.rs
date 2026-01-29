@@ -10,17 +10,17 @@ use std::io::Cursor;
 
 /// Column indices for File A (Transaction file)
 mod file_a_columns {
-    pub const TIMESTAMP: usize = 0;
-    pub const ACCOUNT: usize = 1;
-    pub const EXPENSE: usize = 8;
-    pub const INCOME: usize = 9;
+    pub const _TIMESTAMP: usize = 0;
+    pub const _ACCOUNT: usize = 1;
+    pub const _EXPENSE: usize = 8;
+    pub const _INCOME: usize = 9;
 }
 
 /// Column indices for File B (IP log file)
 mod file_b_columns {
-    pub const TIMESTAMP: usize = 0;
-    pub const ACCOUNT: usize = 1;
-    pub const IP_ADDRESS: usize = 2;
+    pub const _TIMESTAMP: usize = 0;
+    pub const _ACCOUNT: usize = 1;
+    pub const _IP_ADDRESS: usize = 2;
 }
 
 /// Header-based column mapping helpers
