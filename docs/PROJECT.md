@@ -350,7 +350,7 @@ sequenceDiagram
 
 <div align="center">
 
-**版本**：v0.3.8 | **技術架構**：Tauri + Rust + Svelte
+- **Version**: v0.3.9 | **技術架構**：Tauri + Rust + Svelte
 
 _專為數位鑑識打造的戰術級分析工具_
 
