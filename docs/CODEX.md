@@ -79,7 +79,7 @@ Agent 必須在特定情境下強制調用以下思維模式：
    - docs/sessions/latest.md（所有 AI 都要更新這份）
    - 每次工作結束要新增或更新 session log（docs/sessions/YYYY-MM-DD-*.md）
 4) 「時間戳規範」：
-   - docs/sessions/latest.md 必須加註「OpenAI Codex: YYYY-MM-DD HH:mm UTC+8」
+   - docs/sessions/latest.md 必須加註「Gemini Codex: YYYY-MM-DD HH:mm UTC+8」
    - 每份 session log 也必須加註同樣的時間戳
 5) task.md：保持任務清單，不強制加時間戳。
 6) 失敗嘗試必記錄：任何錯誤或失敗嘗試要寫入 docs/TRIALS.md，避免重複踩雷。

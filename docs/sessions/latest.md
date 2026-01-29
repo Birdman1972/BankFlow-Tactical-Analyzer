@@ -2,13 +2,14 @@
 
 **日期**: 2026-01-29  
 **主題**: Codex Prompt for Collaborators
-**OpenAI Codex**: 2026-01-29 13:46 UTC+8
+**Gemini Codex**: 2026-01-29 13:50 UTC+8
 
 ---
 
 ## ✅ 今日完成事項 (Done)
 
-- ✅ 在 `docs/CODEX.md` 新增協作者提示詞，規範所有 AI/協作者的作業流程與時間戳要求。
+- ✅ **Release v0.3.9**: 已完成 Changelog、Commit 與 Tagging。包含「強固檔案驗證」與「Cyberpunk Light Theme」。
+- ✅ **Standardization**: 在 `docs/CODEX.md` 確立 Gemini 協作規範。
 
 ---
 
@@ -16,4 +17,3 @@
 
 - **Session Log**: `docs/sessions/2026-01-29-codex-prompt.md`
 - **Codex**: `docs/CODEX.md`
-
