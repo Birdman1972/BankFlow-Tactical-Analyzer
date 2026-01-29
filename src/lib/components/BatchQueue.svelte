@@ -1,6 +1,6 @@
+```javascript
   import { createEventDispatcher } from 'svelte';
   import { get } from 'svelte/store';
-  import { t } from '../i18n';
   import { 
     loadFileA, 
     loadFileB, 
