@@ -2,6 +2,8 @@
 
 此文件定義了 **BankFlow 金流分析器** 的開發公約與強制性協定。所有參與者 (User & Agent) 必須嚴格遵守此處定義的標準運作程序 (SOP)。
 
+> **Standardization Note**: 本法典 (Codex) 及其定義的 `TRIALS.md` 機制為所有專案的標準配備。任何新專案必須在 `docs/` 目錄下建立對應的法典與試錯紀錄庫。
+
 ---
 
 ## Ⅰ. 核心哲學 (Core Philosophy)
