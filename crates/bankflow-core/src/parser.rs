@@ -23,6 +23,7 @@ mod file_b_columns {
 }
 
 /// Header-based column mapping helpers
+/// Header-based column mapping helpers
 pub mod header_map {
     #[derive(Debug, Clone, Copy)]
     pub struct FileAColumns {
@@ -53,29 +54,54 @@ pub mod header_map {
         None
     }
 
-    pub fn map_file_a_columns(raw_headers: &[&str]) -> FileAColumns {
-        let headers: Vec<String> = raw_headers.iter().map(|h| h.to_string()).collect();
-        map_file_a_columns_from_strings(&headers)
+    pub fn validate_file_a_headers(headers: &[String]) -> Result<FileAColumns, Vec<String>> {
+        let mut missing = Vec::new();
+
+        let timestamp = find_index(headers, &["交易時間", "時間", "timestamp", "交易日期"]);
+        if timestamp.is_none() { missing.push("交易時間/timestamp".to_string()); }
+
+        let account = find_index(headers, &["帳號", "account", "account_id"]);
+        if account.is_none() { missing.push("帳號/account".to_string()); }
+
+        let expense = find_index(headers, &["支出金額", "expense", "支出"]);
+        if expense.is_none() { missing.push("支出金額/expense".to_string()); }
+
+        let income = find_index(headers, &["存入金額", "收入金額", "income", "存入"]);
+        if income.is_none() { missing.push("存入金額/income".to_string()); }
+
+        if !missing.is_empty() {
+            return Err(missing);
+        }
+
+        Ok(FileAColumns {
+            timestamp: timestamp.unwrap(),
+            account: account.unwrap(),
+            expense: expense.unwrap(),
+            income: income.unwrap(),
+        })
     }
 
-    pub fn map_file_a_columns_from_strings(headers: &[String]) -> FileAColumns {
-        let timestamp = find_index(headers, &["交易時間", "時間", "timestamp", "交易日期"]).unwrap_or(super::file_a_columns::TIMESTAMP);
-        let account = find_index(headers, &["帳號", "account", "account_id"]).unwrap_or(super::file_a_columns::ACCOUNT);
-        let expense = find_index(headers, &["支出金額", "expense", "支出"]).unwrap_or(super::file_a_columns::EXPENSE);
-        let income = find_index(headers, &["存入金額", "收入金額", "income", "存入"]).unwrap_or(super::file_a_columns::INCOME);
-        FileAColumns { timestamp, account, expense, income }
-    }
+    pub fn validate_file_b_headers(headers: &[String]) -> Result<FileBColumns, Vec<String>> {
+        let mut missing = Vec::new();
 
-    pub fn map_file_b_columns(raw_headers: &[&str]) -> FileBColumns {
-        let headers: Vec<String> = raw_headers.iter().map(|h| h.to_string()).collect();
-        map_file_b_columns_from_strings(&headers)
-    }
+        let timestamp = find_index(headers, &["登入時間", "時間", "timestamp"]);
+        if timestamp.is_none() { missing.push("登入時間/timestamp".to_string()); }
 
-    pub fn map_file_b_columns_from_strings(headers: &[String]) -> FileBColumns {
-        let timestamp = find_index(headers, &["登入時間", "時間", "timestamp"]).unwrap_or(super::file_b_columns::TIMESTAMP);
-        let account = find_index(headers, &["帳號", "account", "account_id"]).unwrap_or(super::file_b_columns::ACCOUNT);
-        let ip_address = find_index(headers, &["ip位址", "ip地址", "ip", "ip address"]).unwrap_or(super::file_b_columns::IP_ADDRESS);
-        FileBColumns { timestamp, account, ip_address }
+        let account = find_index(headers, &["帳號", "account", "account_id"]);
+        if account.is_none() { missing.push("帳號/account".to_string()); }
+
+        let ip_address = find_index(headers, &["ip位址", "ip地址", "ip", "ip address"]);
+        if ip_address.is_none() { missing.push("IP位址/address".to_string()); }
+
+        if !missing.is_empty() {
+            return Err(missing);
+        }
+
+        Ok(FileBColumns {
+            timestamp: timestamp.unwrap(),
+            account: account.unwrap(),
+            ip_address: ip_address.unwrap(),
+        })
     }
 }
 
@@ -112,7 +138,13 @@ impl Parser {
             .next()
             .map(|row| row.iter().map(cell_to_string).collect())
             .unwrap_or_default();
-        let columns = header_map::map_file_a_columns_from_strings(&headers);
+            .map(|row| row.iter().map(cell_to_string).collect())
+            .unwrap_or_default();
+        
+        let columns = match header_map::validate_file_a_headers(&headers) {
+            Ok(cols) => cols,
+            Err(missing) => return Err(CoreError::ExcelParseError(format!("Missing required columns: {}", missing.join(", ")))),
+        };
 
         for (row_idx, row) in range.rows().enumerate().skip(1) {
             if row.is_empty() || row.iter().all(|c| c.is_empty()) {
@@ -182,7 +214,13 @@ impl Parser {
             .next()
             .map(|row| row.iter().map(cell_to_string).collect())
             .unwrap_or_default();
-        let columns = header_map::map_file_b_columns_from_strings(&headers);
+            .map(|row| row.iter().map(cell_to_string).collect())
+            .unwrap_or_default();
+        
+        let columns = match header_map::validate_file_b_headers(&headers) {
+            Ok(cols) => cols,
+            Err(missing) => return Err(CoreError::ExcelParseError(format!("Missing required columns: {}", missing.join(", ")))),
+        };
 
         for (row_idx, row) in range.rows().enumerate().skip(1) {
             if row.is_empty() || row.iter().all(|c| c.is_empty()) {

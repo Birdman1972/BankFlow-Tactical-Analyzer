@@ -4,9 +4,9 @@
  * Provides typed interfaces for Tauri commands
  */
 
-import { invoke } from '@tauri-apps/api/core';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { open, save } from '@tauri-apps/plugin-dialog';
+import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import {
   fileA,
   fileB,
@@ -16,8 +16,8 @@ import {
   settings,
   addLog,
   type ProgressInfo,
-} from './app';
-import { get } from 'svelte/store';
+} from "./app";
+import { get } from "svelte/store";
 
 // ============================================
 // Tauri Response Types (snake_case from Rust)
@@ -56,12 +56,13 @@ interface TauriWhoisResult {
 // ============================================
 
 // Mock Data Definitions
-const MOCK_FILE_METADATA: TauriFileMetadata = {
-  path: '/mock/path/to/file.xlsx',
-  filename: 'mock_data.xlsx',
+const MOCK_FILE_METADATA: TauriFileMetadata & { isValid: boolean } = {
+  path: "/mock/path/to/file.xlsx",
+  filename: "mock_data.xlsx",
   row_count: 1234,
   column_count: 15,
-  file_type: 'xlsx'
+  file_type: "xlsx",
+  isValid: true,
 };
 
 const MOCK_ANALYSIS_RESULT: TauriAnalysisResult = {
@@ -73,29 +74,38 @@ const MOCK_ANALYSIS_RESULT: TauriAnalysisResult = {
     hide_sensitive: false,
     split_income_expense: true,
     ip_cross_reference: true,
-    whois_lookup: false
-  }
+    whois_lookup: false,
+  },
 };
 
 /**
  * Helper to handle Tauri invocation errors and return mocks in browser
  */
-function handleTauriError<T>(error: unknown, actionName: string, mockData?: T): T {
+function handleTauriError<T>(
+  error: unknown,
+  actionName: string,
+  mockData?: T,
+): T {
   const msg = String(error);
-  
+
   // Check for common environment errors
-  if (msg.includes('__TAURI_INTERNALS__') || msg.includes('ipc not connected')) {
+  if (
+    msg.includes("__TAURI_INTERNALS__") ||
+    msg.includes("ipc not connected")
+  ) {
     const friendlyMsg = `[Browser Mode] Mocking ${actionName} response.`;
-    addLog('warning', friendlyMsg);
+    addLog("warning", friendlyMsg);
     console.warn(friendlyMsg, error);
-    
+
     if (mockData) {
       return mockData;
     }
-    
-    throw new Error(`Tauri API unavailable and no mock data provided for ${actionName}`);
+
+    throw new Error(
+      `Tauri API unavailable and no mock data provided for ${actionName}`,
+    );
   }
-  
+
   // Pass through other errors
   throw error;
 }
@@ -106,10 +116,23 @@ function handleTauriError<T>(error: unknown, actionName: string, mockData?: T): 
 
 export async function loadFileA(path: string): Promise<void> {
   try {
-    addLog('info', `Loading File A: ${path.split(/[/\\]/).pop()}`);
-    
-    const result = await invoke<TauriFileMetadata>('load_file', { path })
-      .catch(err => handleTauriError(err, 'load_file', { ...MOCK_FILE_METADATA, filename: path.split(/[/\\]/).pop() || 'mock.xlsx' }));
+    addLog("info", `Loading File A: ${path.split(/[/\\]/).pop()}`);
+
+    // Default mock for error handling
+    const mockData = {
+      ...MOCK_FILE_METADATA,
+      filename: path.split(/[/\\]/).pop() || "mock.xlsx",
+    };
+
+    const result = await invoke<TauriFileMetadata>("load_file", { path }).catch(
+      (err) => {
+        // If it's a validation error, we re-throw to be caught by the outer catch
+        if (String(err).includes("Missing required columns")) {
+          throw err;
+        }
+        return handleTauriError(err, "load_file", mockData);
+      },
+    );
 
     fileA.set({
       path: result.path,
@@ -117,41 +140,69 @@ export async function loadFileA(path: string): Promise<void> {
       rowCount: result.row_count,
       columnCount: result.column_count,
       fileType: result.file_type,
+      isValid: true,
+      validationError: undefined,
     });
 
-    addLog('success', `File A loaded: ${result.filename} (${result.row_count} rows)`);
+    addLog(
+      "success",
+      `File A loaded: ${result.filename} (${result.row_count} rows)`,
+    );
   } catch (error) {
-    addLog('error', `Failed to load File A: ${error}`);
+    const msg = String(error);
+    if (msg.includes("Missing required columns")) {
+      fileA.set({
+        path: path,
+        filename: path.split(/[/\\]/).pop() || "Invalid File",
+        rowCount: 0,
+        columnCount: 0,
+        fileType: "xlsx",
+        isValid: false,
+        validationError: msg,
+      });
+      addLog("error", `Validation Error (File A): ${msg}`);
+    } else {
+      fileA.set(null); // Clear state on critical error
+      addLog("error", `Failed to load File A: ${error}`);
+    }
   }
 }
 
 export async function selectAndLoadFileA(): Promise<void> {
   try {
-    // In browser, open() will fail. We can't really mock the dialog selection easily 
-    // without UI changes, but we can catch it.
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Excel', extensions: ['xlsx', 'xls'] }],
-      title: 'Select Transaction File (File A)',
-    }).catch(err => handleTauriError(err, 'open_dialog', null));
+      filters: [{ name: "Excel", extensions: ["xlsx", "xls"] }],
+      title: "Select Transaction File (File A)",
+    }).catch((err) => handleTauriError(err, "open_dialog", null));
 
-    if (selected && typeof selected === 'string') {
+    if (selected && typeof selected === "string") {
       await loadFileA(selected);
-    } else if (!selected) {
-        // If mocked with null (browser), we can optionally auto-load a mock file for testing
-        // For now, let's just log.
-        console.log('Dialog cancelled or mocked with null');
     }
   } catch (error) {
-    addLog('error', `Failed to select File A: ${error}`);
+    addLog("error", `Failed to select File A: ${error}`);
   }
 }
 
 export async function loadFileB(path: string): Promise<void> {
   try {
-    addLog('info', `Loading File B: ${path.split(/[/\\]/).pop()}`);
-    const result = await invoke<TauriFileMetadata>('load_ip_file', { path })
-      .catch(err => handleTauriError(err, 'load_ip_file', { ...MOCK_FILE_METADATA, filename: path.split(/[/\\]/).pop() || 'mock_ip.xlsx', row_count: 500 }));
+    addLog("info", `Loading File B: ${path.split(/[/\\]/).pop()}`);
+
+    // Default mock for error handling
+    const mockData = {
+      ...MOCK_FILE_METADATA,
+      filename: path.split(/[/\\]/).pop() || "mock_ip.xlsx",
+      row_count: 500,
+    };
+
+    const result = await invoke<TauriFileMetadata>("load_ip_file", {
+      path,
+    }).catch((err) => {
+      if (String(err).includes("Missing required columns")) {
+        throw err;
+      }
+      return handleTauriError(err, "load_ip_file", mockData);
+    });
 
     fileB.set({
       path: result.path,
@@ -159,11 +210,31 @@ export async function loadFileB(path: string): Promise<void> {
       rowCount: result.row_count,
       columnCount: result.column_count,
       fileType: result.file_type,
+      isValid: true,
+      validationError: undefined,
     });
 
-    addLog('success', `File B loaded: ${result.filename} (${result.row_count} rows)`);
+    addLog(
+      "success",
+      `File B loaded: ${result.filename} (${result.row_count} rows)`,
+    );
   } catch (error) {
-    addLog('error', `Failed to load File B: ${error}`);
+    const msg = String(error);
+    if (msg.includes("Missing required columns")) {
+      fileB.set({
+        path: path,
+        filename: path.split(/[/\\]/).pop() || "Invalid File",
+        rowCount: 0,
+        columnCount: 0,
+        fileType: "xlsx",
+        isValid: false,
+        validationError: msg,
+      });
+      addLog("error", `Validation Error (File B): ${msg}`);
+    } else {
+      fileB.set(null);
+      addLog("error", `Failed to load File B: ${error}`);
+    }
   }
 }
 
@@ -171,15 +242,15 @@ export async function selectAndLoadFileB(): Promise<void> {
   try {
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Excel', extensions: ['xlsx', 'xls'] }],
-      title: 'Select IP Log File (File B)',
-    }).catch(err => handleTauriError(err, 'open_dialog', null));
+      filters: [{ name: "Excel", extensions: ["xlsx", "xls"] }],
+      title: "Select IP Log File (File B)",
+    }).catch((err) => handleTauriError(err, "open_dialog", null));
 
-    if (selected && typeof selected === 'string') {
+    if (selected && typeof selected === "string") {
       await loadFileB(selected);
     }
   } catch (error) {
-    addLog('error', `Failed to select File B: ${error}`);
+    addLog("error", `Failed to select File B: ${error}`);
   }
 }
 
@@ -194,26 +265,38 @@ export async function runAnalysis(): Promise<void> {
 
   try {
     isAnalyzing.set(true);
-    progress.set({ stage: 'starting', progress: 0, message: 'Initializing analysis...' });
-    addLog('info', 'Starting analysis...');
+    progress.set({
+      stage: "starting",
+      progress: 0,
+      message: "Initializing analysis...",
+    });
+    addLog("info", "Starting analysis...");
 
     // Listen for progress events
     try {
-      progressUnlisten = await listen<ProgressInfo>('analysis-progress', (event) => {
-        progress.set(event.payload);
-        addLog('info', `[${event.payload.stage}] ${event.payload.message}`);
-      });
+      progressUnlisten = await listen<ProgressInfo>(
+        "analysis-progress",
+        (event) => {
+          progress.set(event.payload);
+          addLog("info", `[${event.payload.stage}] ${event.payload.message}`);
+        },
+      );
     } catch (err) {
-      console.warn('Failed to setup progress listener (likely non-Tauri env)', err);
+      console.warn(
+        "Failed to setup progress listener (likely non-Tauri env)",
+        err,
+      );
     }
 
     // Run analysis
-    const result = await invoke<TauriAnalysisResult>('run_analysis', {
+    const result = await invoke<TauriAnalysisResult>("run_analysis", {
       hideSensitive: currentSettings.hideSensitive,
       splitIncomeExpense: currentSettings.splitIncomeExpense,
       ipCrossReference: currentSettings.ipCrossReference,
       whoisLookup: currentSettings.whoisLookup,
-    }).catch(err => handleTauriError(err, 'run_analysis', MOCK_ANALYSIS_RESULT));
+    }).catch((err) =>
+      handleTauriError(err, "run_analysis", MOCK_ANALYSIS_RESULT),
+    );
 
     analysisResult.set({
       totalRecords: result.total_records,
@@ -228,13 +311,19 @@ export async function runAnalysis(): Promise<void> {
       },
     });
 
-    addLog('success', `Analysis complete: ${result.matched_count}/${result.total_records} records matched`);
+    addLog(
+      "success",
+      `Analysis complete: ${result.matched_count}/${result.total_records} records matched`,
+    );
 
     if (result.multi_ip_count > 0) {
-      addLog('warning', `${result.multi_ip_count} transactions have multiple IP matches`);
+      addLog(
+        "warning",
+        `${result.multi_ip_count} transactions have multiple IP matches`,
+      );
     }
   } catch (error) {
-    addLog('error', `Analysis failed: ${error}`);
+    addLog("error", `Analysis failed: ${error}`);
   } finally {
     isAnalyzing.set(false);
     progress.set(null);
@@ -251,26 +340,32 @@ export async function runAnalysis(): Promise<void> {
 
 export async function exportReport(): Promise<void> {
   try {
-    const defaultFileName = `bankflow_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const defaultFileName = `bankflow_report_${new Date().toISOString().split("T")[0]}.xlsx`;
     const outputPath = await save({
-      filters: [{ name: 'Excel', extensions: ['xlsx'] }],
+      filters: [{ name: "Excel", extensions: ["xlsx"] }],
       defaultPath: defaultFileName,
-      title: 'Save Analysis Report',
-    }).catch(err => handleTauriError<string | null>(err, 'save_dialog', null));
+      title: "Save Analysis Report",
+    }).catch((err) =>
+      handleTauriError<string | null>(err, "save_dialog", null),
+    );
 
     if (outputPath) {
-      addLog('info', `Exporting report to: ${outputPath.split('/').pop()}`);
+      addLog("info", `Exporting report to: ${outputPath.split("/").pop()}`);
 
       const mockExportResult = `[Mock] Report exported to ${defaultFileName}`;
-      const result = await invoke<string>('export_excel', { outputPath })
-        .catch(err => handleTauriError(err, 'export_excel', mockExportResult));
-      addLog('success', result);
+      const result = await invoke<string>("export_excel", { outputPath }).catch(
+        (err) => handleTauriError(err, "export_excel", mockExportResult),
+      );
+      addLog("success", result);
     } else {
       // Browser mock mode - simulate export
-      addLog('warning', '[Browser Mode] Export simulated - in real app, file would be saved');
+      addLog(
+        "warning",
+        "[Browser Mode] Export simulated - in real app, file would be saved",
+      );
     }
   } catch (error) {
-    addLog('error', `Export failed: ${error}`);
+    addLog("error", `Export failed: ${error}`);
   }
 }
 
@@ -290,13 +385,14 @@ export async function queryWhois(ip: string): Promise<WhoisResult> {
     // Mock whois data for browser mode
     const mockWhoisResult: TauriWhoisResult = {
       ip,
-      country: 'Taiwan',
-      isp: 'Mock ISP Provider',
+      country: "Taiwan",
+      isp: "Mock ISP Provider",
       query_success: true,
     };
 
-    const result = await invoke<TauriWhoisResult>('query_whois', { ip })
-      .catch(err => handleTauriError(err, 'query_whois', mockWhoisResult));
+    const result = await invoke<TauriWhoisResult>("query_whois", { ip }).catch(
+      (err) => handleTauriError(err, "query_whois", mockWhoisResult),
+    );
 
     return {
       ip: result.ip,
@@ -305,9 +401,9 @@ export async function queryWhois(ip: string): Promise<WhoisResult> {
       querySuccess: result.query_success,
     };
   } catch (error) {
-    addLog('error', `Whois query failed for ${ip}: ${error}`);
+    addLog("error", `Whois query failed for ${ip}: ${error}`);
     // Return dummy data instead of crashing
-    return { ip, country: 'Error', isp: String(error), querySuccess: false };
+    return { ip, country: "Error", isp: String(error), querySuccess: false };
   }
 }
 
@@ -318,16 +414,16 @@ export async function queryWhois(ip: string): Promise<WhoisResult> {
 export async function clearAllFiles(): Promise<void> {
   try {
     // Try to clear backend first
-    await invoke('clear_files').catch(err => {
-        // If backend fails (e.g. browser), we still clear frontend
-        console.warn('Backend clear failed, proceeding with frontend clear', err);
+    await invoke("clear_files").catch((err) => {
+      // If backend fails (e.g. browser), we still clear frontend
+      console.warn("Backend clear failed, proceeding with frontend clear", err);
     });
-    
+
     fileA.set(null);
     fileB.set(null);
     analysisResult.set(null);
-    addLog('info', 'All files cleared');
+    addLog("info", "All files cleared");
   } catch (error) {
-    addLog('error', `Failed to clear files: ${error}`);
+    addLog("error", `Failed to clear files: ${error}`);
   }
 }

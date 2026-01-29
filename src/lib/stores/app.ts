@@ -4,8 +4,8 @@
  * Manages global state for BankFlow Fund Flow Analyzer
  */
 
-import { writable, derived } from 'svelte/store';
-import pkg from '../../../package.json';
+import { writable, derived } from "svelte/store";
+import pkg from "../../../package.json";
 
 // ============================================
 // Types
@@ -17,6 +17,8 @@ export interface FileInfo {
   rowCount: number;
   columnCount: number;
   fileType: string;
+  isValid: boolean;
+  validationError?: string;
 }
 
 export interface AnalysisSettings {
@@ -36,7 +38,7 @@ export interface AnalysisResult {
 
 export interface LogEntry {
   timestamp: Date;
-  level: 'info' | 'success' | 'warning' | 'error' | 'system';
+  level: "info" | "success" | "warning" | "error" | "system";
   message: string;
 }
 
@@ -71,13 +73,13 @@ export const progress = writable<ProgressInfo | null>(null);
 export const logs = writable<LogEntry[]>([
   {
     timestamp: new Date(),
-    level: 'system',
+    level: "system",
     message: `BankFlow 金流分析器 v${pkg.version}`,
   },
   {
     timestamp: new Date(),
-    level: 'info',
-    message: 'Awaiting file input...',
+    level: "info",
+    message: "Awaiting file input...",
   },
 ]);
 
@@ -89,8 +91,14 @@ export const logs = writable<LogEntry[]>([
 export const canAnalyze = derived(
   [fileA, fileB, isAnalyzing],
   ([$fileA, $fileB, $isAnalyzing]) => {
-    return $fileA !== null && $fileB !== null && !$isAnalyzing;
-  }
+    return (
+      $fileA !== null &&
+      $fileA.isValid &&
+      $fileB !== null &&
+      $fileB.isValid &&
+      !$isAnalyzing
+    );
+  },
 );
 
 // Check if can export
@@ -98,14 +106,14 @@ export const canExport = derived(
   [analysisResult, isAnalyzing],
   ([$analysisResult, $isAnalyzing]) => {
     return $analysisResult !== null && !$isAnalyzing;
-  }
+  },
 );
 
 // ============================================
 // Actions
 // ============================================
 
-export function addLog(level: LogEntry['level'], message: string) {
+export function addLog(level: LogEntry["level"], message: string) {
   logs.update((entries) => [
     ...entries,
     {
@@ -120,8 +128,8 @@ export function clearLogs() {
   logs.set([
     {
       timestamp: new Date(),
-      level: 'system',
-      message: 'Log cleared',
+      level: "system",
+      message: "Log cleared",
     },
   ]);
 }
@@ -132,5 +140,5 @@ export function resetState() {
   analysisResult.set(null);
   progress.set(null);
   isAnalyzing.set(false);
-  addLog('system', 'State reset');
+  addLog("system", "State reset");
 }

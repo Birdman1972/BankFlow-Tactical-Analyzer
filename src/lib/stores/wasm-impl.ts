@@ -5,9 +5,14 @@
  * Uses browser File API and WASM-compiled bankflow-core.
  */
 
-import type { PlatformAPI } from './platform';
-import type { FileInfo, AnalysisSettings, AnalysisResult, ProgressInfo } from './app';
-import { addLog } from './app';
+import type { PlatformAPI } from "./platform";
+import type {
+  FileInfo,
+  AnalysisSettings,
+  AnalysisResult,
+  ProgressInfo,
+} from "./app";
+import { addLog } from "./app";
 
 // ============================================
 // WASM Module Types (from bankflow-core)
@@ -41,7 +46,9 @@ interface WasmAnalysisData {
 let lastAnalysisData: WasmAnalysisData | null = null;
 
 // WASM module reference (type from bankflow-core-wasm.d.ts)
-let wasmModule: typeof import('$lib/wasm/bankflow-core-wasm/bankflow_core.js') | null = null;
+let wasmModule:
+  | typeof import("$lib/wasm/bankflow-core-wasm/bankflow_core.js")
+  | null = null;
 
 /**
  * Recursively convert Map objects to plain JavaScript objects
@@ -66,7 +73,7 @@ function mapToObject(value: unknown): unknown {
 // ============================================
 
 export class WasmPlatform implements PlatformAPI {
-  readonly platformName = 'Web (WASM)';
+  readonly platformName = "Web (WASM)";
   readonly supportsWhois = false; // CORS restrictions
   readonly supportsFileDialog = true; // Uses browser file input
 
@@ -76,9 +83,10 @@ export class WasmPlatform implements PlatformAPI {
 
   async initialize(): Promise<void> {
     try {
-      addLog('info', 'Loading WASM module...');
+      addLog("info", "Loading WASM module...");
       // Dynamic import of WASM module
-      const wasm = await import('$lib/wasm/bankflow-core-wasm/bankflow_core.js');
+      const wasm =
+        await import("$lib/wasm/bankflow-core-wasm/bankflow_core.js");
 
       // In production, load WASM from public folder
       // In development, let wasm-bindgen resolve it via import.meta.url
@@ -87,17 +95,22 @@ export class WasmPlatform implements PlatformAPI {
         await wasm.default();
       } else {
         // Production: explicitly provide WASM URL from public folder
-        const wasmUrl = new URL('/wasm/bankflow_core_bg.wasm', window.location.origin);
+        const wasmUrl = new URL(
+          "/wasm/bankflow_core_bg.wasm",
+          window.location.origin,
+        );
         // Cast to any to handle wasm-bindgen init signature variation
-        await (wasm.default as (input?: URL | string) => Promise<void>)(wasmUrl);
+        await (wasm.default as (input?: URL | string) => Promise<void>)(
+          wasmUrl,
+        );
       }
 
       wasmModule = wasm;
-      addLog('success', 'WASM module loaded');
+      addLog("success", "WASM module loaded");
     } catch (error) {
-      addLog('error', `Failed to load WASM module: ${error}`);
+      addLog("error", `Failed to load WASM module: ${error}`);
       // Continue without WASM - will use fallback or show error on operations
-      console.warn('WASM module not available, some features may be limited');
+      console.warn("WASM module not available, some features may be limited");
     }
   }
 
@@ -106,26 +119,32 @@ export class WasmPlatform implements PlatformAPI {
   // ----------------------------------------
 
   async selectAndLoadFileA(): Promise<FileInfo> {
-    const file = await this.selectFile('Select Transaction File (File A)');
+    const file = await this.selectFile("Select Transaction File (File A)");
     const bytes = await this.readFileAsBytes(file);
 
     // Parse file to get metadata (using WASM or basic parsing)
-    const info = await this.parseFileMetadata(bytes, file.name, 'A');
+    const info = await this.parseFileMetadata(bytes, file.name, "A");
 
     fileAData = { bytes, name: file.name, info };
-    addLog('success', `File A loaded: ${info.filename} (${info.rowCount} rows)`);
+    addLog(
+      "success",
+      `File A loaded: ${info.filename} (${info.rowCount} rows)`,
+    );
 
     return info;
   }
 
   async selectAndLoadFileB(): Promise<FileInfo> {
-    const file = await this.selectFile('Select IP Log File (File B)');
+    const file = await this.selectFile("Select IP Log File (File B)");
     const bytes = await this.readFileAsBytes(file);
 
-    const info = await this.parseFileMetadata(bytes, file.name, 'B');
+    const info = await this.parseFileMetadata(bytes, file.name, "B");
 
     fileBData = { bytes, name: file.name, info };
-    addLog('success', `File B loaded: ${info.filename} (${info.rowCount} rows)`);
+    addLog(
+      "success",
+      `File B loaded: ${info.filename} (${info.rowCount} rows)`,
+    );
 
     return info;
   }
@@ -134,7 +153,7 @@ export class WasmPlatform implements PlatformAPI {
     fileAData = null;
     fileBData = null;
     lastAnalysisData = null;
-    addLog('info', 'All files cleared');
+    addLog("info", "All files cleared");
   }
 
   // ----------------------------------------
@@ -143,23 +162,31 @@ export class WasmPlatform implements PlatformAPI {
 
   async runAnalysis(
     settings: AnalysisSettings,
-    onProgress?: (progress: ProgressInfo) => void
+    onProgress?: (progress: ProgressInfo) => void,
   ): Promise<AnalysisResult> {
     if (!fileAData || !fileBData) {
-      throw new Error('Both files must be loaded before analysis');
+      throw new Error("Both files must be loaded before analysis");
     }
 
     if (!wasmModule) {
-      throw new Error('WASM module not loaded. Please refresh the page.');
+      throw new Error("WASM module not loaded. Please refresh the page.");
     }
 
-    addLog('info', 'Starting analysis...');
+    addLog("info", "Starting analysis...");
 
     // Report progress
-    onProgress?.({ stage: 'analyzing', progress: 0, message: 'Processing files...' });
+    onProgress?.({
+      stage: "analyzing",
+      progress: 0,
+      message: "Processing files...",
+    });
 
     try {
-      onProgress?.({ stage: 'matching', progress: 50, message: 'Matching IP addresses...' });
+      onProgress?.({
+        stage: "matching",
+        progress: 50,
+        message: "Matching IP addresses...",
+      });
 
       // Call WASM analyze function with correct parameters
       // Signature: analyze(file_a_bytes, file_a_name, file_b_bytes, file_b_name, hide_sensitive, ip_cross_reference)
@@ -171,29 +198,41 @@ export class WasmPlatform implements PlatformAPI {
         fileBData.bytes,
         fileBData.name,
         settings.hideSensitive,
-        settings.ipCrossReference
+        settings.ipCrossReference,
       ) as WasmAnalysisData;
 
       // WASM returns a JavaScript Map, convert to plain objects recursively
       const resultMap = result as unknown as Map<string, unknown>;
       const analysisData: WasmAnalysisData = {
-        transactions: mapToObject(resultMap.get('transactions') || []) as unknown[],
-        income: mapToObject(resultMap.get('income') || []) as unknown[],
-        expense: mapToObject(resultMap.get('expense') || []) as unknown[],
-        totalRecords: (resultMap.get('totalRecords') || 0) as number,
-        incomeCount: (resultMap.get('incomeCount') || 0) as number,
-        expenseCount: (resultMap.get('expenseCount') || 0) as number,
+        transactions: mapToObject(
+          resultMap.get("transactions") || [],
+        ) as unknown[],
+        income: mapToObject(resultMap.get("income") || []) as unknown[],
+        expense: mapToObject(resultMap.get("expense") || []) as unknown[],
+        totalRecords: (resultMap.get("totalRecords") || 0) as number,
+        incomeCount: (resultMap.get("incomeCount") || 0) as number,
+        expenseCount: (resultMap.get("expenseCount") || 0) as number,
       };
 
       // Store for export
       lastAnalysisData = analysisData;
 
-      onProgress?.({ stage: 'complete', progress: 100, message: 'Analysis complete!' });
+      onProgress?.({
+        stage: "complete",
+        progress: 100,
+        message: "Analysis complete!",
+      });
 
       // Compute matched/multi-IP counts from transactions
-      const transactions = analysisData.transactions as Array<{ matched_ips?: string[] }>;
-      const matchedCount = transactions.filter(t => t.matched_ips && t.matched_ips.length > 0).length;
-      const multiIpCount = transactions.filter(t => t.matched_ips && t.matched_ips.length > 1).length;
+      const transactions = analysisData.transactions as Array<{
+        matched_ips?: string[];
+      }>;
+      const matchedCount = transactions.filter(
+        (t) => t.matched_ips && t.matched_ips.length > 0,
+      ).length;
+      const multiIpCount = transactions.filter(
+        (t) => t.matched_ips && t.matched_ips.length > 1,
+      ).length;
       const totalRecords = analysisData.totalRecords;
 
       const analysisResult: AnalysisResult = {
@@ -209,15 +248,21 @@ export class WasmPlatform implements PlatformAPI {
         },
       };
 
-      addLog('success', `Analysis complete: ${matchedCount}/${totalRecords} records matched`);
+      addLog(
+        "success",
+        `Analysis complete: ${matchedCount}/${totalRecords} records matched`,
+      );
 
       if (multiIpCount > 0) {
-        addLog('warning', `${multiIpCount} transactions have multiple IP matches`);
+        addLog(
+          "warning",
+          `${multiIpCount} transactions have multiple IP matches`,
+        );
       }
 
       return analysisResult;
     } catch (error) {
-      addLog('error', `Analysis failed: ${error}`);
+      addLog("error", `Analysis failed: ${error}`);
       throw error;
     }
   }
@@ -228,14 +273,14 @@ export class WasmPlatform implements PlatformAPI {
 
   async exportReport(): Promise<string> {
     if (!lastAnalysisData) {
-      throw new Error('Please run analysis first before exporting');
+      throw new Error("Please run analysis first before exporting");
     }
 
     if (!wasmModule) {
-      throw new Error('WASM module not loaded');
+      throw new Error("WASM module not loaded");
     }
 
-    addLog('info', 'Generating Excel report...');
+    addLog("info", "Generating Excel report...");
 
     try {
       // export_excel expects JSON string with { transactions, income, expense }
@@ -250,13 +295,17 @@ export class WasmPlatform implements PlatformAPI {
       const excelBytes = exportFn(exportData) as Uint8Array;
 
       // Trigger download
-      const filename = `bankflow_report_${new Date().toISOString().split('T')[0]}.xlsx`;
-      this.downloadFile(excelBytes, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      const filename = `bankflow_report_${new Date().toISOString().split("T")[0]}.xlsx`;
+      this.downloadFile(
+        excelBytes,
+        filename,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      );
 
-      addLog('success', `Report exported: ${filename}`);
+      addLog("success", `Report exported: ${filename}`);
       return `Successfully exported report: ${filename}`;
     } catch (error) {
-      addLog('error', `Export failed: ${error}`);
+      addLog("error", `Export failed: ${error}`);
       throw error;
     }
   }
@@ -274,21 +323,21 @@ export class WasmPlatform implements PlatformAPI {
 
   private selectFile(_title: string): Promise<File> {
     return new Promise((resolve, reject) => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.xlsx,.xls';
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".xlsx,.xls";
 
       input.onchange = () => {
         const file = input.files?.[0];
         if (file) {
           resolve(file);
         } else {
-          reject(new Error('No file selected'));
+          reject(new Error("No file selected"));
         }
       };
 
       input.oncancel = () => {
-        reject(new Error('File selection cancelled'));
+        reject(new Error("File selection cancelled"));
       };
 
       // Trigger file picker
@@ -303,7 +352,7 @@ export class WasmPlatform implements PlatformAPI {
         if (reader.result instanceof ArrayBuffer) {
           resolve(new Uint8Array(reader.result));
         } else {
-          reject(new Error('Failed to read file as bytes'));
+          reject(new Error("Failed to read file as bytes"));
         }
       };
       reader.onerror = () => reject(reader.error);
@@ -314,7 +363,7 @@ export class WasmPlatform implements PlatformAPI {
   private async parseFileMetadata(
     bytes: Uint8Array,
     filename: string,
-    fileType: 'A' | 'B'
+    fileType: "A" | "B",
   ): Promise<FileInfo> {
     // For now, return basic metadata
     // In a full implementation, WASM would parse the Excel file
@@ -327,17 +376,22 @@ export class WasmPlatform implements PlatformAPI {
       path: filename, // No real path in browser
       filename,
       rowCount: estimatedRows, // Will be updated after actual parsing
-      columnCount: fileType === 'A' ? 10 : 3, // Estimated
-      fileType: filename.split('.').pop() ?? 'xlsx',
+      columnCount: fileType === "A" ? 10 : 3, // Estimated
+      fileType: filename.split(".").pop() ?? "xlsx",
+      isValid: true,
     };
   }
 
-  private downloadFile(bytes: Uint8Array, filename: string, mimeType: string): void {
+  private downloadFile(
+    bytes: Uint8Array,
+    filename: string,
+    mimeType: string,
+  ): void {
     // Create a copy to ensure proper ArrayBuffer type
     const blob = new Blob([bytes.slice()], { type: mimeType });
     const url = URL.createObjectURL(blob);
 
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
     link.click();

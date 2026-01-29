@@ -339,12 +339,13 @@ sequenceDiagram
 
 ## 文件導覽
 
-| 文件                                        | 說明                   |
-| ------------------------------------------- | ---------------------- |
-| [📖 ARCHITECTURE.md](./ARCHITECTURE.md)     | 詳細系統架構與模組說明 |
-| [📘 USER_GUIDE.md](./USER_GUIDE.md)         | 使用者操作指南         |
-| [📗 TECHNICAL_SPEC.md](./TECHNICAL_SPEC.md) | 技術規格與 API 文件    |
-| [📋 plans/](./plans/)                       | 開發計畫與設計文件     |
+| 文件                                        | 說明                                               |
+| ------------------------------------------- | -------------------------------------------------- |
+| [📖 ARCHITECTURE.md](./ARCHITECTURE.md)     | 詳細系統架構與模組說明                             |
+| [📘 **CODEX**](./CODEX.md)                  | 最高指導原則，包含八大守護神、錯誤處理與任務協定。 |
+| [📘 USER_GUIDE.md](./USER_GUIDE.md)         | 使用者操作手冊                                     |
+| [📗 TECHNICAL_SPEC.md](./TECHNICAL_SPEC.md) | 技術規格與 API 文件                                |
+| [📋 plans/](./plans/)                       | 開發計畫與設計文件                                 |
 
 ---
 

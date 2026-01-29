@@ -68,26 +68,45 @@
   ].filter(Boolean).join(' ');
 </script>
 
-<button
-  type="button"
+<div
+  role="button"
+  tabindex="0"
   class={dropZoneClasses}
   on:click={handleClick}
+  on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick()}
   on:dragenter={handleDragEnter}
   on:dragleave={handleDragLeave}
   on:dragover={handleDragOver}
   on:drop={handleDrop}
 >
   {#if file}
-    <!-- File loaded state -->
-    <div class="text-neon-green text-2xl font-bold">{label}</div>
-    <div class="text-neon-green text-sm font-medium truncate max-w-full px-4">{file.filename}</div>
-    <div class="text-gray-500 text-xs">
-      {file.rowCount.toLocaleString()} {$t('dropZone.rows')}
-    </div>
+    {#if file.validationError}
+      <!-- Error State -->
+      <div class="flex flex-col items-center gap-2 p-4 text-center animate-in fade-in zoom-in duration-300">
+        <span class="text-3xl">⚠️</span>
+        <div class="flex flex-col">
+          <span class="text-sm font-bold text-red-400">{$t('dropZone.fileFormatError')}</span>
+          <span class="text-xs text-red-300 max-w-[200px] break-words">{file.validationError}</span>
+        </div>
+        <button 
+            class="mt-1 text-[10px] text-red-400 underline hover:text-red-300"
+            on:click|stopPropagation={() => handleClick()}
+        >
+            {$t('dropZone.reselectFile')}
+        </button>
+      </div>
+    {:else}
+      <!-- File loaded state -->
+      <div class="text-neon-green text-2xl font-bold">{label}</div>
+      <div class="text-neon-green text-sm font-medium truncate max-w-full px-4">{file.filename}</div>
+      <div class="text-gray-500 text-xs">
+        {file.rowCount.toLocaleString()} {$t('dropZone.rows')}
+      </div>
+    {/if}
   {:else}
     <!-- Empty state -->
     <div class="text-neon-blue text-4xl font-bold">{label}</div>
     <div class="text-gray-400 text-sm text-center">{title}</div>
     <div class="text-gray-500 text-xs">{subtitle}</div>
   {/if}
-</button>
+</div>

@@ -4,12 +4,17 @@
  * Implements PlatformAPI for Tauri desktop environment.
  */
 
-import { invoke } from '@tauri-apps/api/core';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { open, save } from '@tauri-apps/plugin-dialog';
-import type { PlatformAPI, WhoisResult } from './platform';
-import type { FileInfo, AnalysisSettings, AnalysisResult, ProgressInfo } from './app';
-import { addLog } from './app';
+import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import type { PlatformAPI, WhoisResult } from "./platform";
+import type {
+  FileInfo,
+  AnalysisSettings,
+  AnalysisResult,
+  ProgressInfo,
+} from "./app";
+import { addLog } from "./app";
 
 // ============================================
 // Tauri Response Types (snake_case from Rust)
@@ -48,7 +53,7 @@ interface TauriWhoisResult {
 // ============================================
 
 export class TauriPlatform implements PlatformAPI {
-  readonly platformName = 'Tauri Desktop';
+  readonly platformName = "Tauri Desktop";
   readonly supportsWhois = true;
   readonly supportsFileDialog = true;
 
@@ -61,16 +66,18 @@ export class TauriPlatform implements PlatformAPI {
   async selectAndLoadFileA(): Promise<FileInfo> {
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Excel', extensions: ['xlsx', 'xls'] }],
-      title: 'Select Transaction File (File A)',
+      filters: [{ name: "Excel", extensions: ["xlsx", "xls"] }],
+      title: "Select Transaction File (File A)",
     });
 
-    if (!selected || typeof selected !== 'string') {
-      throw new Error('No file selected');
+    if (!selected || typeof selected !== "string") {
+      throw new Error("No file selected");
     }
 
-    addLog('info', `Loading File A: ${selected.split('/').pop()}`);
-    const result = await invoke<TauriFileMetadata>('load_file', { path: selected });
+    addLog("info", `Loading File A: ${selected.split("/").pop()}`);
+    const result = await invoke<TauriFileMetadata>("load_file", {
+      path: selected,
+    });
 
     const fileInfo: FileInfo = {
       path: result.path ?? selected,
@@ -78,25 +85,31 @@ export class TauriPlatform implements PlatformAPI {
       rowCount: result.row_count,
       columnCount: result.column_count,
       fileType: result.file_type,
+      isValid: true,
     };
 
-    addLog('success', `File A loaded: ${fileInfo.filename} (${fileInfo.rowCount} rows)`);
+    addLog(
+      "success",
+      `File A loaded: ${fileInfo.filename} (${fileInfo.rowCount} rows)`,
+    );
     return fileInfo;
   }
 
   async selectAndLoadFileB(): Promise<FileInfo> {
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Excel', extensions: ['xlsx', 'xls'] }],
-      title: 'Select IP Log File (File B)',
+      filters: [{ name: "Excel", extensions: ["xlsx", "xls"] }],
+      title: "Select IP Log File (File B)",
     });
 
-    if (!selected || typeof selected !== 'string') {
-      throw new Error('No file selected');
+    if (!selected || typeof selected !== "string") {
+      throw new Error("No file selected");
     }
 
-    addLog('info', `Loading File B: ${selected.split('/').pop()}`);
-    const result = await invoke<TauriFileMetadata>('load_ip_file', { path: selected });
+    addLog("info", `Loading File B: ${selected.split("/").pop()}`);
+    const result = await invoke<TauriFileMetadata>("load_ip_file", {
+      path: selected,
+    });
 
     const fileInfo: FileInfo = {
       path: result.path ?? selected,
@@ -104,15 +117,19 @@ export class TauriPlatform implements PlatformAPI {
       rowCount: result.row_count,
       columnCount: result.column_count,
       fileType: result.file_type,
+      isValid: true,
     };
 
-    addLog('success', `File B loaded: ${fileInfo.filename} (${fileInfo.rowCount} rows)`);
+    addLog(
+      "success",
+      `File B loaded: ${fileInfo.filename} (${fileInfo.rowCount} rows)`,
+    );
     return fileInfo;
   }
 
   async clearAllFiles(): Promise<void> {
-    await invoke('clear_files');
-    addLog('info', 'All files cleared');
+    await invoke("clear_files");
+    addLog("info", "All files cleared");
   }
 
   // ----------------------------------------
@@ -121,21 +138,24 @@ export class TauriPlatform implements PlatformAPI {
 
   async runAnalysis(
     settings: AnalysisSettings,
-    onProgress?: (progress: ProgressInfo) => void
+    onProgress?: (progress: ProgressInfo) => void,
   ): Promise<AnalysisResult> {
     try {
-      addLog('info', 'Starting analysis...');
+      addLog("info", "Starting analysis...");
 
       // Listen for progress events
       if (onProgress) {
-        this.progressUnlisten = await listen<ProgressInfo>('analysis-progress', (event) => {
-          onProgress(event.payload);
-          addLog('info', `[${event.payload.stage}] ${event.payload.message}`);
-        });
+        this.progressUnlisten = await listen<ProgressInfo>(
+          "analysis-progress",
+          (event) => {
+            onProgress(event.payload);
+            addLog("info", `[${event.payload.stage}] ${event.payload.message}`);
+          },
+        );
       }
 
       // Run analysis
-      const result = await invoke<TauriAnalysisResult>('run_analysis', {
+      const result = await invoke<TauriAnalysisResult>("run_analysis", {
         hideSensitive: settings.hideSensitive,
         splitIncomeExpense: settings.splitIncomeExpense,
         ipCrossReference: settings.ipCrossReference,
@@ -155,10 +175,16 @@ export class TauriPlatform implements PlatformAPI {
         },
       };
 
-      addLog('success', `Analysis complete: ${analysisResult.matchedCount}/${analysisResult.totalRecords} records matched`);
+      addLog(
+        "success",
+        `Analysis complete: ${analysisResult.matchedCount}/${analysisResult.totalRecords} records matched`,
+      );
 
       if (analysisResult.multiIpCount > 0) {
-        addLog('warning', `${analysisResult.multiIpCount} transactions have multiple IP matches`);
+        addLog(
+          "warning",
+          `${analysisResult.multiIpCount} transactions have multiple IP matches`,
+        );
       }
 
       return analysisResult;
@@ -176,18 +202,18 @@ export class TauriPlatform implements PlatformAPI {
 
   async exportReport(): Promise<string> {
     const outputPath = await save({
-      filters: [{ name: 'Excel', extensions: ['xlsx'] }],
-      defaultPath: `bankflow_report_${new Date().toISOString().split('T')[0]}.xlsx`,
-      title: 'Save Analysis Report',
+      filters: [{ name: "Excel", extensions: ["xlsx"] }],
+      defaultPath: `bankflow_report_${new Date().toISOString().split("T")[0]}.xlsx`,
+      title: "Save Analysis Report",
     });
 
     if (!outputPath) {
-      throw new Error('No output path selected');
+      throw new Error("No output path selected");
     }
 
-    addLog('info', `Exporting report to: ${outputPath.split('/').pop()}`);
-    const result = await invoke<string>('export_excel', { outputPath });
-    addLog('success', result);
+    addLog("info", `Exporting report to: ${outputPath.split("/").pop()}`);
+    const result = await invoke<string>("export_excel", { outputPath });
+    addLog("success", result);
 
     return result;
   }
@@ -198,7 +224,7 @@ export class TauriPlatform implements PlatformAPI {
 
   async queryWhois(ip: string): Promise<WhoisResult> {
     try {
-      const result = await invoke<TauriWhoisResult>('query_whois', { ip });
+      const result = await invoke<TauriWhoisResult>("query_whois", { ip });
       return {
         ip: result.ip,
         country: result.country,
@@ -206,7 +232,7 @@ export class TauriPlatform implements PlatformAPI {
         querySuccess: result.query_success,
       };
     } catch (error) {
-      addLog('error', `Whois query failed for ${ip}: ${error}`);
+      addLog("error", `Whois query failed for ${ip}: ${error}`);
       throw error;
     }
   }
