@@ -7,6 +7,7 @@ export interface FeedbackPayload {
   version: string;
   platform: 'tauri' | 'web' | 'unknown';
   createdAt: string;
+  attachments?: string[];
 }
 
 interface QueueItem extends FeedbackPayload {
@@ -153,6 +154,18 @@ function validatePayload(payload: FeedbackPayload): string | null {
   if (!payload.type) return 'type';
   if (!payload.title.trim()) return 'title';
   if (!payload.description.trim()) return 'description';
+  if (payload.attachments) {
+    const invalid = payload.attachments.find((item) => {
+      if (!item) return true;
+      try {
+        const url = new URL(item);
+        return url.protocol !== 'http:' && url.protocol !== 'https:';
+      } catch {
+        return true;
+      }
+    });
+    if (invalid) return 'attachments';
+  }
   return null;
 }
 

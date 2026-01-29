@@ -130,6 +130,9 @@ export interface Translations {
     titlePlaceholder: string;
     descriptionLabel: string;
     descriptionPlaceholder: string;
+    attachmentsLabel: string;
+    attachmentsPlaceholder: string;
+    attachmentsNote: string;
     versionLabel: string;
     submit: string;
     submitting: string;
@@ -141,6 +144,7 @@ export interface Translations {
       typeRequired: string;
       titleRequired: string;
       descriptionRequired: string;
+      attachmentsInvalid: string;
     };
   };
 

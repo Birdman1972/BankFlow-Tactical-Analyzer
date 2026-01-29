@@ -106,6 +106,9 @@ const zhTW: Translations = {
     titlePlaceholder: '請簡要描述',
     descriptionLabel: '詳細內容',
     descriptionPlaceholder: '請描述問題或建議…',
+    attachmentsLabel: '附件連結',
+    attachmentsPlaceholder: 'https://...（每行一個連結）',
+    attachmentsNote: '僅支援連結，不支援檔案上傳。',
     versionLabel: '版本',
     submit: '送出回饋',
     submitting: '送出中...',
@@ -117,6 +120,7 @@ const zhTW: Translations = {
       typeRequired: '請選擇回饋類型。',
       titleRequired: '請填寫標題。',
       descriptionRequired: '請填寫詳細內容。',
+      attachmentsInvalid: '僅允許 http/https 連結。',
     },
   },
   nav: {

@@ -189,6 +189,7 @@ BankFlow-Tactical-Analyzer/
 
 - 回饋內容由前端送至後端 API 進行統一處理
 - 後端會同步建立 GitHub Issue 並寫入資料庫作為備援
+- 回饋可附多行連結（僅支援 http/https），不提供檔案上傳
 - 建議避免在回饋中填寫敏感個資或案件細節
 
 ---

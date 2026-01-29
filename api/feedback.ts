@@ -7,6 +7,7 @@ interface FeedbackPayload {
   version: string;
   platform: 'tauri' | 'web' | 'unknown';
   createdAt: string;
+  attachments?: string[];
 }
 
 interface StorageResult {
@@ -57,6 +58,7 @@ function validatePayload(body: unknown): FeedbackPayload | null {
   const version = payload.version;
   const platform = payload.platform;
   const createdAt = payload.createdAt;
+  const attachments = payload.attachments;
 
   // Type validation
   if (!['feature', 'bug', 'ux'].includes(type as string)) return null;
@@ -65,6 +67,20 @@ function validatePayload(body: unknown): FeedbackPayload | null {
   if (typeof version !== 'string') return null;
   if (!['tauri', 'web', 'unknown'].includes(platform as string)) return null;
   if (typeof createdAt !== 'string') return null;
+  if (attachments !== undefined) {
+    if (!Array.isArray(attachments)) return null;
+    if (attachments.length > 20) return null;
+    const invalid = attachments.find((item) => {
+      if (typeof item !== 'string' || !item.trim()) return true;
+      try {
+        const url = new URL(item);
+        return url.protocol !== 'http:' && url.protocol !== 'https:';
+      } catch {
+        return true;
+      }
+    });
+    if (invalid) return null;
+  }
 
   // Length limits
   if (title.length > 200) return null;
@@ -77,6 +93,7 @@ function validatePayload(body: unknown): FeedbackPayload | null {
     version: version.slice(0, 20),
     platform: platform as FeedbackPayload['platform'],
     createdAt,
+    attachments: attachments ? attachments.map((item) => item.trim()) : undefined,
   };
 }
 
@@ -85,6 +102,10 @@ function buildIssueTitle(payload: FeedbackPayload): string {
 }
 
 function buildIssueBody(payload: FeedbackPayload): string {
+  const attachments = payload.attachments?.length
+    ? `## Attachments\n${payload.attachments.map((item) => `- ${item}`).join('\n')}\n\n---\n\n`
+    : '';
+
   return [
     '## Feedback',
     `- Type: ${payload.type}`,
@@ -94,7 +115,7 @@ function buildIssueBody(payload: FeedbackPayload): string {
     '',
     '---',
     '',
-    payload.description,
+    attachments + payload.description,
   ].join('\n');
 }
 

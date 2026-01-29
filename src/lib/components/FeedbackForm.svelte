@@ -14,6 +14,7 @@
     version: string;
     platform: 'tauri' | 'web' | 'unknown';
     createdAt: string;
+    attachments?: string[];
   }
 
   interface Props {
@@ -26,12 +27,14 @@
     type: 'feature' as FeedbackType,
     title: '',
     description: '',
+    attachments: '',
   });
 
   let errors = $state({
     type: '',
     title: '',
     description: '',
+    attachments: '',
   });
 
   let isSubmitting = $state(false);
@@ -42,8 +45,37 @@
     errors.type = form.type ? '' : 'feedbackForm.errors.typeRequired';
     errors.title = form.title.trim() ? '' : 'feedbackForm.errors.titleRequired';
     errors.description = form.description.trim() ? '' : 'feedbackForm.errors.descriptionRequired';
+    errors.attachments = '';
 
-    return !errors.type && !errors.title && !errors.description;
+    const lines = form.attachments
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (lines.length) {
+      const invalid = lines.find((item) => {
+        try {
+          const url = new URL(item);
+          return url.protocol !== 'http:' && url.protocol !== 'https:';
+        } catch {
+          return true;
+        }
+      });
+      if (invalid) {
+        errors.attachments = 'feedbackForm.errors.attachmentsInvalid';
+      }
+    }
+
+    return !errors.type && !errors.title && !errors.description && !errors.attachments;
+  }
+
+  function parseAttachments(): string[] | undefined {
+    const items = form.attachments
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return items.length ? items : undefined;
   }
 
   function buildPayload(): FeedbackPayload {
@@ -57,6 +89,7 @@
       version,
       platform,
       createdAt: new Date().toISOString(),
+      attachments: parseAttachments(),
     };
   }
 
@@ -91,6 +124,7 @@
       }
       form.title = '';
       form.description = '';
+      form.attachments = '';
     } catch (error) {
       console.error('Feedback submit failed:', error);
       status = 'error';
@@ -146,6 +180,21 @@
     ></textarea>
     {#if errors.description}
       <div class="text-xs text-neon-pink">{$t(errors.description)}</div>
+    {/if}
+  </label>
+
+  <label class="space-y-1">
+    <span class="text-xs text-gray-400">{$t('feedbackForm.attachmentsLabel')}</span>
+    <textarea
+      class="w-full min-h-[90px] bg-cyber-card border border-cyber-border rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-neon-green"
+      placeholder={$t('feedbackForm.attachmentsPlaceholder')}
+      bind:value={form.attachments}
+    ></textarea>
+    <div class="text-xs text-gray-500">
+      {$t('feedbackForm.attachmentsNote')}
+    </div>
+    {#if errors.attachments}
+      <div class="text-xs text-neon-pink">{$t(errors.attachments)}</div>
     {/if}
   </label>
 

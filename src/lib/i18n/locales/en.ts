@@ -106,6 +106,9 @@ const en: Translations = {
     titlePlaceholder: 'Short summary',
     descriptionLabel: 'Details',
     descriptionPlaceholder: 'Describe the issue or suggestion...',
+    attachmentsLabel: 'Attachments (links)',
+    attachmentsPlaceholder: 'https://... (one link per line)',
+    attachmentsNote: 'Links only. File uploads are not supported.',
     versionLabel: 'Version',
     submit: 'Submit Feedback',
     submitting: 'Submitting...',
@@ -117,6 +120,7 @@ const en: Translations = {
       typeRequired: 'Please select a feedback type.',
       titleRequired: 'Title is required.',
       descriptionRequired: 'Details are required.',
+      attachmentsInvalid: 'Only http/https links are supported.',
     },
   },
   nav: {
