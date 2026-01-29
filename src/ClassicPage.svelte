@@ -10,6 +10,7 @@
   import DownloadsDialog from '$lib/components/DownloadsDialog.svelte';
   import ToastContainer from './lib/components/ToastContainer.svelte';
   import ThemeToggle from '$lib/components/modern/ThemeToggle.svelte';
+  import FeedbackForm from '$lib/components/FeedbackForm.svelte';
   import {
     fileA,
     fileB,
@@ -30,10 +31,12 @@
     getInstalledVersion,
     type VersionInfo
   } from '$lib/services/versionService';
+  import { currentPage, navigate } from '$lib/stores/router';
 
   let appVersion = currentVersion;
   let updateInfo: VersionInfo | null = null;
   let showDownloads = false;
+  $: isFeedbackPage = $currentPage === 'feedback';
 
   onMount(async () => {
     appVersion = await getInstalledVersion();
@@ -156,6 +159,14 @@
           {$t('downloadsDialog.open')}
         </button>
 
+        <button
+          class="text-xs text-gray-500 hover:text-neon-green transition-colors"
+          on:click={() => navigate(isFeedbackPage ? 'home' : 'feedback')}
+          disabled={$isAnalyzing}
+        >
+          {$t(isFeedbackPage ? 'nav.home' : 'nav.feedback')}
+        </button>
+
         {#if $fileA || $fileB}
           <button
             class="text-xs text-gray-500 hover:text-neon-pink transition-colors"
@@ -186,47 +197,53 @@
     <DownloadsDialog onClose={() => (showDownloads = false)} />
   {/if}
 
-  <!-- Main Content Grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Left Panel: File Input & Control -->
-    <div class="lg:col-span-2 space-y-6">
-      <!-- Drop Zones -->
-      <div class="grid grid-cols-2 gap-4">
-        <DropZone
-          label="A"
-          title={$t('dropZone.transactionFile')}
-          subtitle={$t('dropZone.fileFormat')}
-          file={$fileA}
-          disabled={$isAnalyzing}
-          on:click={handleFileAClick}
-          on:drop={handleFileADrop}
-        />
+  {#if isFeedbackPage}
+    <div class="cyber-panel p-6">
+      <FeedbackForm />
+    </div>
+  {:else}
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Panel: File Input & Control -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Drop Zones -->
+        <div class="grid grid-cols-2 gap-4">
+          <DropZone
+            label="A"
+            title={$t('dropZone.transactionFile')}
+            subtitle={$t('dropZone.fileFormat')}
+            file={$fileA}
+            disabled={$isAnalyzing}
+            on:click={handleFileAClick}
+            on:drop={handleFileADrop}
+          />
 
-        <DropZone
-          label="B"
-          title={$t('dropZone.ipLogFile')}
-          subtitle={$t('dropZone.fileFormat')}
-          file={$fileB}
-          disabled={$isAnalyzing}
-          on:click={handleFileBClick}
-          on:drop={handleFileBDrop}
-        />
+          <DropZone
+            label="B"
+            title={$t('dropZone.ipLogFile')}
+            subtitle={$t('dropZone.fileFormat')}
+            file={$fileB}
+            disabled={$isAnalyzing}
+            on:click={handleFileBClick}
+            on:drop={handleFileBDrop}
+          />
+        </div>
+
+        <!-- Control Panel -->
+        <ControlPanel />
+
+        <!-- Result Summary (shown after analysis) -->
+        {#if $analysisResult}
+          <ResultSummary />
+        {/if}
       </div>
 
-      <!-- Control Panel -->
-      <ControlPanel />
-
-      <!-- Result Summary (shown after analysis) -->
-      {#if $analysisResult}
-        <ResultSummary />
-      {/if}
+      <!-- Right Panel: Log Console -->
+      <div class="h-[500px]">
+        <LogConsole />
+      </div>
     </div>
-
-    <!-- Right Panel: Log Console -->
-    <div class="h-[500px]">
-      <LogConsole />
-    </div>
-  </div>
+  {/if}
 
   <!-- Footer -->
   <footer class="mt-6 text-center text-xs text-gray-600">

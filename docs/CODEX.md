@@ -6,6 +6,16 @@
 
 ---
 
+## 0. Codex 最高法典 (Universal Rule)
+
+此條款為跨專案最高準則，**任何新專案必須套用且不可省略**：
+
+1. **必備文件**: `docs/CODEX.md`、`docs/TRIALS.md`、`docs/sessions/`、`task.md`。
+2. **錯誤紀錄**: 任何失敗嘗試都必須記錄於 `docs/TRIALS.md`，避免重複踩雷。
+3. **文件優先**: 任何變更先更新文件，再動程式碼或流程。
+
+---
+
 ## Ⅰ. 核心哲學 (Core Philosophy)
 
 1.  **Logic First, Code Later**: 在敲下任何一行程式碼前，必須先釐清邏輯。

@@ -110,6 +110,7 @@ const en: Translations = {
     submit: 'Submit Feedback',
     submitting: 'Submitting...',
     success: 'Thanks! Your feedback was sent.',
+    queued: 'Thanks! We saved your feedback and will retry when online.',
     error: 'Unable to send. We\'ll retry later.',
     privacyNote: 'Please avoid including personal or sensitive information.',
     errors: {

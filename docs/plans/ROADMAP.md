@@ -36,6 +36,7 @@ gantt
     ControlPanel 控制面板        :p4b, after p4a, 2d
     LogConsole 日誌區            :p4c, after p4b, 1d
     ResultTable 結果表格         :p4d, after p4c, 2d
+    Feedback 回饋頁面            :p4g, after p4d, 1d
     WarningBanner OpSec 警告     :p4e, after p4d, 1d
     狀態管理 Stores              :p4f, after p4e, 2d
 
@@ -111,6 +112,7 @@ gantt
 - [x] 實作 ControlPanel（控制面板）
 - [x] 實作 LogConsole（日誌區）
 - [x] 實作 ResultSummary（結果摘要）
+- [x] 實作 Feedback 回饋頁面（Classic/Modern）
 - [x] 實作 WarningBanner（OpSec 警告）
 - [x] 實作狀態管理 Stores (app.ts, tauri.ts)
 - [x] 實作賽博龐克主題 CSS

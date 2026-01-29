@@ -5,6 +5,7 @@
   import UpdateDialog from './lib/components/UpdateDialog.svelte';
   import DownloadsDialog from '$lib/components/DownloadsDialog.svelte';
   import ToastContainer from './lib/components/ToastContainer.svelte';
+  import FeedbackForm from '$lib/components/FeedbackForm.svelte';
 
   import { fileA, fileB, isAnalyzing, analysisResult } from '$lib/stores/app';
   import { fileA as fileAStore, fileB as fileBStore } from '$lib/stores/app';
@@ -16,6 +17,7 @@
   import ResultDashboard from '$lib/components/modern/ResultDashboard.svelte';
   import LogPanel from '$lib/components/modern/LogPanel.svelte';
   import { theme } from '$lib/stores/theme';
+  import { currentPage, navigate } from '$lib/stores/router';
 
   import {
     checkForUpdates,
@@ -81,6 +83,7 @@
   }
 
   $: isDark = $theme === 'dark';
+  $: isFeedbackPage = $currentPage === 'feedback';
   $: rootClass = isDark
     ? 'min-h-screen bg-slate-950 text-slate-100 font-sans'
     : 'min-h-screen bg-modern-bg text-slate-900 font-sans';
@@ -105,6 +108,30 @@
 
       <nav class="flex-1 overflow-y-auto p-4 space-y-2">
         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">Main Menu</div>
+        <button
+          on:click={() => navigate('home')}
+          class={[
+            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-bold transition-all text-left',
+            $currentPage === 'home'
+              ? 'text-modern-primary bg-modern-primary/10'
+              : 'text-slate-500 hover:text-modern-primary hover:bg-modern-primary/5'
+          ].join(' ')}
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          {$t('nav.home')}
+        </button>
+        <button
+          on:click={() => navigate('feedback')}
+          class={[
+            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-bold transition-all text-left',
+            $currentPage === 'feedback'
+              ? 'text-modern-primary bg-modern-primary/10'
+              : 'text-slate-500 hover:text-modern-primary hover:bg-modern-primary/5'
+          ].join(' ')}
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8m-8 4h4m-2 6a9 9 0 110-18 9 9 0 010 18z"></path></svg>
+          {$t('nav.feedback')}
+        </button>
         <a 
           href="/" 
           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-modern-primary hover:bg-modern-primary/5 transition-all"
@@ -174,49 +201,55 @@
           <DownloadsDialog onClose={() => (showDownloads = false)} />
         {/if}
 
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
-          <div class="lg:col-span-2 space-y-6">
-            <section class={['rounded-2xl border p-6 shadow-sm', cardSurface].join(' ')}>
-              <div class="flex items-center justify-between gap-4 mb-6">
-                <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Data Sources</h2>
-              </div>
+        {#if isFeedbackPage}
+          <section class={['rounded-2xl border p-6 shadow-sm', cardSurface].join(' ')}>
+            <FeedbackForm />
+          </section>
+        {:else}
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
+            <div class="lg:col-span-2 space-y-6">
+              <section class={['rounded-2xl border p-6 shadow-sm', cardSurface].join(' ')}>
+                <div class="flex items-center justify-between gap-4 mb-6">
+                  <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Data Sources</h2>
+                </div>
 
-              <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <FileCard
-                  label="A"
-                  title={$t('dropZone.transactionFile')}
-                  subtitle={$t('dropZone.fileFormat')}
-                  file={$fileA}
-                  disabled={$isAnalyzing}
-                  enableDrop={$currentPlatform === 'tauri'}
-                  on:click={handleFileAClick}
-                  on:drop={handleFileADrop}
-                />
-                <FileCard
-                  label="B"
-                  title={$t('dropZone.ipLogFile')}
-                  subtitle={$t('dropZone.fileFormat')}
-                  file={$fileB}
-                  disabled={$isAnalyzing}
-                  enableDrop={$currentPlatform === 'tauri'}
-                  on:click={handleFileBClick}
-                  on:drop={handleFileBDrop}
-                />
-              </div>
-            </section>
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <FileCard
+                    label="A"
+                    title={$t('dropZone.transactionFile')}
+                    subtitle={$t('dropZone.fileFormat')}
+                    file={$fileA}
+                    disabled={$isAnalyzing}
+                    enableDrop={$currentPlatform === 'tauri'}
+                    on:click={handleFileAClick}
+                    on:drop={handleFileADrop}
+                  />
+                  <FileCard
+                    label="B"
+                    title={$t('dropZone.ipLogFile')}
+                    subtitle={$t('dropZone.fileFormat')}
+                    file={$fileB}
+                    disabled={$isAnalyzing}
+                    enableDrop={$currentPlatform === 'tauri'}
+                    on:click={handleFileBClick}
+                    on:drop={handleFileBDrop}
+                  />
+                </div>
+              </section>
 
-            <SettingsPanel />
-            <ActionsBar />
+              <SettingsPanel />
+              <ActionsBar />
 
-            {#if $analysisResult}
-              <ResultDashboard />
-            {/if}
+              {#if $analysisResult}
+                <ResultDashboard />
+              {/if}
+            </div>
+
+            <div class="h-full min-h-[500px] lg:sticky lg:top-0">
+              <LogPanel />
+            </div>
           </div>
-
-          <div class="h-full min-h-[500px] lg:sticky lg:top-0">
-            <LogPanel />
-          </div>
-        </div>
+        {/if}
 
         <footer class="pt-10 pb-6 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
           {$t('app.footer')}

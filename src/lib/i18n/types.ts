@@ -134,6 +134,7 @@ export interface Translations {
     submit: string;
     submitting: string;
     success: string;
+    queued: string;
     error: string;
     privacyNote: string;
     errors: {

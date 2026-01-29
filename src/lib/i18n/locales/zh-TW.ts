@@ -110,6 +110,7 @@ const zhTW: Translations = {
     submit: '送出回饋',
     submitting: '送出中...',
     success: '感謝！你的回饋已送出。',
+    queued: '感謝！已暫存回饋，待連線後自動送出。',
     error: '送出失敗，稍後會重試。',
     privacyNote: '請避免提供個人或敏感資訊。',
     errors: {

@@ -208,6 +208,32 @@ flowchart LR
     style Components fill:#2d2d44,stroke:#00D2FF,color:#E5E7EB
 ```
 
+### 意見回饋流程
+
+```mermaid
+flowchart LR
+    subgraph UI["UI"]
+        FF["FeedbackForm"]
+    end
+
+    subgraph FE["Frontend Services"]
+        FS["feedbackService<br/>queue + retry"]
+    end
+
+    subgraph API["Serverless API"]
+        FB["/api/feedback"]
+    end
+
+    subgraph Storage["Storage"]
+        GH["GitHub Issues"]
+        DB["DB / KV (備援)"]
+    end
+
+    FF --> FS --> FB
+    FB --> GH
+    FB --> DB
+```
+
 ---
 
 ## 後端架構

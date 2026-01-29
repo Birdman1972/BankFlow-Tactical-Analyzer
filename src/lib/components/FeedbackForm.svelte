@@ -2,6 +2,7 @@
   import { t } from '$lib/i18n';
   import { get } from 'svelte/store';
   import { currentPlatform } from '../stores/platform';
+  import { submitFeedback } from '$lib/services/feedbackService';
   import pkg from '../../../package.json';
 
   type FeedbackType = 'feature' | 'bug' | 'ux';
@@ -76,9 +77,18 @@
       const payload = buildPayload();
       if (onSubmit) {
         await onSubmit(payload);
+        status = 'success';
+        statusMessageKey = 'feedbackForm.success';
+      } else {
+        const result = await submitFeedback(payload);
+        if (result.ok) {
+          status = 'success';
+          statusMessageKey = result.queued ? 'feedbackForm.queued' : 'feedbackForm.success';
+        } else {
+          status = result.queued ? 'success' : 'error';
+          statusMessageKey = result.queued ? 'feedbackForm.queued' : 'feedbackForm.error';
+        }
       }
-      status = 'success';
-      statusMessageKey = 'feedbackForm.success';
       form.title = '';
       form.description = '';
     } catch (error) {

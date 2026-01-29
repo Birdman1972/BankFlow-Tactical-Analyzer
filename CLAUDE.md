@@ -9,6 +9,8 @@
 
 **目的**：收集使用者意見，作為更新開發參考
 
+**狀態**：已實作（UI + API；GitHub/DB 需設定環境變數）
+
 **需求**：
 - 介面內建意見回饋表單
 - 收集內容：功能建議、Bug 回報、使用體驗
@@ -118,7 +120,10 @@
 
 **待完成**：
 - [ ] Phase 6 (打包) - Tauri 桌面應用打包
-- [ ] WASM 匯出穩定化（rust_xlsxwriter wasm feature）
+- [ ] 可攜版 ZIP 打包
+
+**已完成補記**：
+- [x] WASM 匯出穩定化（rust_xlsxwriter wasm feature）(2026-01-27)
 
 ---
 

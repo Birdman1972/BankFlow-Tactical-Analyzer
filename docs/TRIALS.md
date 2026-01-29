@@ -69,6 +69,38 @@
 - **Why it failed**: using `--manifest-path` does NOT change the Current Working Directory (CWD). It remains at the root where `cargo` was invoked.
 - **Solution**: Use paths relative to the _invocation directory_ (e.g., just `test.xlsx`), not relative to the crate directory.
 
+### [2026-01-29] Git Worktree Branch Creation Failed
+
+- **Context**: Creating a new worktree for `feature/feedback-ui`.
+- **Attempt**: `git worktree add .worktrees/feedback-ui -b feature/feedback-ui`
+- **Error**: `fatal: cannot lock ref 'refs/heads/feature/feedback-ui': unable to create directory for .git/refs/heads/feature/feedback-ui`
+- **Why it failed**: Git could not create the nested ref directory under `.git/refs/heads/feature/`. This usually indicates missing parent directory or a permission/lock issue in `.git/refs`.
+- **Solution**: Create the branch namespace first or choose a flat branch name (e.g., `feedback-ui`), then retry `git worktree add`.
+
+### [2026-01-29] Git Worktree Lock Permission Error
+
+- **Context**: Creating a new worktree on macOS with a flat branch name.
+- **Attempt**: `git worktree add .worktrees/feedback-ui -b feedback-ui`
+- **Error**: `fatal: cannot lock ref 'refs/heads/feedback-ui': ... .git/refs/heads/feedback-ui.lock: Operation not permitted`
+- **Why it failed**: The repository’s `.git/refs` directory is not writable in this environment, blocking branch creation.
+- **Solution**: Create the branch manually outside this environment or fix permissions on `.git/refs`; then re-run `git worktree add` without `-b` to attach to the existing branch.
+
+### [2026-01-29] Git Worktree Lock Still Failing After chmod
+
+- **Context**: Retried worktree creation after granting write permission to `.git/refs`.
+- **Attempt**: `chmod -R u+w .git/refs` then `git worktree add .worktrees/feedback-ui -b feedback-ui`
+- **Error**: `fatal: cannot lock ref 'refs/heads/feedback-ui': ... .git/refs/heads/feedback-ui.lock: Operation not permitted`
+- **Why it failed**: Permission issue persists even after chmod, suggesting filesystem restrictions beyond repo permissions (e.g., mount flags or sandbox limits).
+- **Solution**: Create the branch outside this environment or move repo to a writable location, then create worktree.
+
+### [2026-01-29] Git Index Lock Permission Error
+
+- **Context**: Staging changes before commit.
+- **Attempt**: `git add ...`
+- **Error**: `fatal: Unable to create '.git/index.lock': Operation not permitted`
+- **Why it failed**: `.git` directory is not writable in this environment (lockfile creation blocked).
+- **Solution**: Fix `.git` permissions (including `.git/index` and parent) or move repo to a writable location, then retry staging.
+
 ---
 
 ## 📝 Pending Hypotheses (待驗證假說)

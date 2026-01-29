@@ -9,6 +9,12 @@ interface FeedbackPayload {
   createdAt: string;
 }
 
+interface StorageResult {
+  ok: boolean;
+  issueCreated: boolean;
+  dbStored: boolean;
+}
+
 // Rate limiting: simple in-memory store (resets on cold start)
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 10; // requests per window
@@ -74,6 +80,93 @@ function validatePayload(body: unknown): FeedbackPayload | null {
   };
 }
 
+function buildIssueTitle(payload: FeedbackPayload): string {
+  return `[Feedback/${payload.type}] ${payload.title}`;
+}
+
+function buildIssueBody(payload: FeedbackPayload): string {
+  return [
+    '## Feedback',
+    `- Type: ${payload.type}`,
+    `- Version: ${payload.version}`,
+    `- Platform: ${payload.platform}`,
+    `- CreatedAt: ${payload.createdAt}`,
+    '',
+    '---',
+    '',
+    payload.description,
+  ].join('\n');
+}
+
+async function createGitHubIssue(payload: FeedbackPayload): Promise<boolean> {
+  const token = process.env.FEEDBACK_GITHUB_TOKEN;
+  if (!token) return false;
+
+  const repo = process.env.FEEDBACK_GITHUB_REPO ?? 'Birdman1972/BankFlow-Tactical-Analyzer';
+  const [owner, name] = repo.split('/');
+  if (!owner || !name) return false;
+
+  const response = await fetch(`https://api.github.com/repos/${owner}/${name}/issues`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    body: JSON.stringify({
+      title: buildIssueTitle(payload),
+      body: buildIssueBody(payload),
+      labels: ['feedback', `type:${payload.type}`, `platform:${payload.platform}`],
+    }),
+  });
+
+  return response.ok;
+}
+
+async function storeInDb(payload: FeedbackPayload): Promise<boolean> {
+  const endpoint = process.env.FEEDBACK_DB_ENDPOINT;
+  if (!endpoint) return false;
+
+  const token = process.env.FEEDBACK_DB_TOKEN;
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      ...payload,
+      receivedAt: new Date().toISOString(),
+    }),
+  });
+
+  return response.ok;
+}
+
+async function storeFeedback(payload: FeedbackPayload): Promise<StorageResult> {
+  let issueCreated = false;
+  let dbStored = false;
+
+  try {
+    issueCreated = await createGitHubIssue(payload);
+  } catch (error) {
+    console.warn('[Feedback] GitHub issue failed:', error);
+  }
+
+  try {
+    dbStored = await storeInDb(payload);
+  } catch (error) {
+    console.warn('[Feedback] DB storage failed:', error);
+  }
+
+  return {
+    ok: issueCreated || dbStored,
+    issueCreated,
+    dbStored,
+  };
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -105,15 +198,21 @@ export default async function handler(
     return res.status(400).json({ error: 'Invalid payload' });
   }
 
-  // Log feedback (in production, would save to database)
+  // Log feedback (avoid sensitive data)
   console.log('[Feedback]', JSON.stringify({
     ...payload,
     ip: clientIP,
     receivedAt: new Date().toISOString(),
   }));
 
-  // TODO: In production, save to database or send to notification service
-  // For now, just log and return success
+  const result = await storeFeedback(payload);
+  if (!result.ok) {
+    return res.status(502).json({ ok: false, error: 'storage_failed' });
+  }
 
-  return res.status(200).json({ ok: true });
+  return res.status(200).json({
+    ok: true,
+    issueCreated: result.issueCreated,
+    dbStored: result.dbStored,
+  });
 }
