@@ -42,6 +42,14 @@ function detectPlatform(): Platform {
     return "unknown";
   }
 
+  // Debugging: Log what we see in the window object
+  console.log("[Platform Detection] Checking environment...");
+  console.log("[Platform Detection] __TAURI__ exists:", "__TAURI__" in window);
+  console.log(
+    "[Platform Detection] __TAURI_INTERNALS__ exists:",
+    "__TAURI_INTERNALS__" in window,
+  );
+
   // Check for Tauri
   if ("__TAURI__" in window || "__TAURI_INTERNALS__" in window) {
     return "tauri";
