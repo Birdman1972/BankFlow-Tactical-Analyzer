@@ -50,6 +50,7 @@ Agent 必須在特定情境下強制調用以下思維模式：
 - **`task.md`**: **動態清單**。反映當下的 Todo List 狀態。
 - **`docs/sessions/*.md`**: **歷史紀錄**。每個工作階段 (Sessions) 結束前必須撰寫。
 - **`README.md`**: **專案入口**。包含安裝、核心功能與協定連結。
+- **`docs/sessions/latest.md`**: **統一入口**。所有 AI 必須維護，提供最新摘要。
 
 ### 2. R-P-I 循環
 
@@ -58,6 +59,34 @@ Agent 必須在特定情境下強制調用以下思維模式：
 1.  **Research**: 讀取現有代碼，確認影響範圍。
 2.  **Plan**: 更新 `task.md`，列出細部步驟。
 3.  **Implement**: 執行開發，並在完成後將 `task.md` 項目打勾 (`[x]`)。
+
+### 3. Codex 註記規範（時間戳）
+
+- **最新摘要**：`docs/sessions/latest.md` 必須加註「OpenAI Codex + 日期時間 (UTC+8)」。
+- **Session Log**：每份 session log 也必須加註「OpenAI Codex + 日期時間 (UTC+8)」。
+- **Task List**：`task.md` 不強制加註時間戳，避免影響可讀性。
+
+### 4. 協作者提示詞（給其他 AI/協作者）
+
+在開始工作前，請先閱讀 `docs/CODEX.md`、`docs/TRIALS.md`、`docs/sessions/latest.md`，並遵守以下規範：
+
+```
+你將接手 BankFlow 專案。請嚴格遵守以下規範：
+
+1) 語言：回覆與文件一律使用繁體中文（台灣用語）。
+2) 文件優先：任何改動先更新文件，再改程式碼。
+3) 必須維護：
+   - docs/sessions/latest.md（所有 AI 都要更新這份）
+   - 每次工作結束要新增或更新 session log（docs/sessions/YYYY-MM-DD-*.md）
+4) 「時間戳規範」：
+   - docs/sessions/latest.md 必須加註「OpenAI Codex: YYYY-MM-DD HH:mm UTC+8」
+   - 每份 session log 也必須加註同樣的時間戳
+5) task.md：保持任務清單，不強制加時間戳。
+6) 失敗嘗試必記錄：任何錯誤或失敗嘗試要寫入 docs/TRIALS.md，避免重複踩雷。
+7) 不要自行 git commit / push，除非使用者明確要求。
+
+請先閱讀 docs/CODEX.md、docs/TRIALS.md、docs/sessions/latest.md，再開始工作。
+```
 
 ---
 
