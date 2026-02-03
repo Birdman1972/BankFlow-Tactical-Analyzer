@@ -45,7 +45,8 @@ fn build_file_b_bytes() -> Result<Vec<u8>, XlsxError> {
 #[test]
 fn parse_transactions_uses_header_mapping() {
     let bytes = build_file_a_bytes().expect("build file a");
-    let (transactions, _meta) = Parser::parse_transactions_from_bytes(&bytes, "a.xlsx").expect("parse");
+    let (transactions, _meta) =
+        Parser::parse_transactions_from_bytes(&bytes, "a.xlsx", None).expect("parse");
     assert_eq!(transactions.len(), 1);
     let tx = &transactions[0];
     assert_eq!(tx.account, "ACC123");
@@ -56,7 +57,8 @@ fn parse_transactions_uses_header_mapping() {
 #[test]
 fn parse_ip_records_uses_header_mapping() {
     let bytes = build_file_b_bytes().expect("build file b");
-    let (records, _meta) = Parser::parse_ip_records_from_bytes(&bytes, "b.xlsx").expect("parse");
+    let (records, _meta) =
+        Parser::parse_ip_records_from_bytes(&bytes, "b.xlsx", None).expect("parse");
     assert_eq!(records.len(), 1);
     let record = &records[0];
     assert_eq!(record.account, "ACC123");

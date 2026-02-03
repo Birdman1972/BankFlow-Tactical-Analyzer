@@ -20,9 +20,11 @@ fn run() -> Result<(), String> {
         fs::read(&file_b).map_err(|e| format!("Failed to read File B ({file_b:?}): {e}"))?;
 
     let (mut transactions, _meta_a) =
-        Parser::parse_transactions_from_bytes(&bytes_a, "FileA.xlsx").map_err(|e| e.to_string())?;
+        Parser::parse_transactions_from_bytes(&bytes_a, "FileA.xlsx", None)
+            .map_err(|e| e.to_string())?;
     let (ip_records, _meta_b) =
-        Parser::parse_ip_records_from_bytes(&bytes_b, "FileB.xlsx").map_err(|e| e.to_string())?;
+        Parser::parse_ip_records_from_bytes(&bytes_b, "FileB.xlsx", None)
+            .map_err(|e| e.to_string())?;
 
     if transactions.is_empty() {
         return Err("File A parsed to 0 transactions".to_string());

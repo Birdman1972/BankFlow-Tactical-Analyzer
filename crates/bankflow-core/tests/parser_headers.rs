@@ -1,12 +1,23 @@
-use bankflow_core::parser::header_map::{map_file_a_columns, map_file_b_columns};
+use bankflow_core::parser::header_map::{validate_file_a_headers, validate_file_b_headers};
 
 #[test]
 fn file_a_header_mapping_prefers_named_columns() {
     let headers = vec![
-        "交易序號", "帳號", "客戶姓名", "交易時間", "交易類型",
-        "身分證/統編", "交易摘要", "交易後餘額", "支出金額", "存入金額",
-    ];
-    let map = map_file_a_columns(&headers);
+        "交易序號",
+        "帳號",
+        "客戶姓名",
+        "交易時間",
+        "交易類型",
+        "身分證/統編",
+        "交易摘要",
+        "交易後餘額",
+        "支出金額",
+        "存入金額",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect::<Vec<_>>();
+    let map = validate_file_a_headers(&headers, None).expect("validate");
     assert_eq!(map.timestamp, 3);
     assert_eq!(map.account, 1);
     assert_eq!(map.expense, 8);
@@ -15,8 +26,11 @@ fn file_a_header_mapping_prefers_named_columns() {
 
 #[test]
 fn file_b_header_mapping_prefers_named_columns() {
-    let headers = vec!["登入序號", "帳號", "登入時間", "IP位址", "裝置資訊", "登入地區"];
-    let map = map_file_b_columns(&headers);
+    let headers = vec!["登入序號", "帳號", "登入時間", "IP位址", "裝置資訊", "登入地區"]
+        .into_iter()
+        .map(String::from)
+        .collect::<Vec<_>>();
+    let map = validate_file_b_headers(&headers, None).expect("validate");
     assert_eq!(map.timestamp, 2);
     assert_eq!(map.account, 1);
     assert_eq!(map.ip_address, 3);
