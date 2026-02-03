@@ -74,6 +74,7 @@ dependencies = [
  "criterion",
  "getrandom",
  "js-sys",
+ "libc",
  "rust_xlsxwriter",
  "serde",
  "serde-wasm-bindgen",
