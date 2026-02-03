@@ -1,8 +1,8 @@
 # BankFlow Tactical Analyzer - 工作摘要
 
 **日期**: 2026-02-03  
-**主題**: Phase 5 Test Coverage Progress
-**Gemini Codex**: 2026-02-03 10:00 UTC+8
+**主題**: Phase 5 Test Coverage + Phase 6 Release Notes
+**Gemini Codex**: 2026-02-03 10:20 UTC+8
 
 ---
 
@@ -11,6 +11,7 @@
 - ✅ **Integration Test**: 新增核心 pipeline 整合測試（parse→match→process→export）。
 - ✅ **Performance Benchmark**: 新增 Criterion 基準測試並完成跑測。
 - ✅ **Memory Check**: 新增記憶體使用檢查工具與驗證執行。
+- ✅ **Release Notes Template**: 新增 GitHub Release 模板並更新 ROADMAP。
 
 ---
 
