@@ -164,8 +164,8 @@ gantt
 | Phase 3  | ✅ 完成   | 100%   | 2026-01-21 完成             |
 | Phase 4  | ✅ 完成   | 100%   | 2026-01-21 完成             |
 | Phase 4B | ✅ 完成   | 100%   | 2026-01-27 Toggle 實作      |
-| Phase 5  | 🚧 進行中 | 80%    | 驗證功能完成 (v0.3.9)       |
-| Phase 6  | 🚧 進行中 | 70%    | v0.3.9 Tagged, Ready for CI |
+| Phase 5  | 🚧 進行中 | 80%    | 驗證功能完成 (v0.3.9); Integration tests + perf benchmark + memory check started |
+| Phase 6  | 🚧 進行中 | 70%    | v0.3.9 Tagged, Ready for CI; Release template + portable zip + checklist added |
 
 ---
 

@@ -34,7 +34,8 @@ fn run() -> Result<(), String> {
     print!("> Parsing File A... ");
     let bytes_a = fs::read(&file_a_path)
         .map_err(|e| format!("Failed to read File A: {}", e))?;
-    let (mut transactions, _meta_a) = Parser::parse_transactions_from_bytes(&bytes_a, "FileA.xlsx")
+    let (mut transactions, _meta_a) =
+        Parser::parse_transactions_from_bytes(&bytes_a, "FileA.xlsx", None)
         .map_err(|e| e.to_string())?;
     println!("OK ({} tx)", transactions.len());
 
@@ -42,7 +43,7 @@ fn run() -> Result<(), String> {
     print!("> Parsing File B... ");
     let bytes_b = fs::read(&file_b_path)
         .map_err(|e| format!("Failed to read File B: {}", e))?;
-    let (ip_records, _meta_b) = Parser::parse_ip_records_from_bytes(&bytes_b, "FileB.xlsx")
+    let (ip_records, _meta_b) = Parser::parse_ip_records_from_bytes(&bytes_b, "FileB.xlsx", None)
         .map_err(|e| e.to_string())?;
     println!("OK ({} rec)", ip_records.len());
 
