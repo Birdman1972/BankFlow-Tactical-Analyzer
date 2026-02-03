@@ -1,8 +1,8 @@
 # BankFlow Tactical Analyzer - 工作摘要
 
 **日期**: 2026-02-03  
-**主題**: Phase 5 Test Coverage + Phase 6 Packaging
-**Gemini Codex**: 2026-02-03 10:35 UTC+8
+**主題**: Phase 5 Test Coverage + Phase 6 Release Prep
+**Gemini Codex**: 2026-02-03 10:45 UTC+8
 
 ---
 
@@ -13,6 +13,7 @@
 - ✅ **Memory Check**: 新增記憶體使用檢查工具與驗證執行。
 - ✅ **Release Notes Template**: 新增 GitHub Release 模板並更新 ROADMAP。
 - ✅ **Portable ZIP**: 新增可攜版 ZIP 打包腳本。
+- ✅ **Release Checklist**: 新增發布檢查清單與 ROADMAP 更新。
 
 ---
 
